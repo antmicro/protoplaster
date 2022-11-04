@@ -12,6 +12,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "--driver_name", action="store", type=str, required=True, help="Driver name"
     )
+    parser.addoption(
+        "--save_file", action="store", type=str, default=None, help="Filename of a frame to save"
+    )
 
 @pytest.fixture
 def device(request):
@@ -24,3 +27,7 @@ def camera_name(request):
 @pytest.fixture
 def driver_name(request):
     return request.config.getoption("--driver_name")
+
+@pytest.fixture
+def save_file(request):
+    return request.config.getoption("--save_file")
