@@ -1,5 +1,4 @@
 import os
-import cv2
 
 class Camera:
     def __init__(self, number=0, path="/dev/video"):
@@ -10,5 +9,4 @@ class Camera:
 
     def get_frame(self):
         ret, frame = cap.read()
-
 
