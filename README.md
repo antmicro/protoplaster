@@ -1,13 +1,18 @@
 # Plaster
 
-An automated framework for testing hardware. It includes tests for:
+Copyright (c) 2022 [Antmicro](https://www.antmicro.com)
+
+An automated framework for platform testing (Hardware and BSPs).
+
+Currently includes tests for:
 
 * I2C
 * GPIO
 * Camera
 
-## Installation
-To use the framework you first need to clone the repository, and install requirements:
+## Usage
+
+To use, clone the repository and install the requirements:
 
 ```bash
 git clone https://github.com/antmicro/plaster.git
@@ -15,7 +20,8 @@ cd plaster/
 pip install requirements.txt
 ```
 
-## Usage
+And then execute the tests for the selected subsystems.
+
 ### I2C
 `pytest i2c/test.py --bus=1 --address="0x3c"`
 
@@ -25,4 +31,4 @@ pip install requirements.txt
 ### Cameras
 `pytest camera/test.py --device="/dev/video0" --camera_name="Camera name" --driver_name="camera-driver"`
 
-There is a possibility to save the frame to a file, in that case pass the file name to `--save_file=""`
+There is a possibility to save a frame to a file, in that case pass the file name to `--save_file=""`
