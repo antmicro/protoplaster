@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+import yaml
+import argparse
+import pytest
+
+from i2c.test import __file__ as i2c_test
+from gpio.test import __file__ as gpio_test
+from camera.test import __file__ as camera_test
+
+tests_paths = {
+        "i2c": i2c_test,
+        "gpio": gpio_test,
+        "camera": camera_test,
+}
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("yaml_file", metavar="FILE", type=str, help="Path to the test yaml description")
+    parser.add_argument("-m", "--module", type=str, action="append", help="External modules for tests")
+    parser.add_argument("-o", "--output", type=str, help="A junit-xml style report of the tests results")
+    return parser.parse_args()
+
+def extract_tests(yaml_file):
+    with open(yaml_file) as file:
+        content = yaml.safe_load(file)
+    return [tests_paths[key] for key in content.keys() if key in tests_paths]
+
+def load_modules(modules):
+    if modules is None:
+        return
+    for mod in modules:
+        print(mod)
+
+def run_tests(args):
+    load_modules(args.module)
+    tests = extract_tests(args.yaml_file)
+    output_file = f"--junitxml={args.output}"
+    cmd = f'{" ".join(tests)} -s --yaml_file={args.yaml_file} {output_file if args.output is not None else ""}'
+    pytest.main(cmd.strip().split(" "))
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    run_tests(args)
+
