@@ -2,6 +2,8 @@
 import yaml
 import argparse
 import pytest
+from colorama import init, Fore, Style
+init()
 
 from i2c.test import __file__ as i2c_test
 from gpio.test import __file__ as gpio_test
@@ -13,6 +15,9 @@ tests_paths = {
         "camera": camera_test,
 }
 
+def warning(text):
+    return Fore.YELLOW + f"[WARNING] {text}" + Style.RESET_ALL
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("yaml_file", metavar="FILE", type=str, help="Path to the test yaml description")
@@ -23,7 +28,13 @@ def parse_args():
 def extract_tests(yaml_file):
     with open(yaml_file) as file:
         content = yaml.safe_load(file)
-    return [tests_paths[key] for key in content.keys() if key in tests_paths]
+    tests = []
+    for module_name in content.keys():
+        if module_name in tests_paths:
+            tests += [tests_paths[module_name] for _ in content[module_name]]
+        else:
+            print(warning(f'Unknown module found: "{module_name}" - Skipping!'))
+    return tests
 
 def load_modules(modules):
     if modules is None:
