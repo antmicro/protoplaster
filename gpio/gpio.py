@@ -36,7 +36,7 @@ class GPIO:
     def read_value(self):
         with open(f"{self.path}/gpio{self.number}/value") as file:
             value = file.read()
-        return value.strip()
+        return int(value.strip())
 
     def write_value(self, value):
         assert self.direction == Direction.OUT, "You can only write to a GPIO in an OUT state"
