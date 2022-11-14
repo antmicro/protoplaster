@@ -15,19 +15,39 @@ tests_paths = {
         "camera": camera_test,
 }
 
+
 def warning(text):
     return Fore.YELLOW + f"[WARNING] {text}" + Style.RESET_ALL
+
+def error(text):
+    return Fore.RED + f"[ERROR] {text}" + Style.RESET_ALL
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("yaml_file", metavar="FILE", type=str, help="Path to the test yaml description")
-    parser.add_argument("-m", "--module", type=str, action="append", help="External modules for tests")
+    parser.add_argument("-m", "--module", type=str, action="append", help="Load external modules for tests")
+    parser.add_argument("-g", "--group", type=str, help="Group to execute")
+    parser.add_argument("--list-groups", action="store_true", help="List possible groups to execute")
     parser.add_argument("-o", "--output", type=str, help="A junit-xml style report of the tests results")
     return parser.parse_args()
 
-def extract_tests(yaml_file):
+def parse_yaml(yaml_file):
     with open(yaml_file) as file:
         content = yaml.safe_load(file)
+    return content
+
+def extract_tests(yaml_file, group):
+    content = parse_yaml(yaml_file)
+
+    if group is not None and group in content:
+        content = content[group]
+    elif group is None:
+        content = {mod_key: content[group_key][mod_key] for group_key in content for mod_key in content[group_key]}
+    else:
+        print(error(f'Group "{group}" not defined - Exiting!'))
+        exit(1)
+
     tests = []
     for module_name in content.keys():
         if module_name in tests_paths:
@@ -44,13 +64,24 @@ def load_modules(modules):
 
 def run_tests(args):
     load_modules(args.module)
-    tests = extract_tests(args.yaml_file)
+    tests = extract_tests(args.yaml_file, args.group)
+    if tests == []:
+        print(warning("No tests to run!"))
     output_file = f"--junitxml={args.output}"
-    cmd = f'{" ".join(tests)} -s --yaml_file={args.yaml_file} {output_file if args.output is not None else ""}'
+    group = f"--group={args.group}"
+    cmd = f'{" ".join(tests)} -s --yaml_file={args.yaml_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
+
+def list_groups(yaml_file):
+    content = parse_yaml(yaml_file)
+    for group in content:
+        print(group)
 
 
 if __name__ == "__main__":
     args = parse_args()
+    if args.list_groups:
+        list_groups(args.yaml_file)
+        exit(0)
     run_tests(args)
 
