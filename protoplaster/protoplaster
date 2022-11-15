@@ -83,7 +83,7 @@ def run_tests(args):
         print(warning("No tests to run!"))
     output_file = f"--junitxml={args.output}"
     group = f"--group={args.group}"
-    cmd = f'{" ".join(tests)} -s -p protoplaster.conf.params_conf --yaml_file={args.yaml_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
+    cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.yaml_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
 
 def list_groups(yaml_file):
