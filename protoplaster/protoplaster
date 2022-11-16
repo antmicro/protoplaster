@@ -7,9 +7,9 @@ import pytest
 from colorama import init, Fore, Style
 init()
 
-from plaster.i2c.test import __file__ as i2c_test
-from plaster.gpio.test import __file__ as gpio_test
-from plaster.camera.test import __file__ as camera_test
+from protoplaster.i2c.test import __file__ as i2c_test
+from protoplaster.gpio.test import __file__ as gpio_test
+from protoplaster.camera.test import __file__ as camera_test
 
 tests_paths = {
         "i2c": i2c_test,
@@ -83,7 +83,7 @@ def run_tests(args):
         print(warning("No tests to run!"))
     output_file = f"--junitxml={args.output}"
     group = f"--group={args.group}"
-    cmd = f'{" ".join(tests)} -s -p plaster.conf.params_conf --yaml_file={args.yaml_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
+    cmd = f'{" ".join(tests)} -s -p protoplaster.conf.params_conf --yaml_file={args.yaml_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
 
 def list_groups(yaml_file):
