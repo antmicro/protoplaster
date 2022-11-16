@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import yaml
 import argparse
+import sys
+import os
 import pytest
 from colorama import init, Fore, Style
 init()
 
-from i2c.test import __file__ as i2c_test
-from gpio.test import __file__ as gpio_test
-from camera.test import __file__ as camera_test
+from plaster.i2c.test import __file__ as i2c_test
+from plaster.gpio.test import __file__ as gpio_test
+from plaster.camera.test import __file__ as camera_test
 
 tests_paths = {
         "i2c": i2c_test,
@@ -22,11 +24,13 @@ def warning(text):
 def error(text):
     return Fore.RED + f"[ERROR] {text}" + Style.RESET_ALL
 
+def info(text):
+    return f"[INFO] {text}"
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("yaml_file", metavar="FILE", type=str, help="Path to the test yaml description")
-    parser.add_argument("-m", "--module", type=str, action="append", help="Load external modules for tests")
     parser.add_argument("-g", "--group", type=str, help="Group to execute")
     parser.add_argument("--list-groups", action="store_true", help="List possible groups to execute")
     parser.add_argument("-o", "--output", type=str, help="A junit-xml style report of the tests results")
@@ -36,6 +40,19 @@ def parse_yaml(yaml_file):
     with open(yaml_file) as file:
         content = yaml.safe_load(file)
     return content
+
+def get_list_of_tests(tests_dict):
+    return tests_dict if isinstance(tests_dict, list) else [tests_dict]
+
+def load_module(module_path, module_name):
+    if not os.path.isfile(f"{module_path}/test.py"):
+        print(warning(f'Additional module "{module_name}" could not be loaded!'))
+        return False
+    file_abs_path = os.path.abspath(module_path)
+    tests_paths[module_name] = f"{file_abs_path}/test.py"
+    sys.path.append(file_abs_path)
+    print(info(f'Additional module loaded "{module_name}" at path {file_abs_path}'))
+    return True
 
 def extract_tests(yaml_file, group):
     content = parse_yaml(yaml_file)
@@ -49,27 +66,24 @@ def extract_tests(yaml_file, group):
         exit(1)
 
     tests = []
-    for module_name in content.keys():
+    for module_name in content:
         if module_name in tests_paths:
-            tests += [tests_paths[module_name] for _ in content[module_name]]
+            content[module_name] = get_list_of_tests(content[module_name])
+        elif '__path__' in content[module_name] and load_module(content[module_name]['__path__'], module_name):
+            content[module_name] = get_list_of_tests(content[module_name]["tests"])
         else:
             print(warning(f'Unknown module found: "{module_name}" - Skipping!'))
+            continue
+        tests += [tests_paths[module_name] for _ in content[module_name]]
     return tests
 
-def load_modules(modules):
-    if modules is None:
-        return
-    for mod in modules:
-        print(mod)
-
 def run_tests(args):
-    load_modules(args.module)
     tests = extract_tests(args.yaml_file, args.group)
     if tests == []:
         print(warning("No tests to run!"))
     output_file = f"--junitxml={args.output}"
     group = f"--group={args.group}"
-    cmd = f'{" ".join(tests)} -s --yaml_file={args.yaml_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
+    cmd = f'{" ".join(tests)} -s -p plaster.conf.params_conf --yaml_file={args.yaml_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
 
 def list_groups(yaml_file):
