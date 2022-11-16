@@ -26,5 +26,11 @@ def yaml_file(request):
         content = content[group]
     elif group is None:
         content = {mod_key: content[group_key][mod_key] for group_key in content for mod_key in content[group_key]}
+    for c in content:
+        if '__path__' in content[c]:
+            content[c] = content[c]['tests']
+        if not isinstance(content[c], list):
+            content[c] = [content[c]]
+    content = {c: content[c] if isinstance(content[c], list) else [content[c]] for c in content}
     return {k: iter(content[k]) for k in content}
 
