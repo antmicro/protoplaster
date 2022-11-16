@@ -5,6 +5,7 @@ import sys
 import os
 import pytest
 from colorama import init, Fore, Style
+
 init()
 
 from protoplaster.i2c.test import __file__ as i2c_test
@@ -12,17 +13,19 @@ from protoplaster.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
 
 tests_paths = {
-        "i2c": i2c_test,
-        "gpio": gpio_test,
-        "camera": camera_test,
+    "i2c": i2c_test,
+    "gpio": gpio_test,
+    "camera": camera_test,
 }
 
 
 def warning(text):
     return Fore.YELLOW + f"[WARNING] {text}" + Style.RESET_ALL
 
+
 def error(text):
     return Fore.RED + f"[ERROR] {text}" + Style.RESET_ALL
+
 
 def info(text):
     return f"[INFO] {text}"
@@ -30,29 +33,45 @@ def info(text):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("yaml_file", metavar="FILE", type=str, help="Path to the test yaml description")
+    parser.add_argument("yaml_file",
+                        metavar="FILE",
+                        type=str,
+                        help="Path to the test yaml description")
     parser.add_argument("-g", "--group", type=str, help="Group to execute")
-    parser.add_argument("--list-groups", action="store_true", help="List possible groups to execute")
-    parser.add_argument("-o", "--output", type=str, help="A junit-xml style report of the tests results")
+    parser.add_argument("--list-groups",
+                        action="store_true",
+                        help="List possible groups to execute")
+    parser.add_argument("-o",
+                        "--output",
+                        type=str,
+                        help="A junit-xml style report of the tests results")
     return parser.parse_args()
+
 
 def parse_yaml(yaml_file):
     with open(yaml_file) as file:
         content = yaml.safe_load(file)
     return content
 
+
 def get_list_of_tests(tests_dict):
     return tests_dict if isinstance(tests_dict, list) else [tests_dict]
 
+
 def load_module(module_path, module_name):
     if not os.path.isfile(f"{module_path}/test.py"):
-        print(warning(f'Additional module "{module_name}" could not be loaded!'))
+        print(
+            warning(f'Additional module "{module_name}" could not be loaded!'))
         return False
     file_abs_path = os.path.abspath(module_path)
     tests_paths[module_name] = f"{file_abs_path}/test.py"
     sys.path.append(file_abs_path)
-    print(info(f'Additional module loaded "{module_name}" at path {file_abs_path}'))
+    print(
+        info(
+            f'Additional module loaded "{module_name}" at path {file_abs_path}'
+        ))
     return True
+
 
 def extract_tests(yaml_file, group):
     content = parse_yaml(yaml_file)
@@ -60,7 +79,10 @@ def extract_tests(yaml_file, group):
     if group is not None and group in content:
         content = content[group]
     elif group is None:
-        content = {mod_key: content[group_key][mod_key] for group_key in content for mod_key in content[group_key]}
+        content = {
+            mod_key: content[group_key][mod_key]
+            for group_key in content for mod_key in content[group_key]
+        }
     else:
         print(error(f'Group "{group}" not defined - Exiting!'))
         exit(1)
@@ -69,13 +91,17 @@ def extract_tests(yaml_file, group):
     for module_name in content:
         if module_name in tests_paths:
             content[module_name] = get_list_of_tests(content[module_name])
-        elif '__path__' in content[module_name] and load_module(content[module_name]['__path__'], module_name):
-            content[module_name] = get_list_of_tests(content[module_name]["tests"])
+        elif '__path__' in content[module_name] and load_module(
+                content[module_name]['__path__'], module_name):
+            content[module_name] = get_list_of_tests(
+                content[module_name]["tests"])
         else:
-            print(warning(f'Unknown module found: "{module_name}" - Skipping!'))
+            print(
+                warning(f'Unknown module found: "{module_name}" - Skipping!'))
             continue
         tests += [tests_paths[module_name] for _ in content[module_name]]
     return tests
+
 
 def run_tests(args):
     tests = extract_tests(args.yaml_file, args.group)
@@ -85,6 +111,7 @@ def run_tests(args):
     group = f"--group={args.group}"
     cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.yaml_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
+
 
 def list_groups(yaml_file):
     content = parse_yaml(yaml_file)
@@ -98,4 +125,3 @@ if __name__ == "__main__":
         list_groups(args.yaml_file)
         exit(0)
     run_tests(args)
-
