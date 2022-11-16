@@ -1,7 +1,9 @@
 from pyrav4l2 import Device, Stream
 import os
 
+
 class Camera:
+
     def __init__(self, path="/dev/video0"):
         self.path = path
         assert os.path.exists(self.path), f"Device {self.path} doesn't exist"
@@ -16,4 +18,3 @@ class Camera:
 
     def get_driver_name(self):
         return self.device.driver_name
-
