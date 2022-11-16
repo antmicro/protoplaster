@@ -1,6 +1,8 @@
 from smbus2 import SMBus
 
+
 class I2C:
+
     def __init__(self, bus):
         self.bus = SMBus(bus)
 
@@ -23,4 +25,3 @@ class I2C:
 
     def write_data(self, address, value, register=0, force=False):
         return self.bus.write_byte_data(address, register, value, force=force)
-
