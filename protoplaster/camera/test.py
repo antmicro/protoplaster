@@ -1,5 +1,5 @@
-from conf.module import ModuleName
-from camera.camera import Camera
+from protoplaster.conf.module import ModuleName
+from protoplaster.camera.camera import Camera
 
 
 @ModuleName("camera")

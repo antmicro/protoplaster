@@ -1,4 +1,4 @@
-# Plaster
+# Protoplaster
 
 Copyright (c) 2022 [Antmicro](https://www.antmicro.com)
 
@@ -15,8 +15,8 @@ Currently includes tests for:
 To use, clone the repository and install the requirements:
 
 ```bash
-git clone https://github.com/antmicro/plaster.git
-cd plaster/
+git clone https://github.com/antmicro/protoplaster.git
+cd protoplaster/
 pip install requirements.txt
 ```
 

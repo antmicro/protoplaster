@@ -1,5 +1,5 @@
-from conf.module import ModuleName
-from i2c.i2c import I2C
+from protoplaster.conf.module import ModuleName
+from protoplaster.i2c.i2c import I2C
 
 
 @ModuleName("i2c")
