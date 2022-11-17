@@ -1,0 +1,23 @@
+name: "General CI checks"
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  Test:
+    name: "Test if installation works"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install protoplaster with pip
+        run: |
+          pip install .
+      - name: See that it can be run
+        run: |
+          cd /tmp/
+          protoplaster --help
