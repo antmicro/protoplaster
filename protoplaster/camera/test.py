@@ -4,8 +4,12 @@ from protoplaster.camera.camera import Camera
 
 @ModuleName("camera")
 class TestCamera:
+    """Camera sensor tests:"""
 
     def test_frame(self):
+        """
+        capture and store frame
+        """
         device = Camera(self.device)
         frame = device.get_frame()
         assert len(frame) > 0, "The frame is invalid"
@@ -14,11 +18,17 @@ class TestCamera:
                 file.write(frame)
 
     def test_device_name(self):
+        """
+        verify the camera sensor name
+        """
         device = Camera(self.device)
         assert device.get_device_name(
         ) == self.camera_name, "The device name is not correct"
 
     def test_driver_name(self):
+        """
+        verify the camera sensor driver name
+        """
         device = Camera(self.device)
         assert device.get_driver_name(
         ) == self.driver_name, "The driver name is not correct"

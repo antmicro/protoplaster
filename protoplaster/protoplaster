@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import yaml
+import ast
 import argparse
 import sys
 import os
 import pytest
 from colorama import init, Fore, Style
+from pathlib import Path
 
 init()
 
@@ -108,6 +110,18 @@ def extract_tests(yaml_file, group):
         tests += [tests_paths[module_name] for _ in content[module_name]]
     return tests
 
+def generate_docs(args):
+    for test_path in args:
+        print(test_path)
+        py_file = Path(test_path)
+        raw_tree = py_file.read_text()
+        tree = ast.parse(raw_tree)
+        classes = [ c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
+        class_docs = [ast.get_docstring(c) for c in classes]
+        print(class_docs)
+        functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)]
+        function_docs = [ast.get_docstring(f) for f in functions]
+        print(function_docs)
 
 def run_tests(args):
     tests = extract_tests(args.test_file, args.group)
@@ -117,6 +131,7 @@ def run_tests(args):
     group = f"--group={args.group}"
     cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
+    generate_docs(tests)
 
 
 def list_groups(yaml_file):
