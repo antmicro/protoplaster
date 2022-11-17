@@ -16,5 +16,7 @@ setup(
         'pyyaml==5.3.1',
         'smbus2==0.3.0',
         'colorama==0.3.9',
+        'Jinja2==3.1.2',
+        'MarkupSafe==2.1.1',
         'pyrav4l2 @ git+https://github.com/antmicro/pyrav4l2.git@7d4dc36a8f#egg=pyrav4l2',
     ])
