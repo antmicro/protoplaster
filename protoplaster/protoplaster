@@ -7,6 +7,7 @@ import os
 import pytest
 from collections import OrderedDict
 from colorama import init, Fore, Style
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pathlib import Path
 
 init()
@@ -111,18 +112,31 @@ def extract_tests(yaml_file, group):
         tests += [tests_paths[module_name] for _ in content[module_name]]
     return tests
 
+
+def print_html_doc(group, classes, functions):
+
+    jinja2_env = Environment(
+        loader=FileSystemLoader("./protoplaster/"),
+        autoescape=select_autoescape()
+    )
+    template = jinja2_env.get_template("jinja2-doc.html")
+    output = template.render(classes_descr=classes, functions_descr=functions)
+    with open(group+"-docs.html", "w") as f:
+        f.write(output)
+
+
 def generate_docs(args):
     for test_path in args:
-        print(test_path)
         py_file = Path(test_path)
+        group_name = os.path.basename(os.path.normpath(py_file.parent))
         raw_tree = py_file.read_text()
         tree = ast.parse(raw_tree)
         classes = [ c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
         class_docs = [ast.get_docstring(c) for c in classes]
-        print(class_docs)
         functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)]
         function_docs = [ast.get_docstring(f) for f in functions]
-        print(function_docs)
+        print_html_doc(group_name, class_docs, function_docs)
+
 
 def run_tests(args):
     tests = extract_tests(args.test_file, args.group)

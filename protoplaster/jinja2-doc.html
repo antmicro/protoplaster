@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Protoplaster documentation</title>
+</head>
+
+<body>
+  {% for class in classes_descr %}
+  <h1>{{ class  }}</h1>
+  <ul>
+  {% for function in functions_descr %}
+    <li>
+      <em>{{ function }}</em>
+    </li>
+  {% endfor %}
+  </ul>
+  {% endfor %}
+</body>
+
+</html>
