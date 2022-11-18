@@ -5,6 +5,7 @@ import argparse
 import sys
 import os
 import pytest
+from collections import OrderedDict
 from colorama import init, Fore, Style
 from pathlib import Path
 
@@ -131,7 +132,7 @@ def run_tests(args):
     group = f"--group={args.group}"
     cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
-    generate_docs(tests)
+    generate_docs(OrderedDict.fromkeys(tests).keys())
 
 
 def list_groups(yaml_file):
