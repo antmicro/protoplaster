@@ -6,14 +6,15 @@
 </head>
 
 <body>
-  {% for group in tests_list %}
-  <h1>{{ group.test_class_name  }}</h1>
+  {% for test_doc in tests_doc_list %}
+  <h1>{{ test_doc.test_class_name  }}</h1>
   <ul>
-  {% for function in group.test_method %}
-    <li>
-      <em>{{ function }}</em>
-    </li>
-  {% endfor %}
+    {% for macro in test_doc.test_macros %}
+      {% import macro.test_macro_file as jinja2_macros %}
+      {% for devices_spec in test_doc.test_details %}
+        {{ jinja2_macros[macro.test_macro_name](devices_spec) }}
+      {% endfor %}
+    {% endfor %}
   </ul>
   {% endfor %}
 </body>

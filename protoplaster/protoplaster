@@ -12,7 +12,7 @@ from pathlib import Path
 
 init()
 
-from protoplaster.docs.docs import TestDocs
+from protoplaster.docs.docs import TestDocs, TestMacro
 from protoplaster.i2c.test import __file__ as i2c_test
 from protoplaster.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
@@ -117,31 +117,46 @@ def extract_tests(yaml_file, group):
     return tests
 
 
-def print_html_doc(tests_list):
+def print_html_doc(tests_doc_list):
 
     jinja2_env = Environment(
         loader=FileSystemLoader("./protoplaster/docs"),
         autoescape=select_autoescape()
     )
     template = jinja2_env.get_template("jinja2-doc.html")
-    output = template.render(tests_list=tests_list)
+    output = template.render(tests_doc_list=tests_doc_list)
     with open("docs.html", "w") as f:
         f.write(output)
 
 
-def generate_docs(args):
-    tests_list = []
-    for test_path in args:
+def generate_docs(tests_full_path, yaml_content):
+    tests_doc_list = []
+    for test_path in tests_full_path:
+        module_details = []
+        method_macros = []
+
         py_file = Path(test_path)
         raw_tree = py_file.read_text()
         tree = ast.parse(raw_tree)
         classes = [ c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
         class_docs = [ast.get_docstring(c) for c in classes]
+        class_doc_str = ''.join(class_docs)
         functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)]
-        function_docs = [ast.get_docstring(f) for f in functions]
-        test_doc = TestDocs(''.join(class_docs), function_docs)
-        tests_list.append(test_doc)
-    print_html_doc(tests_list)
+        for f in functions:
+            function_doc = ast.get_docstring(f)
+            macro_file = f.name + ".html"
+            method_macros.append(TestMacro(macro_file, f.name))
+            with open("./protoplaster/docs/" + macro_file, "w") as f:
+                f.write(function_doc)
+
+        for test_group in yaml_content:
+            for test_module in yaml_content[test_group]:
+                if test_module in class_doc_str.lower():
+                    module_details.append(yaml_content[test_group][test_module])
+
+        test_doc = TestDocs(class_doc_str, module_details, method_macros)
+        tests_doc_list.append(test_doc)
+    print_html_doc(tests_doc_list)
 
 
 def run_tests(args):
@@ -153,7 +168,7 @@ def run_tests(args):
     cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
     if args.generate_docs:
-        generate_docs(OrderedDict.fromkeys(tests).keys())
+        generate_docs(OrderedDict.fromkeys(tests).keys(), parse_yaml(args.yaml_file))
 
 
 def list_groups(yaml_file):

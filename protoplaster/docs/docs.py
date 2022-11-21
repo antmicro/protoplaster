@@ -2,6 +2,12 @@ from dataclasses import dataclass
 from typing import List
 
 @dataclass
+class TestMacro:
+    test_macro_file: str
+    test_macro_name: str
+
+@dataclass
 class TestDocs:
     test_class_name: str
-    test_method: List[str]
+    test_details: List[str]
+    test_macros: List[TestMacro]
