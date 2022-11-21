@@ -12,6 +12,7 @@ from pathlib import Path
 
 init()
 
+from protoplaster.docs.docs import TestDocs
 from protoplaster.i2c.test import __file__ as i2c_test
 from protoplaster.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
@@ -113,29 +114,31 @@ def extract_tests(yaml_file, group):
     return tests
 
 
-def print_html_doc(group, classes, functions):
+def print_html_doc(tests_list):
 
     jinja2_env = Environment(
-        loader=FileSystemLoader("./protoplaster/"),
+        loader=FileSystemLoader("./protoplaster/docs"),
         autoescape=select_autoescape()
     )
     template = jinja2_env.get_template("jinja2-doc.html")
-    output = template.render(classes_descr=classes, functions_descr=functions)
-    with open(group+"-docs.html", "w") as f:
+    output = template.render(tests_list=tests_list)
+    with open("docs.html", "w") as f:
         f.write(output)
 
 
 def generate_docs(args):
+    tests_list = []
     for test_path in args:
         py_file = Path(test_path)
-        group_name = os.path.basename(os.path.normpath(py_file.parent))
         raw_tree = py_file.read_text()
         tree = ast.parse(raw_tree)
         classes = [ c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
         class_docs = [ast.get_docstring(c) for c in classes]
         functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)]
         function_docs = [ast.get_docstring(f) for f in functions]
-        print_html_doc(group_name, class_docs, function_docs)
+        test_doc = TestDocs(''.join(class_docs), function_docs)
+        tests_list.append(test_doc)
+    print_html_doc(tests_list)
 
 
 def run_tests(args):

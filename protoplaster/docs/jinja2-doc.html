@@ -6,10 +6,10 @@
 </head>
 
 <body>
-  {% for class in classes_descr %}
-  <h1>{{ class  }}</h1>
+  {% for group in tests_list %}
+  <h1>{{ group.test_class_name  }}</h1>
   <ul>
-  {% for function in functions_descr %}
+  {% for function in group.test_method %}
     <li>
       <em>{{ function }}</em>
     </li>
