@@ -53,6 +53,9 @@ def parse_args():
                         "--output",
                         type=str,
                         help="A junit-xml style report of the tests results")
+    parser.add_argument("--generate-docs",
+                        action="store_true",
+                        help="Generate documentation")
     return parser.parse_args()
 
 
@@ -149,7 +152,8 @@ def run_tests(args):
     group = f"--group={args.group}"
     cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
-    generate_docs(OrderedDict.fromkeys(tests).keys())
+    if args.generate_docs:
+        generate_docs(OrderedDict.fromkeys(tests).keys())
 
 
 def list_groups(yaml_file):
