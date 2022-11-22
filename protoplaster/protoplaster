@@ -15,6 +15,7 @@ from protoplaster.docs import __file__ as docs_path
 from protoplaster.i2c.test import __file__ as i2c_test
 from protoplaster.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
+from protoplaster.fpga.test import __file__ as fpga_test
 
 CONFIG_DIR = "/etc/protoplaster"
 
@@ -22,6 +23,7 @@ tests_paths = {
     "i2c": i2c_test,
     "gpio": gpio_test,
     "camera": camera_test,
+    "fpga": fpga_test,
 }
 
 init()
