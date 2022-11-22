@@ -18,16 +18,14 @@ pip install git+https://github.com/antmicro/protoplaster.git
 ## Usage
 
 ```
-usage: protoplaster [-h] [-g GROUP] [--list-groups] [-o OUTPUT] FILE
-
-positional arguments:
-  FILE                  	Path to the test yaml description
+usage: protoplaster [-h] [-t TEST_FILE] [-g GROUP] [--list-groups] [-o OUTPUT]
 
 options:
-  -h, --help            	show this help message and exit
-  -g GROUP, --group GROUP	Group to execute
-  --list-groups         	List possible groups to execute
-  -o OUTPUT, --output OUTPUT	A junit-xml style report of the tests results
+  -h, --help            		show this help message and exit
+  -t TEST_FILE, --test-file TEST_FILE	Path to the test yaml description
+  -g GROUP, --group GROUP		Group to execute
+  --list-groups         		List possible groups to execute
+  -o OUTPUT, --output OUTPUT		A junit-xml style report of the tests results
 ```
 
 Protoplaster expects a yaml file describing tests as an input. That yaml file should have a specified structure.
