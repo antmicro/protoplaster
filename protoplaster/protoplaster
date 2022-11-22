@@ -12,6 +12,8 @@ from protoplaster.i2c.test import __file__ as i2c_test
 from protoplaster.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
 
+CONFIG_DIR = "/etc/protoplaster"
+
 tests_paths = {
     "i2c": i2c_test,
     "gpio": gpio_test,
@@ -33,9 +35,10 @@ def info(text):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("yaml_file",
-                        metavar="FILE",
+    parser.add_argument("-t",
+                        "--test-file",
                         type=str,
+                        default=f"{CONFIG_DIR}/test.yaml",
                         help="Path to the test yaml description")
     parser.add_argument("-g", "--group", type=str, help="Group to execute")
     parser.add_argument("--list-groups",
@@ -91,6 +94,9 @@ def extract_tests(yaml_file, group):
     for module_name in content:
         if module_name in tests_paths:
             content[module_name] = get_list_of_tests(content[module_name])
+        elif os.path.exists(f"{CONFIG_DIR}/{module_name}") and load_module(
+                f"{CONFIG_DIR}/{module_name}", module_name):
+            content[module_name] = get_list_of_tests(content[module_name])
         elif '__path__' in content[module_name] and load_module(
                 content[module_name]['__path__'], module_name):
             content[module_name] = get_list_of_tests(
@@ -104,12 +110,12 @@ def extract_tests(yaml_file, group):
 
 
 def run_tests(args):
-    tests = extract_tests(args.yaml_file, args.group)
+    tests = extract_tests(args.test_file, args.group)
     if tests == []:
         print(warning("No tests to run!"))
     output_file = f"--junitxml={args.output}"
     group = f"--group={args.group}"
-    cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.yaml_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
+    cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
 
 
@@ -121,7 +127,13 @@ def list_groups(yaml_file):
 
 if __name__ == "__main__":
     args = parse_args()
+    if not os.path.exists(args.test_file):
+        print(
+            error(
+                f"Test file {args.test_file} does not exist or you don't have sufficient permitions"
+            ))
+        exit(1)
     if args.list_groups:
-        list_groups(args.yaml_file)
+        list_groups(args.test_file)
         exit(0)
     run_tests(args)
