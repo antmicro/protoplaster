@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-import yaml
 import ast
 import argparse
-import sys
 import os
+import sys
 import pytest
+import yaml
 from collections import OrderedDict
 from colorama import init, Fore, Style
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pathlib import Path
-
-init()
 
 from protoplaster.docs.docs import TestDocs, TestMacro
 from protoplaster.i2c.test import __file__ as i2c_test
@@ -25,6 +23,7 @@ tests_paths = {
     "camera": camera_test,
 }
 
+init()
 
 def warning(text):
     return Fore.YELLOW + f"[WARNING] {text}" + Style.RESET_ALL
@@ -125,8 +124,8 @@ def print_html_doc(tests_doc_list):
     )
     template = jinja2_env.get_template("jinja2-doc.html")
     output = template.render(tests_doc_list=tests_doc_list)
-    with open("docs.html", "w") as f:
-        f.write(output)
+    with open("docs.html", "w") as doc:
+        doc.write(output)
 
 
 def generate_docs(tests_full_path, yaml_content):
@@ -138,16 +137,16 @@ def generate_docs(tests_full_path, yaml_content):
         py_file = Path(test_path)
         raw_tree = py_file.read_text()
         tree = ast.parse(raw_tree)
-        classes = [ c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
+        classes = [c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
         class_docs = [ast.get_docstring(c) for c in classes]
         class_doc_str = ''.join(class_docs)
         functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)]
-        for f in functions:
-            function_doc = ast.get_docstring(f)
-            macro_file = f.name + ".html"
-            method_macros.append(TestMacro(macro_file, f.name))
-            with open("./protoplaster/docs/" + macro_file, "w") as f:
-                f.write(function_doc)
+        for func in functions:
+            function_doc = ast.get_docstring(func)
+            macro_file = func.name + ".html"
+            method_macros.append(TestMacro(macro_file, func.name))
+            with open("./protoplaster/docs/" + macro_file, "w") as macro:
+                macro.write(function_doc)
 
         for test_group in yaml_content:
             for test_module in yaml_content[test_group]:
