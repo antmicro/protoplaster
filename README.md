@@ -26,6 +26,7 @@ options:
   -g GROUP, --group GROUP		Group to execute
   --list-groups         		List possible groups to execute
   -o OUTPUT, --output OUTPUT		A junit-xml style report of the tests results
+  --generate-docs              Generate documentation
 ```
 
 Protoplaster expects a yaml file describing tests as an input. That yaml file should have a specified structure.
@@ -92,7 +93,7 @@ from protoplaster.conf.module import ModuleName
 @ModuleName("additional_camera")
 class TestAdditionalCamera:
     def test_exists(self):
-    	assert self.path == "/dev/video0"
+        assert self.path == "/dev/video0"
 ```
 
 And a yaml definition:
