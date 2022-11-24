@@ -8,13 +8,13 @@ class TestI2C:
 
     def test_addresses(self):
         """
-        {% macro test_addresses(i2c_devices) %}
-          {% for device in i2c_devices %}
-            {% for address in device['addresses'] %}
-            <li>
-             bus i2c{{ device['bus'] }}: detection test on address {{ address }}
-            </li>
-            {% endfor %}
+        {% macro test_addresses(device) %}
+          bus i2c{{ device['bus'] }}: detection test on address:
+          {% for address in device['addresses'] %}
+            {{ address }}
+            {% if not loop.last %}
+              ,
+            {% endif %}
           {% endfor %}
         {% endmacro %}
         """
