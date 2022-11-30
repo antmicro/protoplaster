@@ -35,7 +35,7 @@ class TestCamera:
     def test_driver_name(self):
         """
         {% macro test_driver_name(device) %}
-          {{ device['device'] }}: check it the camera sensor driver name is '{{ device['driver_name'] }}'
+          {{ device['device'] }}: check if the camera sensor driver name is '{{ device['driver_name'] }}'
         {% endmacro %}
         """
         device = Camera(self.device)
