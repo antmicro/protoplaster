@@ -95,7 +95,7 @@ def extract_tests(yaml_file, group):
         }
     else:
         print(error(f'Group "{group}" not defined - Exiting!'))
-        exit(1)
+        sys.exit(1)
 
     tests = []
     for module_name in content:
@@ -162,12 +162,13 @@ def run_tests(args):
     tests = extract_tests(args.test_file, args.group)
     if tests == []:
         print(warning("No tests to run!"))
+    if args.generate_docs:
+        generate_docs(OrderedDict.fromkeys(tests).keys(), parse_yaml(args.test_file))
+        sys.exit()
     output_file = f"--junitxml={args.output}"
     group = f"--group={args.group}"
     cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} {group if args.group is not None else ""} {output_file if args.output is not None else ""}'
     pytest.main(cmd.strip().split(" "))
-    if args.generate_docs:
-        generate_docs(OrderedDict.fromkeys(tests).keys(), parse_yaml(args.yaml_file))
 
 
 def list_groups(yaml_file):
@@ -186,5 +187,5 @@ if __name__ == "__main__":
         exit(1)
     if args.list_groups:
         list_groups(args.test_file)
-        exit(0)
+        sys.exit()
     run_tests(args)
