@@ -92,7 +92,14 @@ from protoplaster.conf.module import ModuleName
 
 @ModuleName("additional_camera")
 class TestAdditionalCamera:
+    """ Additional camera sensor tests:"""
+
     def test_exists(self):
+        {% macro test_exists(device) -%}
+          {% if device['path'] is defined -%}
+            {{ device['path'] }}: check if the path exists
+          {%- endif %}
+        {%- endmacro %}
         assert self.path == "/dev/video0"
 ```
 

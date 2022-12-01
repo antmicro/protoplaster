@@ -6,8 +6,10 @@ Provided tests
 {% import macro.test_macro_file as jinja2_macros -%}
 {% for devices_spec in test_doc.test_details -%}
 {% for device_spec in devices_spec %}
-  * {{ jinja2_macros[macro.test_macro_name](device_spec) }}
-{% endfor %}
+  {%- if jinja2_macros[macro.test_macro_name](device_spec) %}
+    * {{ jinja2_macros[macro.test_macro_name](device_spec) }}
+  {%- endif %}
+{%- endfor %}
 {%- endfor %}
 {%- endfor %}
 {% endfor %}

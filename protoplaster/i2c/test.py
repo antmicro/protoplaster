@@ -9,10 +9,12 @@ class TestI2C:
     def test_addresses(self):
         """
         {% macro test_addresses(device) -%}
-          bus i2c{{ device['bus'] }}: detection test on address:
-          {%- for address in device['addresses'] -%}
-            {{ " " }}{{ address -}}{%- if not loop.last -%},{%- endif -%}
-          {%- endfor %}
+          {%- if device['bus'] is defined -%}
+            bus i2c{{ device['bus'] }}: detection test on address:
+            {%- for address in device['addresses'] -%}
+              {{ " " }}{{ address -}}{%- if not loop.last -%},{%- endif -%}
+            {%- endfor %}
+          {%- endif %}
         {%- endmacro %}
         """
         i2c_bus = I2C(self.bus)

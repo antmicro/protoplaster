@@ -164,7 +164,10 @@ def generate_docs(tests_full_path, yaml_content):
 
         for test_group in yaml_content:
             for test_module in yaml_content[test_group]:
-                if test_module in class_doc_str.lower():
+                if "__path__" in yaml_content[test_group][test_module]:
+                    for extra_tests in yaml_content[test_group][test_module]:
+                        module_details.append(yaml_content[test_group][test_module][extra_tests])
+                else:
                     module_details.append(yaml_content[test_group][test_module])
 
         test_doc = TestDocs(class_doc_str, module_details, method_macros)
