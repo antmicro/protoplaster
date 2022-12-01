@@ -8,12 +8,12 @@ class TestCamera:
 
     def test_frame(self):
         """
-        {% macro test_frame(device) %}
+        {% macro test_frame(device) -%}
           {{ device['device'] }}: try to capture frame
-          {% if device['save_file'] is defined %}
+          {%- if device['save_file'] is defined -%}
             and store it to '{{ device['save_file'] }}' file
-          {% endif %}
-        {% endmacro %}
+          {%- endif %}
+        {%- endmacro %}
         """
         device = Camera(self.device)
         frame = device.get_frame()
@@ -24,9 +24,9 @@ class TestCamera:
 
     def test_device_name(self):
         """
-        {% macro test_device_name(device) %}
+        {% macro test_device_name(device) -%}
           {{ device['device'] }}: check if the camera sensor name is '{{ device['camera_name'] }}'
-        {% endmacro %}
+        {%- endmacro %}
         """
         device = Camera(self.device)
         assert device.get_device_name(
@@ -34,9 +34,9 @@ class TestCamera:
 
     def test_driver_name(self):
         """
-        {% macro test_driver_name(device) %}
+        {% macro test_driver_name(device) -%}
           {{ device['device'] }}: check if the camera sensor driver name is '{{ device['driver_name'] }}'
-        {% endmacro %}
+        {%- endmacro %}
         """
         device = Camera(self.device)
         assert device.get_driver_name(

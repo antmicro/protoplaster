@@ -8,9 +8,9 @@ class TestGPIO:
 
     def test_read_write(self):
         """
-        {% macro test_read_write(device) %}
+        {% macro test_read_write(device) -%}
           GPIO{{ device['number'] }}: write the value '{{ device['value'] }}' and read to confirm
-        {% endmacro %}
+        {%- endmacro %}
         """
         with GPIO(self.number, Direction.OUT) as gpio:
             gpio.write_value(self.value)

@@ -122,9 +122,9 @@ def print_html_doc(tests_doc_list):
         loader=FileSystemLoader("./protoplaster/docs"),
         autoescape=select_autoescape()
     )
-    template = jinja2_env.get_template("jinja2-doc.html")
+    template = jinja2_env.get_template("jinja2-doc.rst")
     output = template.render(tests_doc_list=tests_doc_list)
-    with open("docs.html", "w") as doc:
+    with open("doc-src.rst", "w") as doc:
         doc.write(output)
 
 
@@ -143,7 +143,7 @@ def generate_docs(tests_full_path, yaml_content):
         functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)]
         for func in functions:
             function_doc = ast.get_docstring(func)
-            macro_file = func.name + ".html"
+            macro_file = func.name + ".rst"
             method_macros.append(TestMacro(macro_file, func.name))
             with open("./protoplaster/docs/" + macro_file, "w") as macro:
                 macro.write(function_doc)
