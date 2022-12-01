@@ -138,11 +138,25 @@ def generate_docs(tests_full_path, yaml_content):
         raw_tree = py_file.read_text()
         tree = ast.parse(raw_tree)
         classes = [c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
-        class_docs = [ast.get_docstring(c) for c in classes]
+        for tests_class in classes:
+            class_docs = ast.get_docstring(tests_class)
+            if class_docs is None:
+                print(error(f'Docstring for the "{tests_class.name}" class ' +
+                            'is not defined - Exiting!'))
+                sys.exit(2)
         class_doc_str = ''.join(class_docs)
         functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)]
         for func in functions:
             function_doc = ast.get_docstring(func)
+            if function_doc is None:
+                print(error(f'Docstring for the "{func.name}" function ' +
+                            'is not defined - Exiting!'))
+                sys.exit(3)
+            elif func.name not in function_doc:
+                print(error(f'Macro in the docstring for the "{func.name}" ' +
+                            'function should have the same name as function ' +
+                            '- Exiting!'))
+                sys.exit(4)
             macro_file = func.name + ".rst"
             method_macros.append(TestMacro(macro_file, func.name))
             with open("./protoplaster/docs/" + macro_file, "w") as macro:
