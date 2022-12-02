@@ -124,7 +124,7 @@ def print_html_doc(tests_doc_list):
     )
     template = jinja2_env.get_template("jinja2-doc.rst")
     output = template.render(tests_doc_list=tests_doc_list)
-    with open("doc-src.rst", "w") as doc:
+    with open("protoplaster.rst", "w") as doc:
         doc.write(output)
 
 
