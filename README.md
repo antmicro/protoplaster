@@ -9,6 +9,7 @@ Currently includes tests for:
 * I2C
 * GPIO
 * Camera
+* FPGA
 
 ## Installation
 ```bash
@@ -91,6 +92,12 @@ Required parameters:
 Optional parameters:
 
 * `save_file` - a path which the tested frame is saved to (the frame is saved only if this parameter is present)
+
+### FPGA
+Required parameters:
+
+* `sysfs_interface` - path to a sysfs interface for flashing the bitstream to the FPGA
+* `bitstream_path` - path to a test bitstream that is going to be flashed
 
 ## Writing additional modules
 Apart from base modules available in Protoplaster, you can provide your own extended modules. The module should contain a `test.py` file in the root path. That file should contain a test class that is decorated with `ModuleName("")` from `protoplaster.conf.module` package. That decorator tells Protoplaster what the name of the module is. With that information Protoplaster can then correctly initialize the test parameters.
