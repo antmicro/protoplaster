@@ -18,15 +18,15 @@ pip install git+https://github.com/antmicro/protoplaster.git
 ## Usage
 
 ```
-usage: protoplaster [-h] [-t TEST_FILE] [-g GROUP] [--list-groups] [-o OUTPUT]
+usage: protoplaster [-h] [-t TEST_FILE] [-g GROUP] [--list-groups] [-o OUTPUT] [--generate-docs]
 
-options:
-  -h, --help            		show this help message and exit
-  -t TEST_FILE, --test-file TEST_FILE	Path to the test yaml description
-  -g GROUP, --group GROUP		Group to execute
-  --list-groups         		List possible groups to execute
-  -o OUTPUT, --output OUTPUT		A junit-xml style report of the tests results
-  --generate-docs              Generate documentation
+optional arguments:
+  -h, --help                            show this help message and exit
+  -t TEST_FILE, --test-file TEST_FILE   Path to the test yaml description
+  -g GROUP, --group GROUP               Group to execute
+  --list-groups                         List possible groups to execute
+  -o OUTPUT, --output OUTPUT            A junit-xml style report of the tests results
+  --generate-docs                       Generate documentation
 ```
 
 Protoplaster expects a yaml file describing tests as an input. That yaml file should have a specified structure.
@@ -95,11 +95,13 @@ class TestAdditionalCamera:
     """ Additional camera sensor tests:"""
 
     def test_exists(self):
+        """
         {% macro test_exists(device) -%}
           {% if device['path'] is defined -%}
             {{ device['path'] }}: check if the path exists
           {%- endif %}
         {%- endmacro %}
+        """
         assert self.path == "/dev/video0"
 ```
 
