@@ -11,6 +11,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pathlib import Path
 
 from protoplaster.docs.docs import TestDocs, TestMacro
+from protoplaster.docs import __file__ as docs_path
 from protoplaster.i2c.test import __file__ as i2c_test
 from protoplaster.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
@@ -116,10 +117,10 @@ def extract_tests(yaml_file, group):
     return tests
 
 
-def print_html_doc(tests_doc_list):
+def print_html_doc(tests_doc_list, docs_dir_path):
 
     jinja2_env = Environment(
-        loader=FileSystemLoader("./protoplaster/docs"),
+        loader=FileSystemLoader(docs_dir_path),
         autoescape=select_autoescape()
     )
     template = jinja2_env.get_template("jinja2-doc.rst")
@@ -130,6 +131,7 @@ def print_html_doc(tests_doc_list):
 
 def generate_docs(tests_full_path, yaml_content):
     tests_doc_list = []
+    docs_dir_path = os.path.dirname(docs_path)
     for test_path in tests_full_path:
         module_details = []
         method_macros = []
@@ -159,7 +161,7 @@ def generate_docs(tests_full_path, yaml_content):
                 sys.exit(4)
             macro_file = func.name + ".rst"
             method_macros.append(TestMacro(macro_file, func.name))
-            with open("./protoplaster/docs/" + macro_file, "w") as macro:
+            with open(f"{docs_dir_path}/{macro_file}", "w") as macro:
                 macro.write(function_doc)
 
         for test_group in yaml_content:
@@ -172,7 +174,7 @@ def generate_docs(tests_full_path, yaml_content):
 
         test_doc = TestDocs(class_doc_str, module_details, method_macros)
         tests_doc_list.append(test_doc)
-    print_html_doc(tests_doc_list)
+    print_html_doc(tests_doc_list, docs_dir_path)
 
 
 def run_tests(args):
