@@ -147,7 +147,7 @@ def generate_docs(tests_full_path, yaml_content):
                             'is not defined - Exiting!'))
                 sys.exit(2)
         class_doc_str = ''.join(class_docs)
-        functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)]
+        functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef) and f.name.startswith("test")]
         for func in functions:
             function_doc = ast.get_docstring(func)
             if function_doc is None:
