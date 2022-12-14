@@ -9,7 +9,6 @@ def read_req(filename):
 
 setup(
     name="protoplaster",
-    packages=find_packages(),
     scripts=['protoplaster/protoplaster'],
     version="1.0",
     description=
@@ -17,6 +16,8 @@ setup(
     author="Antmicro Ltd",
     license=
     'Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
+    packages=find_packages(),
     include_package_data=True,
+    package_data={'': ['jinja2-doc.rst']},
     install_requires=read_req('requirements.txt').splitlines(),
 )
