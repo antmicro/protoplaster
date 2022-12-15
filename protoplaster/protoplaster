@@ -132,10 +132,12 @@ def print_html_doc(tests_doc_list, docs_dir_path):
 def generate_docs(tests_full_path, yaml_content):
     tests_doc_list = []
     docs_dir_path = os.path.dirname(docs_path)
+
     for test_path in tests_full_path:
         module_details = []
         method_macros = []
 
+        # collect docstrings from tests
         py_file = Path(test_path)
         raw_tree = py_file.read_text()
         tree = ast.parse(raw_tree)
@@ -164,13 +166,16 @@ def generate_docs(tests_full_path, yaml_content):
             with open(f"{docs_dir_path}/{macro_file}", "w") as macro:
                 macro.write(function_doc)
 
+        # collect data from yaml file
         for test_group in yaml_content:
             for test_module in yaml_content[test_group]:
-                if "__path__" in yaml_content[test_group][test_module]:
-                    for extra_tests in yaml_content[test_group][test_module]:
-                        module_details.append(yaml_content[test_group][test_module][extra_tests])
-                else:
-                    module_details.append(yaml_content[test_group][test_module])
+                module = test_path.split("/")
+                if module[-2] == test_module:
+                    if "__path__" in yaml_content[test_group][test_module]:
+                        for extra_tests in yaml_content[test_group][test_module]:
+                            module_details.append(yaml_content[test_group][test_module][extra_tests])
+                    else:
+                        module_details.append(yaml_content[test_group][test_module])
 
         test_doc = TestDocs(class_doc_str, module_details, method_macros)
         tests_doc_list.append(test_doc)
