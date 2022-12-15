@@ -33,12 +33,16 @@ Protoplaster expects a yaml file describing tests as an input. That yaml file sh
 
 ```yaml
 ---
-base:                   # A group specifier
-  i2c:                  # A module specifier
-  - bus: 1              # There can be specified multiple instances of tests in one module
-    addresses: [ 0x3c ] # Every test instance should contain needed parameters to initialize the test
+base:                # A group specifier
+  i2c:               # A module specifier
+  - bus: 1           # An interface specifier
+    devices:         # Multiple instances of devices can be defined in one module
+    - name: "Sensor name"
+      address: 0x3c  # The given device parameters determine which tests will be run for the module
   - bus: 2
-    addresses: [ 0x50, 0x30 ]
+    devices:
+    - name: "I2C-bus multiplexer"
+      address: 0x70
   camera:
   - device: "/dev/video0"
     camera_name: "Camera name"
@@ -92,7 +96,7 @@ from protoplaster.conf.module import ModuleName
 
 @ModuleName("additional_camera")
 class TestAdditionalCamera:
-    """ Additional camera sensor tests:"""
+    """Additional camera sensor tests:"""
 
     def test_exists(self):
         """
