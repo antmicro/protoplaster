@@ -4,16 +4,19 @@ from protoplaster.camera.camera import Camera
 
 @ModuleName("camera")
 class TestCamera:
-    """Camera sensor tests:"""
+    """
+    Camera sensor tests:
+    --------------------
+
+    This module provides tests dedicated to V4L devices on specific video node:
+    """
 
     def test_frame(self):
         """
         {% macro test_frame(device) -%}
-          {%- if device['device'] is defined -%}
-            {{ device['device'] }}: try to capture frame
-            {%- if device['save_file'] is defined -%}
-              and store it to '{{ device['save_file'] }}' file
-            {%- endif %}
+          try to capture frame
+          {%- if device['save_file'] is defined -%}
+            and store it to '{{ device['save_file'] }}' file
           {%- endif %}
         {%- endmacro %}
         """
@@ -27,9 +30,7 @@ class TestCamera:
     def test_device_name(self):
         """
         {% macro test_device_name(device) -%}
-          {%- if device['device'] is defined -%}
-            {{ device['device'] }}: check if the camera sensor name is '{{ device['camera_name'] }}'
-          {%- endif %}
+          check if the camera sensor name is '{{ device['camera_name'] }}'
         {%- endmacro %}
         """
         device = Camera(self.device)
@@ -39,9 +40,7 @@ class TestCamera:
     def test_driver_name(self):
         """
         {% macro test_driver_name(device) -%}
-          {%- if device['device'] is defined -%}
-            {{ device['device'] }}: check if the camera sensor driver name is '{{ device['driver_name'] }}'
-          {%- endif %}
+          check if the camera sensor driver name is '{{ device['driver_name'] }}'
         {%- endmacro %}
         """
         device = Camera(self.device)

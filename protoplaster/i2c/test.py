@@ -4,17 +4,20 @@ from protoplaster.i2c.i2c import I2C
 
 @ModuleName("i2c")
 class TestI2C:
-    """ I2C tests:"""
+    """
+    I2C devices tests
+    -----------------
+
+    This module provides tests dedicated to i2c devices on specific buses:
+    """
 
     def test_addresses(self):
         """
         {% macro test_addresses(device) -%}
-          {%- if device['bus'] is defined -%}
-            bus i2c{{ device['bus'] }}: detection test for
-            {%- for dev in device['devices'] -%}
-              {{ " " }}{{ dev['name'] }} on address: {{ dev['address'] -}}{%- if not loop.last -%},{%- endif -%}
-            {%- endfor %}
-          {%- endif %}
+        {%- for dev in device['devices'] -%}
+          {%- set addr = dev['address'] -%}
+          detection test for {{ dev['name'] }} on address: 0x{{ "%0x" | format(addr|int) }}
+        {%- endfor %}
         {%- endmacro %}
         """
         i2c_bus = I2C(self.bus)
