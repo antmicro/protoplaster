@@ -23,6 +23,6 @@ class TestI2C:
         {%- endmacro %}
         """
         i2c_bus = I2C(self.bus)
-        detected_addresses = i2c_bus.i2cdetect(force=True)
         for device in self.devices:
-            assert device['address'] in detected_addresses
+            assert (i2c_bus.check_address(device['address'], True),
+                    f"No device found at address: {device['address']}")
