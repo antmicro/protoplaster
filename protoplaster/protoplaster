@@ -121,7 +121,8 @@ def print_html_doc(tests_doc_list, docs_dir_path):
 
     jinja2_env = Environment(
         loader=FileSystemLoader(docs_dir_path),
-        autoescape=select_autoescape()
+        autoescape=select_autoescape(),
+        extensions=["jinja2.ext.do",],
     )
     template = jinja2_env.get_template("jinja2-doc.rst")
     output = template.render(tests_doc_list=tests_doc_list)
@@ -134,6 +135,7 @@ def generate_docs(tests_full_path, yaml_content):
     docs_dir_path = os.path.dirname(docs_path)
 
     for test_path in tests_full_path:
+        class_macros = []
         module_details = []
         method_macros = []
 
@@ -143,24 +145,33 @@ def generate_docs(tests_full_path, yaml_content):
         tree = ast.parse(raw_tree)
         classes = [c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
         for tests_class in classes:
-            class_docs = ast.get_docstring(tests_class)
-            if class_docs is None:
+            class_doc = ast.get_docstring(tests_class)
+            if class_doc is None:
                 print(error(f'Docstring for the "{tests_class.name}" class ' +
                             'is not defined - Exiting!'))
                 sys.exit(2)
-        class_doc_str = ''.join(class_docs)
+            elif tests_class.name not in class_doc:
+                print(error(f'Macro in the docstring for the "{tests_class.name}" ' +
+                            'function should have the same name as class ' +
+                            '- Exiting!'))
+                sys.exit(3)
+            macro_file = tests_class.name + ".rst"
+            class_macros.append(TestMacro(macro_file, tests_class.name))
+            with open(f"{docs_dir_path}/{macro_file}", "w") as macro:
+                macro.write(class_doc)
+
         functions = [f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef) and f.name.startswith("test")]
         for func in functions:
             function_doc = ast.get_docstring(func)
             if function_doc is None:
                 print(error(f'Docstring for the "{func.name}" function ' +
                             'is not defined - Exiting!'))
-                sys.exit(3)
+                sys.exit(4)
             elif func.name not in function_doc:
                 print(error(f'Macro in the docstring for the "{func.name}" ' +
                             'function should have the same name as function ' +
                             '- Exiting!'))
-                sys.exit(4)
+                sys.exit(5)
             macro_file = func.name + ".rst"
             method_macros.append(TestMacro(macro_file, func.name))
             with open(f"{docs_dir_path}/{macro_file}", "w") as macro:
@@ -177,7 +188,7 @@ def generate_docs(tests_full_path, yaml_content):
                     else:
                         module_details.append(yaml_content[test_group][test_module])
 
-        test_doc = TestDocs(class_doc_str, module_details, method_macros)
+        test_doc = TestDocs(class_macros, module_details, method_macros)
         tests_doc_list.append(test_doc)
     print_html_doc(tests_doc_list, docs_dir_path)
 

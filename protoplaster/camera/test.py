@@ -5,10 +5,12 @@ from protoplaster.camera.camera import Camera
 @ModuleName("camera")
 class TestCamera:
     """
-    Camera sensor tests:
-    --------------------
-
+    {% macro TestCamera(prefix) -%}
+    Camera sensor tests
+    -------------------
+    {% do prefix.append('') %}
     This module provides tests dedicated to V4L devices on specific video node:
+    {%- endmacro %}
     """
 
     def test_frame(self):

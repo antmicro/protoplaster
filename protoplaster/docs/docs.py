@@ -8,6 +8,6 @@ class TestMacro:
 
 @dataclass
 class TestDocs:
-    test_class_name: str
+    class_macros: List[TestMacro]
     test_details: List[str]
     test_macros: List[TestMacro]

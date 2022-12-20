@@ -5,10 +5,12 @@ from protoplaster.i2c.i2c import I2C
 @ModuleName("i2c")
 class TestI2C:
     """
+    {% macro TestI2C(prefix) -%}
     I2C devices tests
     -----------------
-
+    {% do prefix.append('/dev/i2c-') %}
     This module provides tests dedicated to i2c devices on specific buses:
+    {%- endmacro %}
     """
 
     def test_addresses(self):

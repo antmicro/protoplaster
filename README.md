@@ -96,7 +96,14 @@ from protoplaster.conf.module import ModuleName
 
 @ModuleName("additional_camera")
 class TestAdditionalCamera:
-    """Additional camera sensor tests:"""
+    """
+    {% macro TestAdditionalCamera(prefix) -%}
+    Additional camera tests
+    -----------------------
+    {% do prefix.append('') %}
+    This module provides tests dedicated to camera sensors on specific video node:
+    {%- endmacro %}
+    """
 
     def test_exists(self):
         """
