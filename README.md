@@ -67,7 +67,8 @@ Each base module has some parameters that are needed for test initialization. Th
 Required parameters:
 
 * `bus` - i2c bus to check
-* `addresses` - addresses of that bus that should be detected
+* `name` - name of device to be detected
+* `address` - address of the device to be detected on the indicated bus
 
 ### GPIO
 Required parameters:
