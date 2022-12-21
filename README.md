@@ -82,6 +82,10 @@ Required parameters:
 * `number` - number of the gpio pin
 * `value` - the value written to that pin
 
+Optional parameters:
+
+* `gpio_name` - name of the sysfs gpio interface after exporting
+
 ### Cameras
 Required parameters:
 
