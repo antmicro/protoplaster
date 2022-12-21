@@ -56,6 +56,11 @@ def parse_args():
     parser.add_argument("--generate-docs",
                         action="store_true",
                         help="Generate documentation")
+    parser.add_argument("-c",
+                        "--custom-tests",
+                        type=str,
+                        default=f"{CONFIG_DIR}/tests/*/",
+                        help="Path to the custom tests sources")
     return parser.parse_args()
 
 
@@ -84,7 +89,7 @@ def load_module(module_path, module_name):
     return True
 
 
-def extract_tests(yaml_file, group):
+def extract_tests(yaml_file, group, custom_path):
     content = parse_yaml(yaml_file)
 
     if group is not None and group in content:
@@ -105,10 +110,9 @@ def extract_tests(yaml_file, group):
         elif os.path.exists(f"{CONFIG_DIR}/{module_name}") and load_module(
                 f"{CONFIG_DIR}/{module_name}", module_name):
             content[module_name] = get_list_of_tests(content[module_name])
-        elif '__path__' in content[module_name] and load_module(
-                content[module_name]['__path__'], module_name):
-            content[module_name] = get_list_of_tests(
-                content[module_name]["tests"])
+        elif os.path.exists(f"{custom_path}") and load_module(
+                f"{custom_path}", module_name):
+            content[module_name] = get_list_of_tests(content[module_name])
         else:
             print(
                 warning(f'Unknown module found: "{module_name}" - Skipping!'))
@@ -182,11 +186,7 @@ def generate_docs(tests_full_path, yaml_content):
             for test_module in yaml_content[test_group]:
                 module = test_path.split("/")
                 if module[-2] == test_module:
-                    if "__path__" in yaml_content[test_group][test_module]:
-                        for extra_tests in yaml_content[test_group][test_module]:
-                            module_details.append(yaml_content[test_group][test_module][extra_tests])
-                    else:
-                        module_details.append(yaml_content[test_group][test_module])
+                    module_details.append(yaml_content[test_group][test_module])
 
         test_doc = TestDocs(class_macros, module_details, method_macros)
         tests_doc_list.append(test_doc)
@@ -194,7 +194,7 @@ def generate_docs(tests_full_path, yaml_content):
 
 
 def run_tests(args):
-    tests = extract_tests(args.test_file, args.group)
+    tests = extract_tests(args.test_file, args.group, args.custom_tests)
     if tests == []:
         print(warning("No tests to run!"))
     if args.generate_docs:
