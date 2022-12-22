@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from typing import List
 
+
 @dataclass
 class TestMacro:
     test_macro_file: str
     test_macro_name: str
+
 
 @dataclass
 class TestDocs:
