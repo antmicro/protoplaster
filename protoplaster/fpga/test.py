@@ -1,4 +1,5 @@
 from protoplaster.conf.module import ModuleName
+from protoplaster.tools.tools import assert_user_input
 import os
 
 
@@ -31,7 +32,14 @@ class TestFPGA:
         {%- endmacro %}
         """
         assert os.path.exists(f"/lib/firmware/{self.bitstream_path}"), "Bitstream file does not exist"
-        with open(self.sysfs_interface, 'w') as file:
-            file.write(self.bitstream_path)
-        anwser = input("Did the bitstream work? [y/n] ")
-        assert anwser.lower() == 'y', "The bitstream failed"
+        assert self.__flash_bitstream(), "The bitstream failed to flash"
+        assert_user_input("Did the bitstream work?", "The bitstream has failed")
+
+    def __flash_bitstream(self):
+        fpga_flashed_succesfully = True
+        try:
+            with open(self.sysfs_interface, 'w') as file:
+                file.write(self.bitstream_path)
+        except OSError:
+            fpga_flashed_succesfully = False
+        return fpga_flashed_succesfully
