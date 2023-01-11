@@ -20,6 +20,7 @@ class TestGPIO:
         {%- endmacro %}
         """
         self.gpio_name = self.gpio_name if hasattr(self, "gpio_name") else None
-        with GPIO(self.number, Direction.OUT, gpio_name=self.gpio_name) as gpio:
+        with GPIO(self.number, Direction.OUT,
+                  gpio_name=self.gpio_name) as gpio:
             gpio.write_value(self.value)
             assert gpio.read_value() == self.value
