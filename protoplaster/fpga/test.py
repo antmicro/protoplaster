@@ -31,9 +31,11 @@ class TestFPGA:
           {%- endif %}
         {%- endmacro %}
         """
-        assert os.path.exists(f"/lib/firmware/{self.bitstream_path}"), "Bitstream file does not exist"
+        assert os.path.exists(f"/lib/firmware/{self.bitstream_path}"
+                              ), "Bitstream file does not exist"
         assert self.__flash_bitstream(), "The bitstream failed to flash"
-        assert_user_input("Did the bitstream work?", "The bitstream has failed")
+        assert_user_input("Did the bitstream work?",
+                          "The bitstream has failed")
 
     def __flash_bitstream(self):
         fpga_flashed_succesfully = True
