@@ -21,3 +21,25 @@ jobs:
         run: |
           cd /tmp/
           protoplaster --help
+  test-in-renode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: get packages
+        if: ${{ env.ACT }}
+        run: |
+         sudo apt update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
+         python3-pip telnet iptables iproute2 bc cpio rsync
+
+      - name: Run scripts in Renode
+        uses: antmicro-labs/renode-linux-runner-action@add-custom-git-pip-packages
+        with:
+          shared-dir: ./
+          renode-run: |
+            ./protoplaster/protoplaster -t tests/test1.yml
+          devices: |
+            vivid
+            gpio 0 32
+            i2c 0x1C
+          python-packages: git+https://github.com/antmicro/protoplaster.git
