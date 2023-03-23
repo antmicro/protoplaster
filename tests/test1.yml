@@ -1,0 +1,13 @@
+base:
+  i2c:
+  - bus: 0
+    devices:
+    - name: "Sensor name"
+      address: 0x1C
+  camera:
+  - device: "/dev/video0"
+    camera_name: "vivid"
+    driver_name: "vivid"
+  gpio:
+  - number: 20
+    value: 1
