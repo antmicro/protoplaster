@@ -132,7 +132,9 @@ def print_html_doc(tests_doc_list, docs_dir_path):
         extensions=[
             "jinja2.ext.do",
         ],
+        lstrip_blocks=True,
     )
+
     template = jinja2_env.get_template("jinja2-doc.rst")
     output = template.render(tests_doc_list=tests_doc_list)
     with open("protoplaster.rst", "w") as doc:
