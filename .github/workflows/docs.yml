@@ -1,0 +1,67 @@
+name: Generate and publish docs
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 3'
+
+jobs:
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Get repository
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install protoplaster with pip
+        run: |
+          pip install .
+
+      - name: Generate docs from yml
+        run: |
+          protoplaster -t tests/basic.yml --generate-docs
+
+      - name: Prepare docs template
+        run: |
+          cp -r .github/docs-template docs/
+          cp README.md docs/source/readme.md
+          cp protoplaster.rst docs/source/
+
+      - name: Build html
+        uses: docker://btdi/sphinx:min
+        with:
+          args: ./.github/scripts/sphinx.sh
+
+      - name: Build pdf
+        uses: docker://btdi/latex
+        with:
+          args: ./.github/scripts/latex.sh
+
+      - name: 'Upload artifact: Sphinx HTML and PDF'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Documentation
+          path: docs/build/html
+
+      - name: Deploy
+        if: github.ref == 'refs/heads/main'
+        run: |
+          sudo chown -R $(whoami) docs
+          cd docs/build/html
+          touch .nojekyll
+          git init
+          cp ../../../.git/config ./.git/config
+          git add .
+          git config --local user.email "push@gha"
+          git config --local user.name "GHA"
+          git commit -am "update ${{ github.sha }}"
+          git push -u origin +HEAD:gh-pages
+          rm -rf .git
