@@ -24,10 +24,14 @@ jobs:
       - name: Install protoplaster with pip
         run: |
           pip install .
+      - name: Install tuttest
+        run: |
+          pip install git+https://github.com/antmicro/tuttest
 
       - name: Generate docs from yml
         run: |
-          protoplaster -t tests/basic.yml --generate-docs
+          tuttest README.md example > example.yml
+          protoplaster -t example.yml --generate-docs
 
       - name: Prepare docs template
         run: |
