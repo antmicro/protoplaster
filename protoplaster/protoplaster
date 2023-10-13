@@ -124,7 +124,7 @@ def extract_tests(yaml_file, group, custom_path):
     return tests
 
 
-def print_html_doc(tests_doc_list, docs_dir_path):
+def generate_rst_doc(tests_doc_list, docs_dir_path):
 
     jinja2_env = Environment(
         loader=FileSystemLoader(docs_dir_path),
@@ -206,7 +206,7 @@ def generate_docs(tests_full_path, yaml_content):
 
         test_doc = TestDocs(class_macros, module_details, method_macros)
         tests_doc_list.append(test_doc)
-    print_html_doc(tests_doc_list, docs_dir_path)
+    generate_rst_doc(tests_doc_list, docs_dir_path)
 
 
 def run_tests(args):
