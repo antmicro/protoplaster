@@ -1,5 +1,5 @@
-Hardware testing
-================
+Protoplaster tests
+==================
 
 To perform hardware/BSP tests and open-source `Protoplaster <https://github.com/antmicro/protoplaster>`_  framework has been used.
 
