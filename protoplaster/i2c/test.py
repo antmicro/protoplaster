@@ -18,7 +18,7 @@ class TestI2C:
         {% macro test_addresses(device) -%}
         {%- for dev in device['devices'] -%}
           {%- set addr = dev['address'] -%}
-          detection test for {{ dev['name'] }} on address: 0x{{ "%0x" | format(addr|int) }}
+          detection test for `{{ dev['name'] }}` on address: `0x{{ "%0x" | format(addr|int) }}`
         {%- endfor %}
         {%- endmacro %}
         """
