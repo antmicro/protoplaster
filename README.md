@@ -37,8 +37,8 @@ optional arguments:
 
 Protoplaster expects a yaml file describing tests as an input. That yaml file should have a specified structure.
 
+<!-- name="example" -->
 ```yaml
----
 base:                # A group specifier
   i2c:               # A module specifier
   - bus: 1           # An interface specifier
