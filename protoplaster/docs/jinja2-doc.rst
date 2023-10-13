@@ -1,7 +1,7 @@
 Hardware testing
 ================
 
-To perform hardware/BSP tests and open-source `Protoplaster `Github repository <https://github.com/antmicro/protoplaster>`_  framework has been used.
+To perform hardware/BSP tests and open-source `Protoplaster <https://github.com/antmicro/protoplaster>`_  framework has been used.
 
 Running Protoplaster runs the tests described in the following chapters:
 
