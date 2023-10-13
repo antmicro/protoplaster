@@ -20,14 +20,14 @@ Running Protoplaster runs the tests described in the following chapters:
     {% do val_list.append(dev_spec[1]) -%}
    {%- endfor -%}
    {% if prefix[0]|length %}
-    * {{ prefix[0] }}{{ val_list[0] }}:
+* {{ prefix[0] }}{{ val_list[0] }}:
    {% else %}
-    * {{ val_list[0] }}:
+* {{ val_list[0] }}:
    {% endif -%}
    {%- for macro in module_doc.test_macros -%}
     {% import macro.test_macro_file as jinja2_macros -%}
     {% if jinja2_macros[macro.test_macro_name](dev_type) %}
-     * {{ jinja2_macros[macro.test_macro_name](dev_type) }}
+  * {{ jinja2_macros[macro.test_macro_name](dev_type) }}
     {% endif -%}
    {% endfor %}
   {% endfor %}
