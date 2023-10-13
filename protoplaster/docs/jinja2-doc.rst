@@ -1,6 +1,9 @@
 Hardware testing
 ================
-In order to test Hardware/BSP an open-source framework ``Protoplaster`` has been created. There are required a yaml file as an input to decide which tests should be run and pass the data necessary to performence tests, for example address and bus number when you want to test the i2c interface. The example of such a file and detailed usage description is avaiable in the `Github repository <https://github.com/antmicro/protoplaster>`_.
+
+To perform hardware/BSP tests and open-source `Protoplaster `Github repository <https://github.com/antmicro/protoplaster>`_  framework has been used.
+
+Running Protoplaster runs the tests described in the following chapters:
 
 {% for module_doc in tests_doc_list -%}
  {% set prefix = [] -%}
