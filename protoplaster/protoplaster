@@ -2,6 +2,7 @@
 import ast
 import argparse
 import os
+import shutil
 import sys
 import pytest
 import yaml
@@ -25,6 +26,8 @@ tests_paths = {
     "camera": camera_test,
     "fpga": fpga_test,
 }
+
+build_path = "./build"
 
 init()
 
@@ -143,7 +146,9 @@ def generate_rst_doc(tests_doc_list, docs_dir_path):
 
 def generate_docs(tests_full_path, yaml_content):
     tests_doc_list = []
-    docs_dir_path = os.path.dirname(docs_path)
+
+    os.makedirs(build_path, exist_ok=True)
+    shutil.copy(f"{os.path.dirname(docs_path)}/jinja2-doc.rst", f"{build_path}/jinja2-doc.rst")
 
     for test_path in tests_full_path:
         class_macros = []
@@ -171,7 +176,7 @@ def generate_docs(tests_full_path, yaml_content):
                 sys.exit(3)
             macro_file = tests_class.name + ".rst"
             class_macros.append(TestMacro(macro_file, tests_class.name))
-            with open(f"{docs_dir_path}/{macro_file}", "w") as macro:
+            with open(f"{build_path}/{macro_file}", "w") as macro:
                 macro.write(class_doc)
 
         functions = [
@@ -193,7 +198,7 @@ def generate_docs(tests_full_path, yaml_content):
                 sys.exit(5)
             macro_file = func.name + ".rst"
             method_macros.append(TestMacro(macro_file, func.name))
-            with open(f"{docs_dir_path}/{macro_file}", "w") as macro:
+            with open(f"{build_path}/{macro_file}", "w") as macro:
                 macro.write(function_doc)
 
         # collect data from yaml file
@@ -206,7 +211,7 @@ def generate_docs(tests_full_path, yaml_content):
 
         test_doc = TestDocs(class_macros, module_details, method_macros)
         tests_doc_list.append(test_doc)
-    generate_rst_doc(tests_doc_list, docs_dir_path)
+    generate_rst_doc(tests_doc_list, build_path)
 
 
 def run_tests(args):
