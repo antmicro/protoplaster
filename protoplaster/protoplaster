@@ -2,13 +2,12 @@
 import ast
 import argparse
 import os
-import shutil
 import sys
 import pytest
 import yaml
 from collections import OrderedDict
 from colorama import init, Fore, Style
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, DictLoader, select_autoescape
 from pathlib import Path
 
 from protoplaster.docs.docs import TestDocs, TestMacro
@@ -26,8 +25,6 @@ tests_paths = {
     "camera": camera_test,
     "fpga": fpga_test,
 }
-
-build_path = "./build"
 
 init()
 
@@ -127,10 +124,10 @@ def extract_tests(yaml_file, group, custom_path):
     return tests
 
 
-def generate_rst_doc(tests_doc_list, docs_dir_path):
+def generate_rst_doc(tests_doc_list, docs_dict):
 
     jinja2_env = Environment(
-        loader=FileSystemLoader(docs_dir_path),
+        loader=DictLoader(docs_dict),
         autoescape=select_autoescape(),
         extensions=[
             "jinja2.ext.do",
@@ -146,9 +143,10 @@ def generate_rst_doc(tests_doc_list, docs_dir_path):
 
 def generate_docs(tests_full_path, yaml_content):
     tests_doc_list = []
+    docs_dict = {}
 
-    os.makedirs(build_path, exist_ok=True)
-    shutil.copy(f"{os.path.dirname(docs_path)}/jinja2-doc.rst", f"{build_path}/jinja2-doc.rst")
+    with open(f"{os.path.dirname(docs_path)}/jinja2-doc.rst", "r") as jinja2_doc:
+        docs_dict["jinja2-doc.rst"] = jinja2_doc.read()
 
     for test_path in tests_full_path:
         class_macros = []
@@ -175,9 +173,8 @@ def generate_docs(tests_full_path, yaml_content):
                         '- Exiting!'))
                 sys.exit(3)
             macro_file = tests_class.name + ".rst"
+            docs_dict[macro_file] = class_doc
             class_macros.append(TestMacro(macro_file, tests_class.name))
-            with open(f"{build_path}/{macro_file}", "w") as macro:
-                macro.write(class_doc)
 
         functions = [
             f for f in ast.walk(tree)
@@ -197,9 +194,8 @@ def generate_docs(tests_full_path, yaml_content):
                           '- Exiting!'))
                 sys.exit(5)
             macro_file = func.name + ".rst"
+            docs_dict[macro_file] = function_doc
             method_macros.append(TestMacro(macro_file, func.name))
-            with open(f"{build_path}/{macro_file}", "w") as macro:
-                macro.write(function_doc)
 
         # collect data from yaml file
         for test_group in yaml_content:
@@ -211,7 +207,7 @@ def generate_docs(tests_full_path, yaml_content):
 
         test_doc = TestDocs(class_macros, module_details, method_macros)
         tests_doc_list.append(test_doc)
-    generate_rst_doc(tests_doc_list, build_path)
+    generate_rst_doc(tests_doc_list, docs_dict)
 
 
 def run_tests(args):
