@@ -37,7 +37,7 @@ jobs:
         run: |
           cp -r .github/docs-template docs/
           cp README.md docs/source/readme.md
-          cp protoplaster.rst docs/source/
+          cp protoplaster.md docs/source/
 
       - name: Build html
         uses: docker://btdi/sphinx:min

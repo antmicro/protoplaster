@@ -18,6 +18,6 @@ setup(
     'Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
     packages=find_packages(),
     include_package_data=True,
-    package_data={'': ['template.rst']},
+    package_data={'': ['template.md']},
     install_requires=read_req('requirements.txt').splitlines(),
 )

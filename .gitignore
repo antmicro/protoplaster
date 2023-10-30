@@ -4,4 +4,4 @@ __pycache__/
 build
 venv
 protoplaster/docs/test_*.rst
-protoplaster.rst
+protoplaster.md

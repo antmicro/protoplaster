@@ -42,7 +42,7 @@ build-docs:
     - protoplaster -t example.yml --generate-docs
     - cp -r .github/docs-template docs/
     - cp README.md docs/source/readme.md
-    - cp protoplaster.rst docs/source/
+    - cp protoplaster.md docs/source/
     - ./.github/scripts/sphinx.sh
     - ./.github/scripts/latex.sh
   artifacts:

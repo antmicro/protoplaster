@@ -18,6 +18,7 @@ from protoplaster.camera.test import __file__ as camera_test
 from protoplaster.fpga.test import __file__ as fpga_test
 
 CONFIG_DIR = "/etc/protoplaster"
+TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
 tests_paths = {
     "i2c": i2c_test,
@@ -135,9 +136,9 @@ def generate_rst_doc(tests_doc_list, docs_dict):
         lstrip_blocks=True,
     )
 
-    template = jinja2_env.get_template("template.rst")
+    template = jinja2_env.get_template(TOP_LEVEL_TEMPLATE_PATH)
     output = template.render(tests_doc_list=tests_doc_list)
-    with open("protoplaster.rst", "w") as doc:
+    with open("protoplaster.md", "w") as doc:
         doc.write(output)
 
 
@@ -145,8 +146,9 @@ def generate_docs(tests_full_path, yaml_content):
     tests_doc_list = []
     templates = {}
 
-    with open(f"{os.path.dirname(docs_path)}/template.rst", "r") as jinja2_doc:
-        templates["template.rst"] = jinja2_doc.read()
+    with open(f"{os.path.dirname(docs_path)}/{TOP_LEVEL_TEMPLATE_PATH}",
+              "r") as jinja2_doc:
+        templates[TOP_LEVEL_TEMPLATE_PATH] = jinja2_doc.read()
 
     for test_path in tests_full_path:
         class_macros = []
