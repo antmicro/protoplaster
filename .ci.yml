@@ -1,0 +1,50 @@
+stages:
+  - code-quality-checks
+  - tests
+  - build-docs
+
+check-code-quality:
+  stage: code-quality-checks
+  image: debian:bookworm
+  script:
+    - PATH="/root/.local/bin:$PATH"
+    - apt -y update
+    - apt -y install python3 pipx git
+    - pipx install yapf==0.32.0
+    - yapf -ipr protoplaster/
+    - test $(git status --porcelain | wc -l) -eq 0 || { git diff; false; }
+
+installation-test:
+  stage: tests
+  image: debian:bookworm
+  script:
+    - PATH="/root/.local/bin:$PATH"
+    - apt -y update
+    - apt -y install python3 python3-venv git
+    - python3 -m venv ./venv
+    - source ./venv/bin/activate
+    - pip install .
+    - cd /tmp/
+    - protoplaster --help
+
+build-docs:
+  stage: build-docs
+  image: btdi/latex
+  script:
+    - PATH="/root/.local/bin:$PATH"
+    - apt -y update
+    - apt -y install python3 python3-venv git make
+    - python3 -m venv ./venv
+    - source ./venv/bin/activate
+    - pip install .
+    - pip install git+https://github.com/antmicro/tuttest
+    - tuttest README.md example > example.yml
+    - protoplaster -t example.yml --generate-docs
+    - cp -r .github/docs-template docs/
+    - cp README.md docs/source/readme.md
+    - cp protoplaster.rst docs/source/
+    - ./.github/scripts/sphinx.sh
+    - ./.github/scripts/latex.sh
+  artifacts:
+    paths:
+      - docs/build/html/*
