@@ -101,7 +101,8 @@ def extract_tests(yaml_file, group, custom_path):
     elif group is None:
         content = {
             mod_key: content[group_key][mod_key]
-            for group_key in content for mod_key in content[group_key]
+            for group_key in content
+            for mod_key in content[group_key]
         }
     else:
         print(error(f'Group "{group}" not defined - Exiting!'))
@@ -230,7 +231,7 @@ def list_groups(yaml_file):
         print(group)
 
 
-if __name__ == "__main__":
+def main():
     args = parse_args()
     if not os.path.exists(args.test_file):
         print(
@@ -242,3 +243,7 @@ if __name__ == "__main__":
         list_groups(args.test_file)
         sys.exit()
     run_tests(args)
+
+
+if __name__ == "__main__":
+    main()

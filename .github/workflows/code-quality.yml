@@ -16,7 +16,7 @@ jobs:
           python-version: 3.7
       - name: Install yapf
         run: |
-          pip install yapf==0.32.0
+          pip install yapf==0.40.2
       - name: Yapf code formatting checks
         run: |
           yapf -ipr protoplaster/

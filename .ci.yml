@@ -10,7 +10,7 @@ check-code-quality:
     - PATH="/root/.local/bin:$PATH"
     - apt -y update
     - apt -y install python3 pipx git
-    - pipx install yapf==0.32.0
+    - pipx install yapf==0.40.2
     - yapf -ipr protoplaster/
     - test $(git status --porcelain | wc -l) -eq 0 || { git diff; false; }
 
