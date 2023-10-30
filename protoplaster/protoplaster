@@ -7,10 +7,10 @@ import pytest
 import yaml
 from collections import OrderedDict
 from colorama import init, Fore, Style
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, DictLoader, select_autoescape
 from pathlib import Path
 
-from protoplaster.docs.docs import TestDocs, TestMacro
+from protoplaster.docs.docs import TestDocs
 from protoplaster.docs import __file__ as docs_path
 from protoplaster.i2c.test import __file__ as i2c_test
 from protoplaster.gpio.test import __file__ as gpio_test
@@ -124,10 +124,10 @@ def extract_tests(yaml_file, group, custom_path):
     return tests
 
 
-def generate_rst_doc(tests_doc_list, docs_dir_path):
+def generate_rst_doc(tests_doc_list, docs_dict):
 
     jinja2_env = Environment(
-        loader=FileSystemLoader(docs_dir_path),
+        loader=DictLoader(docs_dict),
         autoescape=select_autoescape(),
         extensions=[
             "jinja2.ext.do",
@@ -135,7 +135,7 @@ def generate_rst_doc(tests_doc_list, docs_dir_path):
         lstrip_blocks=True,
     )
 
-    template = jinja2_env.get_template("jinja2-doc.rst")
+    template = jinja2_env.get_template("template.rst")
     output = template.render(tests_doc_list=tests_doc_list)
     with open("protoplaster.rst", "w") as doc:
         doc.write(output)
@@ -143,7 +143,10 @@ def generate_rst_doc(tests_doc_list, docs_dir_path):
 
 def generate_docs(tests_full_path, yaml_content):
     tests_doc_list = []
-    docs_dir_path = os.path.dirname(docs_path)
+    templates = {}
+
+    with open(f"{os.path.dirname(docs_path)}/template.rst", "r") as jinja2_doc:
+        templates["template.rst"] = jinja2_doc.read()
 
     for test_path in tests_full_path:
         class_macros = []
@@ -169,10 +172,8 @@ def generate_docs(tests_full_path, yaml_content):
                         + 'function should have the same name as class ' +
                         '- Exiting!'))
                 sys.exit(3)
-            macro_file = tests_class.name + ".rst"
-            class_macros.append(TestMacro(macro_file, tests_class.name))
-            with open(f"{docs_dir_path}/{macro_file}", "w") as macro:
-                macro.write(class_doc)
+            templates[tests_class.name] = class_doc
+            class_macros.append(tests_class.name)
 
         functions = [
             f for f in ast.walk(tree)
@@ -191,10 +192,8 @@ def generate_docs(tests_full_path, yaml_content):
                           'function should have the same name as function ' +
                           '- Exiting!'))
                 sys.exit(5)
-            macro_file = func.name + ".rst"
-            method_macros.append(TestMacro(macro_file, func.name))
-            with open(f"{docs_dir_path}/{macro_file}", "w") as macro:
-                macro.write(function_doc)
+            templates[func.name] = function_doc
+            method_macros.append(func.name)
 
         # collect data from yaml file
         for test_group in yaml_content:
@@ -206,7 +205,7 @@ def generate_docs(tests_full_path, yaml_content):
 
         test_doc = TestDocs(class_macros, module_details, method_macros)
         tests_doc_list.append(test_doc)
-    generate_rst_doc(tests_doc_list, docs_dir_path)
+    generate_rst_doc(tests_doc_list, templates)
 
 
 def run_tests(args):

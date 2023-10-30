@@ -3,13 +3,7 @@ from typing import List
 
 
 @dataclass
-class TestMacro:
-    test_macro_file: str
-    test_macro_name: str
-
-
-@dataclass
 class TestDocs:
-    class_macros: List[TestMacro]
+    class_macros: List[str]
     test_details: List[str]
-    test_macros: List[TestMacro]
+    test_macros: List[str]
