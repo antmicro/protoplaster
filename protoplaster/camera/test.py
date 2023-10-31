@@ -48,3 +48,6 @@ class TestCamera:
         device = Camera(self.device)
         assert device.get_driver_name(
         ) == self.driver_name, "The driver name is not correct"
+
+    def name(self):
+        return f"{self.device}"

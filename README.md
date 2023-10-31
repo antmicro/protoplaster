@@ -21,7 +21,7 @@ pip install git+https://github.com/antmicro/protoplaster.git
 ```
 usage: protoplaster [-h] [-t TEST_FILE] [-g GROUP] [--list-groups] [-o OUTPUT] [--generate-docs] [-c CUSTOM_TESTS]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -t TEST_FILE, --test-file TEST_FILE
                         Path to the test yaml description
@@ -30,6 +30,10 @@ optional arguments:
   --list-groups         List possible groups to execute
   -o OUTPUT, --output OUTPUT
                         A junit-xml style report of the tests results
+  -csvo CSV_OUTPUT, --csv-output CSV_OUTPUT
+                        A csv report of the tests results
+  -csvc CSV_COLUMNS, --csv-columns CSV_COLUMNS
+                        Specifies comma separated columns to be included in csv
   --generate-docs       Generate documentation
   -c CUSTOM_TESTS, --custom-tests CUSTOM_TESTS
                         Path to the custom tests sources
@@ -104,7 +108,7 @@ Required parameters:
 * `bitstream_path` - path to a test bitstream that is going to be flashed
 
 ## Writing additional modules
-Apart from base modules available in Protoplaster, you can provide your own extended modules. The module should contain a `test.py` file in the root path. That file should contain a test class that is decorated with `ModuleName("")` from `protoplaster.conf.module` package. That decorator tells Protoplaster what the name of the module is. With that information Protoplaster can then correctly initialize the test parameters.
+Apart from base modules available in Protoplaster, you can provide your own extended modules. The module should contain a `test.py` file in the root path. That file should contain a test class that is decorated with `ModuleName("")` from `protoplaster.conf.module` package. That decorator tells Protoplaster what the name of the module is. With that information Protoplaster can then correctly initialize the test parameters. The test class should contain `name()` method used to populate `device_name` field in csv output.
 
 The description of the external module should be added to the yaml file as for other tests. By default, external modules are searched in the `/etc/protoplaster` directory. If you want to store them in a different path, use the `--custom-tests` argument to set your own path. The individual tests run by Protoplaster should be present in the main class in the `test.py` file. The class's name should start with `Test`, and every test's name in that class should also start with `test`. An example of the extended module's test:
 

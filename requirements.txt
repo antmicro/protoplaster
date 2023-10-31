@@ -1,4 +1,5 @@
-pytest==5.3.5
+pytest==7.4.3
+pytest-csv==3.0.0
 pyyaml==5.3.1
 smbus2==0.3.0
 colorama==0.3.9
