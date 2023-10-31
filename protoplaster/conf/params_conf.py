@@ -32,7 +32,8 @@ def yaml_file(request):
     elif group is None:
         content = {
             mod_key: content[group_key][mod_key]
-            for group_key in content for mod_key in content[group_key]
+            for group_key in content
+            for mod_key in content[group_key]
         }
     for c in content:
         if '__path__' in content[c]:

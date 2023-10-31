@@ -1,0 +1,16 @@
+[project]
+name="protoplaster"
+version="1.0"
+description="An automated framework for platform testing (Hardware and BSPs)"
+authors=[{name = "Antmicro Ltd"}]
+license={text = "Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)"}
+dynamic = ["dependencies"]
+
+[project.scripts]
+protoplaster = 'protoplaster.protoplaster:main'
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.package-data]
+"*" = ["template.md"]
