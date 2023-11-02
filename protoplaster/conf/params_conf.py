@@ -46,6 +46,7 @@ def yaml_file(request):
     }
     return {k: iter(content[k]) for k in content}
 
+
 def pytest_csv_register_columns(columns):
     columns["device"] = lambda item, report: {
         "device": dict(item.user_properties).get("device", "unknown device")

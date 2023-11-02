@@ -1,12 +1,30 @@
 import inspect
+import functools
 
 
 def ReportDeviceName(f):
+    # pytest passes fixtures to tests if given test contains parameter with that name,
+    # we want tu use record_property fixture in wrapper, but out wrapped function may
+    # not have it on its param list, so we have handle such case
 
-    def wrapper(self, record_property):
-        record_property("device", self.name())
-        return f(self)
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        if 'record_property' in inspect.signature(f).parameters.keys():
+            record_property = kwargs['record_property']
+        else:
+            # wrapped function doesn't expect record_property arg, we have to remove it
+            record_property = kwargs.pop('record_property')
+        record_property("device", args[0].name())
+        return f(*args, **kwargs)
 
+    if 'record_property' not in inspect.signature(f).parameters.keys():
+        # extend wrapper function signature with record_property param
+        wrapped_sig = inspect.signature(f)
+        new_params = list(wrapped_sig.parameters.values()) + [
+            inspect.Parameter('record_property',
+                              inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        ]
+        wrapper.__signature__ = wrapped_sig.replace(parameters=new_params)
     return wrapper
 
 
