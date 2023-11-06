@@ -64,8 +64,7 @@ def parse_args():
     parser.add_argument("-csvc",
                         "--csv-columns",
                         type=str,
-                        help="Specifies columns included in csv",
-                        default="device,name,status,message,module,duration")
+                        help="Specifies columns included in csv")
     parser.add_argument("--generate-docs",
                         action="store_true",
                         help="Generate documentation")
@@ -229,10 +228,10 @@ def run_tests(args):
             OrderedDict.fromkeys(tests).keys(), parse_yaml(args.test_file))
         sys.exit()
     output_file = f"--junitxml={args.output}" if args.output is not None else ""
-    csv_file = f"--csv={args.csv_output}" if args.csv_output is not None else ""
+    csv_file = f"--csv-output={args.csv_output}" if args.csv_output is not None else ""
     csv_columns = f"--csv-columns={args.csv_columns}" if args.csv_columns is not None else ""
     group = f"--group={args.group}" if args.group is not None else ""
-    cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} {group} {output_file} {csv_file} {csv_columns}'
+    cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf -p protoplaster.conf.csv_generator --yaml_file={args.test_file} {group} {output_file} {csv_file} {csv_columns}'
     pytest.main(cmd.strip().split(" "))
 
 

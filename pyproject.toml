@@ -8,10 +8,10 @@ dynamic = ["dependencies"]
 
 [project.scripts]
 protoplaster = 'protoplaster.protoplaster:main'
-protoplaster-csv-to-html = 'protoplaster.csv_to_html:main'
+protoplaster-report = 'protoplaster.report_generator.csv_to_html:main'
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.package-data]
-"*" = ["template.md"]
+"*" = ["template.md", "style.css"]
