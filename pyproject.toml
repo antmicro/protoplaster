@@ -9,6 +9,7 @@ dynamic = ["dependencies"]
 [project.scripts]
 protoplaster = 'protoplaster.protoplaster:main'
 protoplaster-report = 'protoplaster.report_generator.protoplaster_report:main'
+protoplaster-system-report = 'protoplaster.report_generator.system_report:main'
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
