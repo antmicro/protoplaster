@@ -2,6 +2,7 @@
 import argparse
 import csv
 import os
+from jinja2 import Environment, FileSystemLoader
 
 
 def parse_args():
@@ -31,50 +32,33 @@ def human_readable_time(seconds):
 
 
 custom_columns = {
-    "status":
-    (lambda value:
-     f"<td class='{'status-passed' if value == 'passed' else 'status-failed'}'>{value}</td>"
-     ),
-    "duration": (lambda value: f"<td>{human_readable_time(float(value))}</td>")
+    "status": (lambda value: (value, "status-passed"
+                              if value == "passed" else "status-failed")),
+    "duration": (lambda value: (human_readable_time(float(value)), ""))
 }
 
 
 def main():
-    args, rest = parse_args()
+    args, unnamed = parse_args()
 
-    if not args.input_file and len(rest) == 0:
+    if not args.input_file and len(unnamed) == 0:
         print("missing input name arg")
-        return
+        return 1
 
-    input_file = args.input_file if args.input_file else rest[0]
+    input_file = args.input_file if args.input_file else unnamed[0]
     output_file = args.output_file if args.output_file else input_file.split(
         ".")[0] + ".html"
 
     with open(input_file) as csv_file:
+        reader = csv.DictReader(csv_file)
+        environment = Environment(
+            loader=FileSystemLoader(os.path.dirname(__file__)))
+        template = environment.get_template("report_table_template.html")
         with open(output_file, "w") as html_file:
-            reader = csv.DictReader(csv_file)
-
-            html_file.write("<html><head><style>")
-            with open(f"{os.path.dirname(__file__)}/style.css") as style:
-                html_file.write(style.read())
             html_file.write(
-                "</style></head><body><table style='report-table'>")
-
-            html_file.write("<tr>")
-            for field in reader.fieldnames:
-                html_file.write(f"<th>{field}</th>")
-            html_file.write("</tr>")
-
-            for row in reader:
-                html_file.write("<tr>")
-                for field in reader.fieldnames:
-                    if field not in custom_columns:
-                        html_file.write(f"<td>{row[field]}</td>")
-                    else:
-                        html_file.write(custom_columns[field](row[field]))
-                html_file.write("</tr>")
-
-            html_file.write("</table></body></html>")
+                template.render(fields=reader.fieldnames,
+                                reader=reader,
+                                custom_columns=custom_columns))
 
 
 if __name__ == "__main__":

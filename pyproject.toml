@@ -14,4 +14,4 @@ protoplaster-report = 'protoplaster.report_generator.csv_to_html:main'
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.package-data]
-"*" = ["template.md", "style.css"]
+"*" = ["template.md", "style.css", "report_table_template.html"]

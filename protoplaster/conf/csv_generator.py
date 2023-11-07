@@ -17,6 +17,15 @@ csv_report_file = None
 csv_columns = []
 csv_report = []
 
+
+def get_test_message(report):
+    if hasattr(report.longrepr, "reprcrash") and hasattr(
+            report.longrepr.reprcrash, "message"):
+        return report.longrepr.reprcrash.message
+    else:
+        return ""
+
+
 retrieve_field = {
     "device name": (lambda item, report: dict(item.user_properties).get(
         "device", "unknown device")),
@@ -41,14 +50,6 @@ def pytest_configure(config):
             filter(lambda c: c not in retrieve_field, csv_columns))
     else:
         csv_columns = retrieve_field.keys()
-
-
-def get_test_message(report):
-    if hasattr(report.longrepr, "reprcrash") and hasattr(
-            report.longrepr.reprcrash, "message"):
-        return report.longrepr.reprcrash.message
-    else:
-        return ""
 
 
 @pytest.mark.hookwrapper
