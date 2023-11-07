@@ -2,7 +2,7 @@ import inspect
 import functools
 
 
-def ReportDeviceName(f):
+def report_device_name(f):
     # pytest passes fixtures to tests if given test contains parameter with that name,
     # we want tu use record_property fixture in wrapper, but out wrapped function may
     # not have it on its param list, so we have handle such case
@@ -37,7 +37,7 @@ class ModuleName(object):
         for name, member in inspect.getmembers(param_arg[0]):
             if (name.startswith("test") and
                 (inspect.ismethod(member) or inspect.isfunction(member))):
-                setattr(param_arg[0], name, ReportDeviceName(member))
+                setattr(param_arg[0], name, report_device_name(member))
 
         name_method = getattr(param_arg[0], "name", None)
         if not callable(name_method):
