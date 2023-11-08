@@ -77,6 +77,10 @@ def is_root():
     return int(get_cmd_output("id -u")) == 0
 
 
+def is_root():
+    return int(get_cmd_output("id -u")) == int(get_cmd_output("id -u root"))
+
+
 def main():
     args = parse_args()
 
