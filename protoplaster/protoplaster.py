@@ -57,14 +57,13 @@ def parse_args():
                         "--output",
                         type=str,
                         help="A junit-xml style report of the tests results")
-    parser.add_argument("-csvo",
-                        "--csv-output",
+    parser.add_argument("--csv",
                         type=str,
-                        help="A csv report of the tests results")
-    parser.add_argument("-csvc",
-                        "--csv-columns",
-                        type=str,
-                        help="Specifies columns included in csv")
+                        help="Generate a CSV report of the tests results")
+    parser.add_argument(
+        "--csv-columns",
+        type=str,
+        help="Comma-separated list of columns to be included in generated CSV")
     parser.add_argument("--generate-docs",
                         action="store_true",
                         help="Generate documentation")
@@ -73,7 +72,10 @@ def parse_args():
                         type=str,
                         default=f"{CONFIG_DIR}/tests/*/",
                         help="Path to the custom tests sources")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.csv_columns and not args.csv:
+        parser.error("--csv-columns requires --csv")
+    return args
 
 
 def parse_yaml(yaml_file):
@@ -219,6 +221,20 @@ def generate_docs(tests_full_path, yaml_content):
     generate_rst_doc(tests_doc_list, templates)
 
 
+def prepare_pytest_args(tests, args):
+    pytest_args = f" -s -p no:cacheprovider -p protoplaster.conf.params_conf -p protoplaster.conf.csv_generator --yaml_file={args.test_file} "
+    if args.output:
+        pytest_args += f"--junitxml={args.output} "
+    if args.csv:
+        pytest_args += f"--csv-output={args.csv} "
+    if args.csv_columns:
+        pytest_args += f"--csv-columns={args.csv_columns} "
+    if args.group:
+        pytest_args += f"--group={args.group} "
+    pytest_args = " ".join(tests) + pytest_args
+    return pytest_args.strip().split(" ")
+
+
 def run_tests(args):
     tests = extract_tests(args.test_file, args.group, args.custom_tests)
     if tests == []:
@@ -227,12 +243,7 @@ def run_tests(args):
         generate_docs(
             OrderedDict.fromkeys(tests).keys(), parse_yaml(args.test_file))
         sys.exit()
-    output_file = f"--junitxml={args.output}" if args.output is not None else ""
-    csv_file = f"--csv-output={args.csv_output}" if args.csv_output is not None else ""
-    csv_columns = f"--csv-columns={args.csv_columns}" if args.csv_columns is not None else ""
-    group = f"--group={args.group}" if args.group is not None else ""
-    cmd = f'{" ".join(tests)} -s -p no:cacheprovider -p protoplaster.conf.params_conf -p protoplaster.conf.csv_generator --yaml_file={args.test_file} {group} {output_file} {csv_file} {csv_columns}'
-    pytest.main(cmd.strip().split(" "))
+    pytest.main(prepare_pytest_args(tests, args))
 
 
 def list_groups(yaml_file):

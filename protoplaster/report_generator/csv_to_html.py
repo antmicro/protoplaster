@@ -51,8 +51,10 @@ def main():
 
     with open(input_file) as csv_file:
         reader = csv.DictReader(csv_file)
-        environment = Environment(
-            loader=FileSystemLoader(os.path.dirname(__file__)))
+        environment = Environment(loader=FileSystemLoader(
+            os.path.dirname(__file__)),
+                                  trim_blocks=True,
+                                  lstrip_blocks=True)
         template = environment.get_template("report_table_template.html")
         with open(output_file, "w") as html_file:
             html_file.write(

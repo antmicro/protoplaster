@@ -13,7 +13,7 @@ def pytest_addoption(parser):
                      help="csv report columns")
 
 
-csv_report_file = None
+csv_report_file = None  # there is no clean way to store this between hooks invocations, because in pytest_configure we only have access to `config`
 csv_columns = []
 csv_report = []
 
@@ -46,8 +46,7 @@ def pytest_configure(config):
     if config.option.csv_columns:
         csv_columns = config.option.csv_columns.replace(" ", "").replace(
             "_", " ").split(",")
-        csv_columns = list(
-            filter(lambda c: c not in retrieve_field, csv_columns))
+        csv_columns = list(filter(lambda c: c in retrieve_field, csv_columns))
     else:
         csv_columns = retrieve_field.keys()
 
