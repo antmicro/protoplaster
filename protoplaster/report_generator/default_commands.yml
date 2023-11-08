@@ -1,0 +1,23 @@
+uname:
+  command: uname -a
+  output: uname.out
+dmesg:
+  command: dmesg
+  output: dmesg.out
+  superuser: required
+journalctl:
+  command: journalctl
+  output: journalctl.out
+  superuser: required
+systemctl:
+  command: systemctl list-units --all
+  output: systemctl.out
+ip:
+  command: ip a
+  output: ip.out
+ps:
+  command: ps -eF
+  output: ps.out
+udevadm:
+  command: udevadm info -e
+  output: udevadm.out

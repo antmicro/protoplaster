@@ -15,4 +15,4 @@ protoplaster-system-report = 'protoplaster.report_generator.system_report:main'
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.package-data]
-"*" = ["template.md", "style.css", "report_table_template.html", "report_table_template.md"]
+"*" = ["template.md", "style.css", "report_table_template.html", "report_table_template.md", "default_commands.yml"]
