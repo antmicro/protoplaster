@@ -21,3 +21,12 @@ ps:
 udevadm:
   command: udevadm info -e
   output: udevadm.out
+fdisk:
+  command: fdisk --list
+  output: fdisk.out
+  permissions:
+    root_required: yes
+    on_insufficent_permissions: warn
+df:
+  command: df
+  output: df.out
