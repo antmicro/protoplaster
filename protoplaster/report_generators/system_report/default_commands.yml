@@ -1,0 +1,46 @@
+uname:
+  run: uname -a
+  summary:
+    - name: summary
+      run: cat
+  output: uname.out
+df:
+  run: df
+  summary:
+    - name: summary
+      run: $PROTOPLASTER_SCRIPTS/generate_df_table.py "$(cat)"
+  output: df.out
+dmesg:
+  run: dmesg
+  summary: 
+    - name: usb
+      run: grep usb
+    - name: V4L
+      run: grep V4L
+    - name: ftdi
+      run: grep ftdi
+  output: dmesg.out
+  superuser: required
+# journalctl:
+#   run: journalctl
+#   output: journalctl.out
+#   superuser: required
+# systemctl:
+#   run: systemctl list-units --all
+#   output: systemctl.out
+# ps:
+#   run: ps -eF
+#   output: ps.out
+# udevadm:
+#   run: udevadm info -e
+#   output: udevadm.out
+fdisk:
+  run: fdisk --list
+  output: fdisk.out
+  superuser: required
+ip:
+  run: ip_or_ifconfig.sh
+  output: ip.out
+test:
+  run: test_cmd.sh
+  output: i.out

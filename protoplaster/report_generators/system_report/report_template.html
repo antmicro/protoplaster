@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .hidden {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>System report summary</h1>
+
+        {%- for sub_report in sub_reports %}
+        <h2>{{sub_report.name}}</h2>
+        <p>Full output available in <a href="{{sub_report.output_file}}">{{sub_report.output_file}}</a></p>
+        {% for summary in sub_report.summaries %}
+        <button onclick="document.getElementById('{{sub_report.name}}_{{summary.title}}').classList.toggle('hidden')">{{summary.title}}</button>
+        {% endfor %}
+        {% for summary in sub_report.summaries %}
+        <div id="{{sub_report.name}}_{{summary.title}}" class="hidden">
+            <h3>{{summary.title}}</h3>
+            <p style='white-space: pre'>{{summary.content}}</p>
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </body>
+</html>

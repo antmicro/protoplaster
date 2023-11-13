@@ -1,0 +1,14 @@
+<table>
+    <tr>
+    {%- for field in fields %}
+        <th>{{field}}</th>
+    {%- endfor %}
+    </tr>
+    {%- for row in rows %}
+    <tr>
+        {%- for field in row %}
+        <td class={{style}}>{{field}}</td>
+        {%- endfor %}
+    </tr>
+    {%- endfor %}
+</table>
