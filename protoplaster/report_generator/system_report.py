@@ -90,9 +90,11 @@ def main():
         with zipfile.ZipFile(archive_file, 'w',
                              zipfile.ZIP_DEFLATED) as archive:
             for cmd in commands:
-                out = get_cmd_output(cmd.command)
-                archive.writestr(cmd.output_file, out)
-
+                try:
+                    out = get_cmd_output(cmd.command)
+                    archive.writestr(cmd.output_file, out)
+                except subprocess.CalledProcessError as e:
+                    print(f"command {cmd.command} exited with non-zero return code {e.returncode}")
 
 if __name__ == "__main__":
     main()
