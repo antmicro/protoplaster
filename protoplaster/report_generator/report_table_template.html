@@ -8,22 +8,22 @@
     <body>
         <table>
             <tr>
-            {% for field in fields %}
+            {%- for field in fields %}
                 <th>{{field}}</th>
-            {% endfor %}
+            {%- endfor %}
             </tr>
-            {% for row in reader%}
+            {%- for row in reader%}
             <tr>
-                {% for field in fields %}
-                    {% if field not in custom_columns %}
-                        <td>{{row[field]}}</td>
-                    {% else %}
-                        {% set value, style = custom_columns[field](row[field]) %}
-                        <td class={{style}}>{{value}}</td>
-                    {% endif %}
-                {% endfor %}
+                {%- for field in fields %}
+                {%- if field not in custom_columns %}
+                <td>{{row[field]}}</td>
+                {%- else %}
+                {%- set value, style = custom_columns[field](row[field]) %}
+                <td class={{style}}>{{value}}</td>
+                {%- endif %}
+                {%- endfor %}
             </tr>
-            {% endfor %}
+            {%- endfor %}
         </table>
     </body>
 </html>

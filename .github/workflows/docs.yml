@@ -33,11 +33,17 @@ jobs:
           tuttest README.md example > example.yml
           protoplaster -t example.yml --generate-docs
 
+      - name: Generate test report from yml
+        run: |
+          protoplaster -t example.yml --csv report.csv 
+          protoplaster-report report.csv -t md
+
       - name: Prepare docs template
         run: |
           cp -r .github/docs-template docs/
           cp README.md docs/source/readme.md
           cp protoplaster.md docs/source/
+          cp report.md docs/source/
 
       - name: Build html
         uses: docker://btdi/sphinx:min
