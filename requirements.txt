@@ -1,7 +1,8 @@
-pytest==5.3.5
+pytest==7.4.3
 pyyaml==5.3.1
 smbus2==0.3.0
 colorama==0.3.9
 Jinja2==3.1.2
 MarkupSafe==2.1.1
 pyrav4l2 @ git+https://github.com/antmicro/pyrav4l2.git@3c071a7
+pyudev==0.24.1

@@ -45,3 +45,6 @@ class TestFPGA:
         except OSError:
             fpga_flashed_succesfully = False
         return fpga_flashed_succesfully
+
+    def name(self):
+        return f"{self.sysfs_interface}"

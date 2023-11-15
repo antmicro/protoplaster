@@ -1,0 +1,7 @@
+.status-passed {
+    color: green;
+}
+
+.status-failed {
+    color: red;
+}

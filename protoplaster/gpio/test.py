@@ -24,3 +24,6 @@ class TestGPIO:
                   gpio_name=self.gpio_name) as gpio:
             gpio.write_value(self.value)
             assert gpio.read_value() == self.value
+
+    def name(self):
+        return f"/sys/class/gpio/{self.number}"

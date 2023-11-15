@@ -1,5 +1,6 @@
 from protoplaster.conf.module import ModuleName
 from protoplaster.camera.camera import Camera
+import pyudev
 
 
 @ModuleName("camera")
@@ -48,3 +49,20 @@ class TestCamera:
         device = Camera(self.device)
         assert device.get_driver_name(
         ) == self.driver_name, "The driver name is not correct"
+
+    def camera_model(self):
+        try:
+            dev = pyudev.Devices.from_device_file(pyudev.Context(),
+                                                  self.device)
+            try:
+                return dev.properties['ID_V4L_PRODUCT']
+            except:
+                return dev.properties['ID_MODEL']
+        except:
+            return None
+
+    def name(self):
+        model = self.camera_model()
+        if model != None:
+            return f"{model}({self.device})"
+        return f"{self.device}"

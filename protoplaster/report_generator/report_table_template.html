@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            {% include "style.css" %}
+        </style>
+    </head>
+    <body>
+        <table>
+            <tr>
+            {%- for field in fields %}
+                <th>{{field}}</th>
+            {%- endfor %}
+            </tr>
+            {%- for row in reader%}
+            <tr>
+                {%- for field in fields %}
+                {%- if field not in custom_columns %}
+                <td>{{row[field]}}</td>
+                {%- else %}
+                {%- set value, style = custom_columns[field](row[field]) %}
+                <td class={{style}}>{{value}}</td>
+                {%- endif %}
+                {%- endfor %}
+            </tr>
+            {%- endfor %}
+        </table>
+    </body>
+</html>
