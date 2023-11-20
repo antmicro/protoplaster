@@ -24,7 +24,8 @@ class CommandConfig:
 
     def __init__(self, yaml_config):
         name, config = yaml_config
-        required_fields_present = "run" in config and "output" in config
+        required_fields_present = "run" in config and ("output" in config
+                                                       or "summary" in config)
         superuser_correct = "superuser" not in config or config[
             "superuser"] in ["required", "preferred"]
         if not required_fields_present or not superuser_correct:
@@ -45,8 +46,9 @@ class CommandConfig:
         self.summary_configs = [
             SummaryConfig(c) for c in config.get("summary", [])
         ]
-        self.output_file = config["output"]
-        self.on_fail = CommandConfig((name, config["on-fail"])) if "on-fail" in config else None
+        self.output_file = config.get("output", None)
+        self.on_fail = CommandConfig(
+            (name, config["on-fail"])) if "on-fail" in config else None
 
 
 @dataclass
@@ -127,24 +129,24 @@ def run_command(config):
         out = get_cmd_output(f"sh -c '{config.script}'")
         summaries = []
         for summary_config in config.summary_configs:
-                summary_content = subprocess.check_output(
-                    f"sh -c '{summary_config.script}'",
-                    shell=True,
-                    text=True,
-                    stderr=subprocess.STDOUT,
-                    env=os.environ | {
-                        "PROTOPLASTER_SCRIPTS":
-                        f"{os.path.dirname(__file__)}/scripts"
-                    },
-                    input=out)
-                summaries.append(
-                    SubReportSummary(summary_config.name,
-                                    summary_content))
+            summary_content = subprocess.check_output(
+                f"sh -c '{summary_config.script}'",
+                shell=True,
+                text=True,
+                stderr=subprocess.STDOUT,
+                env=os.environ | {
+                    "PROTOPLASTER_SCRIPTS":
+                    f"{os.path.dirname(__file__)}/scripts"
+                },
+                input=out)
+            summaries.append(
+                SubReportSummary(summary_config.name, summary_content))
         return SubReportResult(config.name, out, config.output_file, summaries)
     except:
         if config.on_fail:
             return run_command(config.on_fail)
         return None
+
 
 def main():
     args = parse_args()
@@ -158,8 +160,10 @@ def main():
             for config in command_configs:
                 sub_report = run_command(config)
                 if sub_report:
-                    archive.writestr(config.output_file, sub_report.raw_output)
                     sub_reports.append(sub_report)
+                    if config.output_file:
+                        archive.writestr(config.output_file,
+                                         sub_report.raw_output)
 
             archive.writestr("summary.html", generate_html(sub_reports))
             with open("summary.html", "w") as ofile:

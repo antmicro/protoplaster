@@ -3,7 +3,7 @@ uname:
   summary:
     - name: summary
       run: cat
-  output: uname.out
+  # output: uname.out
 df:
   run: df
   summary:
