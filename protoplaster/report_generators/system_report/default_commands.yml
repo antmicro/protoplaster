@@ -8,7 +8,7 @@ df:
   run: df
   summary:
     - name: file system usage
-      run: $PROTOPLASTER_SCRIPTS/generate_df_table.py "$(cat)"
+      run: python3 $PROTOPLASTER_SCRIPTS/generate_df_table.py "$(cat)"
   output: df.out
 dmesg:
   run: dmesg
@@ -42,11 +42,11 @@ ip:
   run: ip a
   summary:
     - name: interfaces
-      run: $PROTOPLASTER_SCRIPTS/generate_ip_table.py "$(cat)"
+      run: python3 $PROTOPLASTER_SCRIPTS/generate_ip_table.py "$(cat)"
   output: ip.out
   on-fail:
     run: ifconfig -a
     summary:
       - name: interfaces
-        run: $PROTOPLASTER_SCRIPTS/generate_ifconfig_table.py "$(cat)"
+        run: python3 $PROTOPLASTER_SCRIPTS/generate_ifconfig_table.py "$(cat)"
     output: ifconfig.out
