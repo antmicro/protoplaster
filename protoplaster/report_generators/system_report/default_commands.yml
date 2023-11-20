@@ -3,7 +3,7 @@ uname:
   summary:
     - name: summary
       run: cat
-  # output: uname.out
+  output: uname.out
 df:
   run: df
   summary:
@@ -21,19 +21,19 @@ dmesg:
       run: grep ftdi
   output: dmesg.out
   superuser: required
-# journalctl:
-#   run: journalctl
-#   output: journalctl.out
-#   superuser: required
-# systemctl:
-#   run: systemctl list-units --all
-#   output: systemctl.out
-# ps:
-#   run: ps -eF
-#   output: ps.out
-# udevadm:
-#   run: udevadm info -e
-#   output: udevadm.out
+journalctl:
+  run: journalctl
+  output: journalctl.out
+  superuser: required
+systemctl:
+  run: systemctl list-units --all
+  output: systemctl.out
+ps:
+  run: ps -eF
+  output: ps.out
+udevadm:
+  run: udevadm info -e
+  output: udevadm.out
 fdisk:
   run: fdisk --list
   output: fdisk.out
@@ -41,15 +41,12 @@ fdisk:
 ip:
   run: ip a
   summary:
-    - name: ip summary
-      run: cat
+    - name: interfaces
+      run: $PROTOPLASTER_SCRIPTS/generate_ip_table.py "$(cat)"
   output: ip.out
   on-fail:
-    run: ip a
+    run: ifconfig -a
     summary:
       - name: ip summary
-        run: rev
+        run: $PROTOPLASTER_SCRIPTS/generate_ifconfig_table.py "$(cat)"
     output: ifconfig.out
-test:
-  run: test_cmd.sh
-  output: i.out

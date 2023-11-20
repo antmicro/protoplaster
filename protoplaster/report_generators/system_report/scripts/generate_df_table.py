@@ -16,7 +16,7 @@ if __name__ == "__main__":
         rows[0]) - 1]  #last column (Mounted on) have space in it
     rows[0].pop(len(rows[0]) - 1)
 
-    with open(f"{os.path.dirname(__file__)}/df_table_template.html"
+    with open(f"{os.path.dirname(__file__)}/generic_table_template.html"
               ) as template_file:
         html_template = template_file.read()
     environment = Environment(
