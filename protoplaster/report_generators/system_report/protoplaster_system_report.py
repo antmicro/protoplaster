@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import subprocess
 import argparse
 import zipfile
@@ -6,6 +7,7 @@ import yaml
 import os
 import sys
 from jinja2 import Environment, DictLoader
+import shutil
 
 
 class SummaryConfig:
@@ -76,6 +78,7 @@ def parse_args():
         type=str,
         help="Path to the yaml config file",
         default=f"{os.path.dirname(__file__)}/default_commands.yml")
+    parser.add_argument("--sudo", action='store_true', help="Run as sudo")
     return parser.parse_args()
 
 
@@ -138,6 +141,10 @@ def run_command(config):
 
 def main():
     args = parse_args()
+
+    if args.sudo:
+        os.execv(shutil.which("sudo"),
+                 [__file__] + list(filter(lambda a: a != "--sudo", sys.argv)))
 
     command_configs = read_commands(args.config)
 
