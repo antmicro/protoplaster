@@ -96,16 +96,6 @@ def read_config(filename):
         return yaml.safe_load(file)
 
 
-def command_path(command):
-    cmd = command.split(" ")
-    if shutil.which(cmd[0]):
-        return command
-    builtin = f"{os.path.dirname(__file__)}/{cmd[0]}"
-    if shutil.which(builtin):
-        return builtin + " ".join(cmd[1:])
-    return None
-
-
 def read_commands(filename):
     command_configs = []
     for config in read_config(filename).items():
