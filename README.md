@@ -143,3 +143,60 @@ base:
     - path: "/dev/video0"
     - path: "/dev/video1"
 ```
+## System report
+Protoplaster provides `protoplaster-system-report`, a tool to obtain information about system state and configuration. It executes list of provided scripts and saves output of each one, optionally generating summaries. The outputs are stored in single zip archive together with html summary.
+
+### Usage
+```
+usage: protoplaster-system-report [-h] [-o OUTPUT_FILE] [-c CONFIG]
+
+options:
+  -h, --help            show this help message and exit
+  -o OUTPUT_FILE, --output-file OUTPUT_FILE
+                        Path to the output file
+  -c CONFIG, --config CONFIG
+                        Path to the yaml config file
+```
+
+The yaml config contains list of actions to perform. The single action is described as follows:
+
+```yaml
+report_item_name:
+  run: script
+  summary:
+    - name: summary_name
+      run: summary_script
+  output: script_output_file
+  superuser: required | preferred
+  on-fail: ...
+```
+
+* `run` defines script to run.
+* `summary` provides list of summary generators. Each one consisting of `name` that defines name of the summary and `run` with summary script. The summary script can read report script output from its stdin. This field is optional.
+* `output` defines output file that will contain script output, its optional if at least one summary is provided.
+* `superuser` defines whether script requires elevated privileges to run or not. If its set to `required` the `protoplaster-system-report` will terminate if the privilege requirement is not met. In case of `preferred` it will issue a warning and this particular report item won't be included in the report. This field is optional.
+* `on-fail` contains description of the item to run in case of failure. It can be used to run some alternative script if the first one is not available. This field is optional.
+
+Example yaml config file:
+```yaml
+uname:
+  run: uname -a
+  summary:
+    - name: os info
+      run: cat
+dmesg:
+  run: dmesg
+  summary: 
+    - name: usb
+      run: grep usb
+    - name: v4l
+      run: grep v4l
+  output: dmesg.out
+  superuser: required
+ip:
+  run: ip a
+  output: ip.out
+  on-fail:
+    run: ifconfig -a
+    output: ifconfig.out
+```
