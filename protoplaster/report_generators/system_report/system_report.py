@@ -46,6 +46,7 @@ class CommandConfig:
             SummaryConfig(c) for c in config.get("summary", [])
         ]
         self.output_file = config["output"]
+        self.on_fail = CommandConfig((name, config["on-fail"])) if "on-fail" in config else None
 
 
 @dataclass
@@ -121,6 +122,30 @@ def is_root():
     return int(get_cmd_output("id -u")) == 0
 
 
+def run_command(config):
+    try:
+        out = get_cmd_output(f"sh -c '{config.script}'")
+        summaries = []
+        for summary_config in config.summary_configs:
+                summary_content = subprocess.check_output(
+                    f"sh -c '{summary_config.script}'",
+                    shell=True,
+                    text=True,
+                    stderr=subprocess.STDOUT,
+                    env=os.environ | {
+                        "PROTOPLASTER_SCRIPTS":
+                        f"{os.path.dirname(__file__)}/scripts"
+                    },
+                    input=out)
+                summaries.append(
+                    SubReportSummary(summary_config.name,
+                                    summary_content))
+        return SubReportResult(config.name, out, config.output_file, summaries)
+    except:
+        if config.on_fail:
+            return run_command(config.on_fail)
+        return None
+
 def main():
     args = parse_args()
 
@@ -131,31 +156,11 @@ def main():
                              zipfile.ZIP_DEFLATED) as archive:
             sub_reports = []
             for config in command_configs:
-                try:
-                    out = get_cmd_output(f"sh -c '{config.script}'")
-                    archive.writestr(config.output_file, out)
-                    summaries = []
-                    for summary_config in config.summary_configs:
-                        summary_content = subprocess.check_output(
-                            f"sh -c '{summary_config.script}'",
-                            shell=True,
-                            text=True,
-                            stderr=subprocess.STDOUT,
-                            env=os.environ | {
-                                "PROTOPLASTER_SCRIPTS":
-                                f"{os.path.dirname(__file__)}/scripts"
-                            },
-                            input=out)
-                        summaries.append(
-                            SubReportSummary(summary_config.name,
-                                             summary_content))
-                    sub_reports.append(
-                        SubReportResult(config.name, out, config.output_file,
-                                        summaries))
-                except subprocess.CalledProcessError as e:
-                    print(
-                        f"command {config.name} exited with non-zero return code {e.returncode}"
-                    )
+                sub_report = run_command(config)
+                if sub_report:
+                    archive.writestr(config.output_file, sub_report.raw_output)
+                    sub_reports.append(sub_report)
+
             archive.writestr("summary.html", generate_html(sub_reports))
             with open("summary.html", "w") as ofile:
                 ofile.write(generate_html(sub_reports))

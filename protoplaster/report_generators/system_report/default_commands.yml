@@ -39,8 +39,17 @@ fdisk:
   output: fdisk.out
   superuser: required
 ip:
-  run: ip_or_ifconfig.sh
+  run: ip a
+  summary:
+    - name: ip summary
+      run: cat
   output: ip.out
+  on-fail:
+    run: ip a
+    summary:
+      - name: ip summary
+        run: rev
+    output: ifconfig.out
 test:
   run: test_cmd.sh
   output: i.out
