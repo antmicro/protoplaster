@@ -1,13 +1,13 @@
 uname:
   run: uname -a
   summary:
-    - name: summary
+    - name: os info
       run: cat
   output: uname.out
 df:
   run: df
   summary:
-    - name: summary
+    - name: file system usage
       run: $PROTOPLASTER_SCRIPTS/generate_df_table.py "$(cat)"
   output: df.out
 dmesg:
@@ -15,8 +15,8 @@ dmesg:
   summary: 
     - name: usb
       run: grep usb
-    - name: V4L
-      run: grep V4L
+    - name: v4l
+      run: grep v4l
     - name: ftdi
       run: grep ftdi
   output: dmesg.out
@@ -47,6 +47,6 @@ ip:
   on-fail:
     run: ifconfig -a
     summary:
-      - name: ip summary
+      - name: interfaces
         run: $PROTOPLASTER_SCRIPTS/generate_ifconfig_table.py "$(cat)"
     output: ifconfig.out
