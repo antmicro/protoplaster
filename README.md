@@ -200,3 +200,6 @@ ip:
     run: ifconfig -a
     output: ifconfig.out
 ```
+
+### Running as root
+Sudo doesn't preserve path by default. To run protoplaster installed by normal user instead of using `sudo protoplaster-system-report` you have to use `sudo env "PATH=$PATH" protoplaster-system-report`
