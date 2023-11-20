@@ -166,8 +166,6 @@ def main():
                                          sub_report.raw_output)
 
             archive.writestr("summary.html", generate_html(sub_reports))
-            with open("summary.html", "w") as ofile:
-                ofile.write(generate_html(sub_reports))
 
 
 if __name__ == "__main__":
