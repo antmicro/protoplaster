@@ -5,15 +5,14 @@ from dataclasses import dataclass
 import yaml
 import os
 import sys
-import shutil
 from jinja2 import Environment, DictLoader
 
 
 class SummaryConfig:
 
     def __init__(self, config):
-        if "name" in config and "run" in config:
-            self.name = config["name"]
+        if "title" in config and "run" in config:
+            self.title = config["title"]
             self.script = config["run"]
         else:
             print("Error: summary config is incomplete")
@@ -24,8 +23,7 @@ class CommandConfig:
 
     def __init__(self, yaml_config):
         name, config = yaml_config
-        required_fields_present = "run" in config and ("output" in config
-                                                       or "summary" in config)
+        required_fields_present = "run" in config and "output" in config
         superuser_correct = "superuser" not in config or config[
             "superuser"] in ["required", "preferred"]
         if not required_fields_present or not superuser_correct:
@@ -130,7 +128,7 @@ def run_command(config):
                 },
                 input=out)
             summaries.append(
-                SubReportSummary(summary_config.name, summary_content))
+                SubReportSummary(summary_config.title, summary_content))
         return SubReportResult(config.name, out, config.output_file, summaries)
     except:
         if config.on_fail:

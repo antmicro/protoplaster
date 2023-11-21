@@ -1,24 +1,17 @@
 uname:
   run: uname -a
   summary:
-    - name: os info
+    - title: OS information
       run: cat
   output: uname.out
 df:
   run: df
   summary:
-    - name: file system usage
+    - title: Filesystem usage
       run: python3 $PROTOPLASTER_SCRIPTS/generate_df_table.py "$(cat)"
   output: df.out
-dmesg:
+kernel log:
   run: dmesg
-  summary: 
-    - name: usb
-      run: grep usb
-    - name: v4l
-      run: grep v4l
-    - name: ftdi
-      run: grep ftdi
   output: dmesg.out
   superuser: required
 journalctl:
@@ -41,12 +34,12 @@ fdisk:
 ip:
   run: ip a
   summary:
-    - name: interfaces
+    - title: Network interfaces state
       run: python3 $PROTOPLASTER_SCRIPTS/generate_ip_table.py "$(cat)"
   output: ip.out
   on-fail:
     run: ifconfig -a
     summary:
-      - name: interfaces
+      - title: Network interfaces state
         run: python3 $PROTOPLASTER_SCRIPTS/generate_ifconfig_table.py "$(cat)"
     output: ifconfig.out
