@@ -144,7 +144,7 @@ base:
     - path: "/dev/video1"
 ```
 ## System report
-Protoplaster provides `protoplaster-system-report`, a tool to obtain information about system state and configuration. It executes list of provided scripts and saves output of each one, optionally generating summaries. The outputs are stored in single zip archive together with html summary.
+Protoplaster provides `protoplaster-system-report`, a tool to obtain information about system state and configuration. It executes a list of commands and saves their outputs. The outputs are stored in a single zip archive together with an HTML summary.
 
 ### Usage
 ```
@@ -158,26 +158,30 @@ options:
                         Path to the yaml config file
 ```
 
-The yaml config contains list of actions to perform. The single action is described as follows:
+The YAML config contains list of actions to perform. A single action is described as follows:
 
 ```yaml
 report_item_name:
   run: script
   summary:
-    - name: summary_name
+    - title: summary_title
       run: summary_script
   output: script_output_file
   superuser: required | preferred
   on-fail: ...
 ```
 
-* `run` defines script to run.
-* `summary` provides list of summary generators. Each one consisting of `name` that defines name of the summary and `run` with summary script. The summary script can read report script output from its stdin. This field is optional.
-* `output` defines output file that will contain script output, its optional if at least one summary is provided.
-* `superuser` defines whether script requires elevated privileges to run or not. If its set to `required` the `protoplaster-system-report` will terminate if the privilege requirement is not met. In case of `preferred` it will issue a warning and this particular report item won't be included in the report. This field is optional.
-* `on-fail` contains description of the item to run in case of failure. It can be used to run some alternative script if the first one is not available. This field is optional.
+* `run` - command to run.
+* `summary` – list of summary generators, each one with fields:
+  * `title` – summary title
+  * `run` – command that generates the summary. This command gets the output of the original command as stdin. This field is optional; if not specified, the output is placed in the report as-is.
+* `output` - output file for `run`'s output.
+* `superuser` – optional, should be specified if the command requires elevated privileges to run. Possible values:
+  * `required` – `protoplaster-system-report` will terminate if the privilege requirement is not met
+  * `preferred` – if the privilege requirement is not met, a warning will be issued and this particular item won't be included in the report
+* `on-fail` – optional description of an item to run in case of failure. It can be used to run some alternative command if the original one fails or is not available.
 
-Example yaml config file:
+Example config file:
 ```yaml
 uname:
   run: uname -a
@@ -202,4 +206,4 @@ ip:
 ```
 
 ### Running as root
-Sudo doesn't preserve path by default. To run protoplaster installed by normal user instead of using `sudo protoplaster-system-report` you have to use `sudo env "PATH=$PATH" protoplaster-system-report`
+By default, `sudo` doesn't preserve `PATH`. To run `protoplaster` installed by a non-root user, invoke `sudo env "PATH=$PATH" protoplaster-system-report`.
