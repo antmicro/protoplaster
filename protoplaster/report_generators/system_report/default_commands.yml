@@ -1,0 +1,45 @@
+uname:
+  run: uname -a
+  summary:
+    - title: OS information
+      run: cat
+  output: uname.out
+df:
+  run: df
+  summary:
+    - title: Filesystem usage
+      run: python3 $PROTOPLASTER_SCRIPTS/generate_df_table.py "$(cat)"
+  output: df.out
+kernel log:
+  run: dmesg
+  output: dmesg.out
+  superuser: required
+journalctl:
+  run: journalctl
+  output: journalctl.out
+  superuser: required
+systemctl:
+  run: systemctl list-units --all
+  output: systemctl.out
+ps:
+  run: ps -eF
+  output: ps.out
+udevadm:
+  run: udevadm info -e
+  output: udevadm.out
+fdisk:
+  run: fdisk --list
+  output: fdisk.out
+  superuser: required
+ip:
+  run: ip a
+  summary:
+    - title: Network interfaces state
+      run: python3 $PROTOPLASTER_SCRIPTS/generate_ip_table.py "$(cat)"
+  output: ip.out
+  on-fail:
+    run: ifconfig -a
+    summary:
+      - title: Network interfaces state
+        run: python3 $PROTOPLASTER_SCRIPTS/generate_ifconfig_table.py "$(cat)"
+    output: ifconfig.out

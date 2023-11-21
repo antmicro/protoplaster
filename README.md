@@ -143,3 +143,67 @@ base:
     - path: "/dev/video0"
     - path: "/dev/video1"
 ```
+## System report
+Protoplaster provides `protoplaster-system-report`, a tool to obtain information about system state and configuration. It executes a list of commands and saves their outputs. The outputs are stored in a single zip archive together with an HTML summary.
+
+### Usage
+```
+usage: protoplaster-system-report [-h] [-o OUTPUT_FILE] [-c CONFIG]
+
+options:
+  -h, --help            show this help message and exit
+  -o OUTPUT_FILE, --output-file OUTPUT_FILE
+                        Path to the output file
+  -c CONFIG, --config CONFIG
+                        Path to the yaml config file
+```
+
+The YAML config contains list of actions to perform. A single action is described as follows:
+
+```yaml
+report_item_name:
+  run: script
+  summary:
+    - title: summary_title
+      run: summary_script
+  output: script_output_file
+  superuser: required | preferred
+  on-fail: ...
+```
+
+* `run` - command to run.
+* `summary` – list of summary generators, each one with fields:
+  * `title` – summary title
+  * `run` – command that generates the summary. This command gets the output of the original command as stdin. This field is optional; if not specified, the output is placed in the report as-is.
+* `output` - output file for `run`'s output.
+* `superuser` – optional, should be specified if the command requires elevated privileges to run. Possible values:
+  * `required` – `protoplaster-system-report` will terminate if the privilege requirement is not met
+  * `preferred` – if the privilege requirement is not met, a warning will be issued and this particular item won't be included in the report
+* `on-fail` – optional description of an item to run in case of failure. It can be used to run some alternative command if the original one fails or is not available.
+
+Example config file:
+```yaml
+uname:
+  run: uname -a
+  summary:
+    - name: os info
+      run: cat
+dmesg:
+  run: dmesg
+  summary: 
+    - name: usb
+      run: grep usb
+    - name: v4l
+      run: grep v4l
+  output: dmesg.out
+  superuser: required
+ip:
+  run: ip a
+  output: ip.out
+  on-fail:
+    run: ifconfig -a
+    output: ifconfig.out
+```
+
+### Running as root
+By default, `sudo` doesn't preserve `PATH`. To run `protoplaster` installed by a non-root user, invoke `sudo env "PATH=$PATH" protoplaster-system-report`.

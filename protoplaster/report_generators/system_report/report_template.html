@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .hidden {
+                display: none;
+            }
+            table, th, td {
+                border: 1px solid black;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>System report summary</h1>
+
+        {%- for sub_report in sub_reports %}
+        <h2>{{sub_report.name}}</h2>
+        {% if sub_report.output_file %}
+        <p>Full output available in <a href="{{sub_report.output_file}}">{{sub_report.output_file}}</a></p>
+        {% endif %}
+        {% for summary in sub_report.summaries %}
+        <button onclick="document.getElementById('{{sub_report.name}}_{{summary.title}}').classList.toggle('hidden')">{{summary.title}}</button>
+        {% endfor %}
+        {% if sub_report.summaries | length > 1 %}
+        <button onclick="
+        {% for summary in sub_report.summaries %}
+        document.getElementById('{{sub_report.name}}_{{summary.title}}').classList.add('hidden');
+        {% endfor %}
+        ">hide all</button>
+        {% endif %}
+        {% for summary in sub_report.summaries %}
+        <div id="{{sub_report.name}}_{{summary.title}}" class="hidden">
+            <h3>{{summary.title}}</h3>
+            <pre><code>{{summary.content}}</code></pre>
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </body>
+</html>

@@ -8,11 +8,11 @@ dynamic = ["dependencies"]
 
 [project.scripts]
 protoplaster = 'protoplaster.protoplaster:main'
-protoplaster-report = 'protoplaster.report_generator.protoplaster_report:main'
-protoplaster-system-report = 'protoplaster.report_generator.system_report:main'
+protoplaster-test-report = 'protoplaster.report_generators.test_report.protoplaster_test_report:main'
+protoplaster-system-report = 'protoplaster.report_generators.system_report.protoplaster_system_report:main'
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.package-data]
-"*" = ["template.md", "style.css", "report_table_template.html", "report_table_template.md", "default_commands.yml"]
+"*" = ["*.md", "*.css", "*.html", "*.yml"]
