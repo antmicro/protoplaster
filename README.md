@@ -148,7 +148,7 @@ Protoplaster provides `protoplaster-system-report`, a tool to obtain information
 
 ### Usage
 ```
-usage: protoplaster-system-report [-h] [-o OUTPUT_FILE] [-c CONFIG]
+usage: protoplaster-system-report [-h] [-o OUTPUT_FILE] [-c CONFIG] [--sudo]
 
 options:
   -h, --help            show this help message and exit
@@ -156,6 +156,7 @@ options:
                         Path to the output file
   -c CONFIG, --config CONFIG
                         Path to the yaml config file
+  --sudo                Run as sudo
 ```
 
 The YAML config contains list of actions to perform. A single action is described as follows:
@@ -206,4 +207,4 @@ ip:
 ```
 
 ### Running as root
-By default, `sudo` doesn't preserve `PATH`. To run `protoplaster` installed by a non-root user, invoke `sudo env "PATH=$PATH" protoplaster-system-report`.
+By default, `sudo` doesn't preserve `PATH`. To run `protoplaster-system-report` installed by a non-root user, invoke `protoplaster-system-report --sudo`
