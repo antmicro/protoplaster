@@ -12,9 +12,10 @@
             .summary_button {
                 background-color: #006e63;
                 border: none;
+                margin-bottom: 4px;
                 margin-left: 8px;
                 color: white;
-                padding: 15px 32px;
+                <!-- padding: 15px 32px; -->
                 text-align: center;
                 font-size: 16px;
             }
@@ -68,7 +69,8 @@
         {%- for sub_report in sub_reports %}
         <div class="item_header">
             <h2 class="item_header_text">{{sub_report.name}}</h2>
-            <div class="item_buttons">
+        </div>
+        <div class="item_buttons">
             {% for summary in sub_report.summaries %}
             <button 
                 class="summary_button"
@@ -80,7 +82,6 @@
             >{{summary.title}}</button>
             {% endfor %}
             </div>
-        </div>
         {% if sub_report.output_file %}
         <p class="text output_text">Full output available in <a href="{{sub_report.output_file}}">{{sub_report.output_file}}</a></p>
         {% endif %}
