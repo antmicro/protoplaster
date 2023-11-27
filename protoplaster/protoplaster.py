@@ -9,6 +9,7 @@ from collections import OrderedDict
 from colorama import init, Fore, Style
 from jinja2 import Environment, DictLoader, select_autoescape
 from pathlib import Path
+import zipfile
 
 from protoplaster.docs.docs import TestDocs
 from protoplaster.docs import __file__ as docs_path
@@ -16,6 +17,9 @@ from protoplaster.i2c.test import __file__ as i2c_test
 from protoplaster.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
 from protoplaster.fpga.test import __file__ as fpga_test
+
+from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
+from protoplaster.conf.csv_generator import CsvReportGenerator
 
 CONFIG_DIR = "/etc/protoplaster"
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
@@ -72,9 +76,12 @@ def parse_args():
                         type=str,
                         default=f"{CONFIG_DIR}/tests/*/",
                         help="Path to the custom tests sources")
+    parser.add_argument("--report-output",
+                        type=str,
+                        help="Proplaster report archive")
     args = parser.parse_args()
-    if args.csv_columns and not args.csv:
-        parser.error("--csv-columns requires --csv")
+    if args.csv_columns and not args.csv and not args.report_output:
+        parser.error("--csv-columns requires --csv or --report-output")
     return args
 
 
@@ -222,13 +229,9 @@ def generate_docs(tests_full_path, yaml_content):
 
 
 def prepare_pytest_args(tests, args):
-    pytest_args = f" -s -p no:cacheprovider -p protoplaster.conf.params_conf -p protoplaster.conf.csv_generator --yaml_file={args.test_file} "
+    pytest_args = f" -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} "
     if args.output:
         pytest_args += f"--junitxml={args.output} "
-    if args.csv:
-        pytest_args += f"--csv-output={args.csv} "
-    if args.csv_columns:
-        pytest_args += f"--csv-columns={args.csv_columns} "
     if args.group:
         pytest_args += f"--group={args.group} "
     pytest_args = " ".join(tests) + pytest_args
@@ -243,7 +246,19 @@ def run_tests(args):
         generate_docs(
             OrderedDict.fromkeys(tests).keys(), parse_yaml(args.test_file))
         sys.exit()
-    pytest.main(prepare_pytest_args(tests, args))
+    csv_report_gen = CsvReportGenerator(args.csv_columns)
+    pytest.main(prepare_pytest_args(tests, args), plugins=[csv_report_gen])
+    if args.csv:
+        with open(args.csv, "w") as csv_file:
+            csv_file.write(csv_report_gen.report)
+    if args.report_output:
+        with open(args.report_output, "wb") as archive_file:
+            with zipfile.ZipFile(archive_file, 'w',
+                                 zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("report.csv", csv_report_gen.report)
+                archive.writestr(
+                    "report.html",
+                    generate_test_report(csv_report_gen.report, "html"))
 
 
 def list_groups(yaml_file):
