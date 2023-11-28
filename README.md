@@ -80,7 +80,7 @@ These parameters describe the tests and are passed to the test class as its attr
 ### I2C
 Required parameters:
 
-* `bus` - i2c bus to be check
+* `bus` - i2c bus to be checked
 * `name` - name of device to be detected
 * `address` - address of the device to be detected on the indicated bus
 
