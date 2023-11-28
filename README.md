@@ -71,7 +71,7 @@ In the yaml file, you can define different groups of tests to run them for diffe
 In the yaml file example, there are two groups defined: base and additional. 
 Protoplaster, when run without a defined group, will execute every test in each group. 
 When the group is specified with the parameter `-g` or `--group`, only the tests in the specified group are going to be run. 
-You can also list existing groups in the yaml file, simply run `protoplaster --list-groups test.yaml`.
+You can also list existing groups in the YAML file, simply run `protoplaster --list-groups test.yaml`.
 
 ## Base modules parameters
 Each base module requires parameters for test initialization. 
@@ -87,7 +87,7 @@ Required parameters:
 ### GPIO
 Required parameters:
 
-* `number` - GPIO pin number
+* `number` - gpio pin number
 * `value` - value written to that pin
 
 Optional parameters:
