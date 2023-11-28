@@ -67,7 +67,7 @@ additional:
 ```
 
 ### Groups
-In the yaml file, you can define different groups of tests to run them for different purposes. 
+In the YAML file, you can define different groups of tests to run them for different purposes. 
 In the yaml file example, there are two groups defined: base and additional. 
 Protoplaster, when run without a defined group, will execute every test in each group. 
 When the group is specified with the parameter `-g` or `--group`, only the tests in the specified group are going to be run. 
@@ -80,7 +80,7 @@ These parameters describe the tests and are passed to the test class as its attr
 ### I2C
 Required parameters:
 
-* `bus` - i2c bus to be checked
+* `bus` - i2c bus to be check
 * `name` - name of device to be detected
 * `address` - address of the device to be detected on the indicated bus
 
