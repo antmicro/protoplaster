@@ -38,7 +38,7 @@ options:
                         Path to the custom tests sources
 ```
 
-Protoplaster expects a yaml file describing tests as an input. That yaml file should have a specified structure.
+Protoplaster expects a yaml file describing tests as an input. The yaml file should have a structure specified as follows:
 
 <!-- name="example" -->
 ```yaml
@@ -67,23 +67,28 @@ additional:
 ```
 
 ### Groups
-In the yaml file, there is a way to define different groups of tests to run them for different purposes. In the example yaml file, there are two groups defined: base and additional. Protoplaster when run without a defined group, will execute every test in each group. When the group is specified with a parameter `-g` or `--group`, only tests in the specified group are going to be run. There is a possibility to list existing groups in the yaml file, simply run `protoplaster --list-groups test.yaml`.
+In the yaml file, you can define different groups of tests to run them for different purposes. 
+In the yaml file example, there are two groups defined: base and additional. 
+Protoplaster, when run without a defined group, will execute every test in each group. 
+When the group is specified with the parameter `-g` or `--group`, only the tests in the specified group are going to be run. 
+You can also list existing groups in the yaml file, simply run `protoplaster --list-groups test.yaml`.
 
 ## Base modules parameters
-Each base module has some parameters that are needed for test initialization. Those parameters describe the tests and are passed to the test class as its attributes.
+Each base module requires parameters for test initialization. 
+These parameters describe the tests and are passed to the test class as its attributes.
 
 ### I2C
 Required parameters:
 
-* `bus` - i2c bus to check
+* `bus` - i2c bus to be check
 * `name` - name of device to be detected
 * `address` - address of the device to be detected on the indicated bus
 
 ### GPIO
 Required parameters:
 
-* `number` - number of the gpio pin
-* `value` - the value written to that pin
+* `number` - gpio pin number
+* `value` - value written to that pin
 
 Optional parameters:
 
@@ -107,9 +112,19 @@ Required parameters:
 * `bitstream_path` - path to a test bitstream that is going to be flashed
 
 ## Writing additional modules
-Apart from base modules available in Protoplaster, you can provide your own extended modules. The module should contain a `test.py` file in the root path. That file should contain a test class that is decorated with `ModuleName("")` from `protoplaster.conf.module` package. That decorator tells Protoplaster what the name of the module is. With that information Protoplaster can then correctly initialize the test parameters. The test class should contain a `name()` method. Its return value is used for the `device_name` field in CSV output.
+Apart from base modules available in Protoplaster, you can provide your own extended modules. 
+The module should contain a `test.py` file in the root path. 
+This file should contain a test class that is decorated with `ModuleName("")` from the `protoplaster.conf.module` package.
+This decorator tells Protoplaster what the name of the module is. 
+With this information, Protoplaster can correctly initialize the test parameters. 
+The test class should contain a `name()` method. Its return value is used for the `device_name` field in CSV output.
 
-The description of the external module should be added to the yaml file as for other tests. By default, external modules are searched in the `/etc/protoplaster` directory. If you want to store them in a different path, use the `--custom-tests` argument to set your own path. The individual tests run by Protoplaster should be present in the main class in the `test.py` file. The class's name should start with `Test`, and every test's name in that class should also start with `test`. An example of the extended module's test:
+The description of the external module should be added to the yaml file as for other tests. 
+By default, external modules are expected in the `/etc/protoplaster` directory. 
+If you want to store them in a different path, use the `--custom-tests` argument to set your own path. 
+Individual tests run by Protoplaster should be present in the main class in the `test.py` file. 
+The class's name should start with `Test`, and every test's name in this class should also start with `test`. 
+An example of an extended module test:
 
 ```python
 from protoplaster.conf.module import ModuleName
@@ -144,7 +159,9 @@ base:
     - path: "/dev/video1"
 ```
 ## System report
-Protoplaster provides `protoplaster-system-report`, a tool to obtain information about system state and configuration. It executes a list of commands and saves their outputs. The outputs are stored in a single zip archive together with an HTML summary.
+Protoplaster provides `protoplaster-system-report`, a tool for obtaining information about system state and configuration.
+It executes a list of commands and saves their outputs. 
+The outputs are stored in a single zip archive along with an HTML summary.
 
 ### Usage
 ```
@@ -159,7 +176,7 @@ options:
   --sudo                Run as sudo
 ```
 
-The YAML config contains list of actions to perform. A single action is described as follows:
+The YAML config contains a list of actions to perform. A single action is described as follows:
 
 ```yaml
 report_item_name:
@@ -172,17 +189,17 @@ report_item_name:
   on-fail: ...
 ```
 
-* `run` - command to run.
-* `summary` – list of summary generators, each one with fields:
+* `run` - command to be run
+* `summary` – a list of summary generators, each one with fields:
   * `title` – summary title
   * `run` – command that generates the summary. This command gets the output of the original command as stdin. This field is optional; if not specified, the output is placed in the report as-is.
-* `output` - output file for `run`'s output.
+* `output` - output file for the output of `run`.
 * `superuser` – optional, should be specified if the command requires elevated privileges to run. Possible values:
   * `required` – `protoplaster-system-report` will terminate if the privilege requirement is not met
   * `preferred` – if the privilege requirement is not met, a warning will be issued and this particular item won't be included in the report
-* `on-fail` – optional description of an item to run in case of failure. It can be used to run some alternative command if the original one fails or is not available.
+* `on-fail` – optional description of an item to run in case of failure. It can be used to run an alternative command when the original one fails or is not available.
 
-Example config file:
+Config file example:
 ```yaml
 uname:
   run: uname -a
@@ -207,4 +224,5 @@ ip:
 ```
 
 ### Running as root
-By default, `sudo` doesn't preserve `PATH`. To run `protoplaster-system-report` installed by a non-root user, invoke `protoplaster-system-report --sudo`
+By default, `sudo` doesn't preserve `PATH`. 
+To run `protoplaster-system-report` installed by a non-root user, invoke `protoplaster-system-report --sudo`
