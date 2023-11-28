@@ -199,7 +199,7 @@ report_item_name:
   * `preferred` – if the privilege requirement is not met, a warning will be issued and this particular item won't be included in the report
 * `on-fail` – optional description of an item to run in case of failure. It can be used to run an alternative command when the original one fails or is not available.
 
-Config file example:
+Example config file:
 ```yaml
 uname:
   run: uname -a
