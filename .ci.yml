@@ -42,6 +42,8 @@ build-docs:
     - protoplaster -t example.yml --generate-docs
     - protoplaster -t example.yml --csv report.csv
     - protoplaster-test-report report.csv -t md
+    - tuttest README.md system-report-example > system-report-example.yml
+    - protoplaster-system-report -c system-report-example.yml
     - cp -r .github/docs-template docs/
     - cp README.md docs/source/readme.md
     - cp protoplaster.md docs/source/

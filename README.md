@@ -183,18 +183,20 @@ report_item_name:
 * `on-fail` – optional description of an item to run in case of failure. It can be used to run some alternative command if the original one fails or is not available.
 
 Example config file:
+<!-- name="system-report-example" -->
 ```yaml
 uname:
   run: uname -a
   summary:
-    - name: os info
+    - title: os info
       run: cat
+  output: uname.out
 dmesg:
   run: dmesg
   summary: 
-    - name: usb
+    - title: usb
       run: grep usb
-    - name: v4l
+    - title: v4l
       run: grep v4l
   output: dmesg.out
   superuser: required
