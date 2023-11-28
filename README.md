@@ -67,11 +67,11 @@ additional:
 ```
 
 ### Groups
-In the yaml file, you can define different groups of tests to run them for different purposes. 
-In the yaml file example, there are two groups defined: base and additional. 
+In the YAML file, you can define different groups of tests to run them for different purposes. 
+In the YAML file example, there are two groups defined: base and additional. 
 Protoplaster, when run without a defined group, will execute every test in each group. 
 When the group is specified with the parameter `-g` or `--group`, only the tests in the specified group are going to be run. 
-You can also list existing groups in the yaml file, simply run `protoplaster --list-groups test.yaml`.
+You can also list existing groups in the YAML file, simply run `protoplaster --list-groups test.yaml`.
 
 ## Base modules parameters
 Each base module requires parameters for test initialization. 
@@ -80,19 +80,19 @@ These parameters describe the tests and are passed to the test class as its attr
 ### I2C
 Required parameters:
 
-* `bus` - i2c bus to be check
+* `bus` - i2c bus to be checked
 * `name` - name of device to be detected
 * `address` - address of the device to be detected on the indicated bus
 
 ### GPIO
 Required parameters:
 
-* `number` - gpio pin number
+* `number` - GPIO pin number
 * `value` - value written to that pin
 
 Optional parameters:
 
-* `gpio_name` - name of the sysfs gpio interface after exporting
+* `gpio_name` - name of the sysfs GPIO interface after exporting
 
 ### Cameras
 Required parameters:
@@ -149,7 +149,7 @@ class TestAdditionalCamera:
         assert self.path == "/dev/video0"
 ```
 
-And a yaml definition:
+And a YAML definition:
 
 ```yaml
 ---
@@ -172,7 +172,7 @@ options:
   -o OUTPUT_FILE, --output-file OUTPUT_FILE
                         Path to the output file
   -c CONFIG, --config CONFIG
-                        Path to the yaml config file
+                        Path to the YAML config file
   --sudo                Run as sudo
 ```
 
@@ -225,4 +225,4 @@ ip:
 
 ### Running as root
 By default, `sudo` doesn't preserve `PATH`. 
-To run `protoplaster-system-report` installed by a non-root user, invoke `protoplaster-system-report --sudo`
+To run `protoplaster-system-report` installed by a non-root user as root, invoke `protoplaster-system-report --sudo`
