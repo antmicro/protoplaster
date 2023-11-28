@@ -67,7 +67,7 @@ additional:
 ```
 
 ### Groups
-In the YAML file, you can define different groups of tests to run them for different purposes. 
+In the YAML file, you can define different groups of tests to run them for different use cases. 
 In the YAML file example, there are two groups defined: base and additional. 
 Protoplaster, when run without a defined group, will execute every test in each group. 
 When the group is specified with the parameter `-g` or `--group`, only the tests in the specified group are going to be run. 
