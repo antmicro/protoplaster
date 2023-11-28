@@ -40,12 +40,12 @@ class CommandConfig:
         if "superuser" in config and not is_root():
             if config["superuser"] == "required":
                 print(
-                    f"Error: You have insufficient permissions to run {self.script}. No report will be generated."
+                    f"Error: You have insufficient permissions to run {self.script}. No system report will be generated."
                 )
                 sys.exit(1)
             else:
                 print(
-                    f"Warning: You have insufficient permissions to run {self.script}. Output from this command will be skipped in the report."
+                    f"Warning: You have insufficient permissions to run {self.script}. Output from this command will be skipped in the system report."
                 )
         self.summary_configs = [
             SummaryConfig(c) for c in config.get("summary", [])
@@ -146,6 +146,43 @@ def run_command(config):
 spinner_frames = ["   ", ".  ", ".. ", "..."]
 
 
+def generate_system_report(config_path):
+    command_configs = read_commands(config_path)
+
+    files = []
+
+    sub_reports = []
+    for config in command_configs:
+        sub_report = None
+        finish_event = threading.Event()
+
+        def run():
+            nonlocal sub_report
+            sub_report = run_command(config)
+            finish_event.set()
+
+        thrd = threading.Thread(target=run)
+        print(f"running {config.name}", end="")
+        thrd.start()
+        for spinner_frame in itertools.cycle(spinner_frames):
+            if finish_event.wait(0.5):
+                break
+            print(f"\r{CLEAR_LINE}running {config.name}{spinner_frame}",
+                  end="")
+
+        if sub_report:
+            sub_reports.append(sub_report)
+            if config.output_file:
+                files.append((config.output_file, sub_report.raw_output))
+            print(f"\r{CLEAR_LINE}{config.name} completed")
+        else:
+            print(f"\r{CLEAR_LINE}{config.name} failed")
+
+    files.append(("system_report_summary.html", generate_html(sub_reports)))
+
+    return files
+
+
 def main():
     args = parse_args()
 
@@ -153,41 +190,13 @@ def main():
         os.execv(shutil.which("sudo"),
                  [__file__] + list(filter(lambda a: a != "--sudo", sys.argv)))
 
-    command_configs = read_commands(args.config)
+    files = generate_system_report(args.config)
 
     with open(args.output_file, "wb") as archive_file:
         with zipfile.ZipFile(archive_file, 'w',
                              zipfile.ZIP_DEFLATED) as archive:
-            sub_reports = []
-            for config in command_configs:
-                sub_report = None
-                finish_event = threading.Event()
-
-                def run():
-                    nonlocal sub_report
-                    sub_report = run_command(config)
-                    finish_event.set()
-
-                thrd = threading.Thread(target=run)
-                print(f"running {config.name}", end="")
-                thrd.start()
-                for spinner_frame in itertools.cycle(spinner_frames):
-                    if finish_event.wait(0.5):
-                        break
-                    print(
-                        f"\r{CLEAR_LINE}running {config.name}{spinner_frame}",
-                        end="")
-
-                if sub_report:
-                    sub_reports.append(sub_report)
-                    if config.output_file:
-                        archive.writestr(config.output_file,
-                                         sub_report.raw_output)
-                    print(f"\r{CLEAR_LINE}{config.name} completed")
-                else:
-                    print(f"\r{CLEAR_LINE}{config.name} failed")
-
-            archive.writestr("summary.html", generate_html(sub_reports))
+            for filename, content in files:
+                archive.writestr(filename, content)
 
 
 if __name__ == "__main__":

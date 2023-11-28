@@ -10,6 +10,7 @@ from colorama import init, Fore, Style
 from jinja2 import Environment, DictLoader, select_autoescape
 from pathlib import Path
 import zipfile
+import shutil
 
 from protoplaster.docs.docs import TestDocs
 from protoplaster.docs import __file__ as docs_path
@@ -18,8 +19,10 @@ from protoplaster.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
 from protoplaster.fpga.test import __file__ as fpga_test
 
-from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
 from protoplaster.conf.csv_generator import CsvReportGenerator
+from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
+from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report
+from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
 
 CONFIG_DIR = "/etc/protoplaster"
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
@@ -79,6 +82,12 @@ def parse_args():
     parser.add_argument("--report-output",
                         type=str,
                         help="Proplaster report archive")
+    parser.add_argument(
+        "--system-report-config",
+        type=str,
+        help="Path to the system report yaml config file",
+        default=f"{os.path.dirname(system_report_file)}/default_commands.yml")
+    parser.add_argument("--sudo", action='store_true', help="Run as sudo")
     args = parser.parse_args()
     if args.csv_columns and not args.csv and not args.report_output:
         parser.error("--csv-columns requires --csv or --report-output")
@@ -255,10 +264,14 @@ def run_tests(args):
         with open(args.report_output, "wb") as archive_file:
             with zipfile.ZipFile(archive_file, 'w',
                                  zipfile.ZIP_DEFLATED) as archive:
-                archive.writestr("report.csv", csv_report_gen.report)
+                archive.writestr("test_report.csv", csv_report_gen.report)
                 archive.writestr(
-                    "report.html",
+                    "test_report.html",
                     generate_test_report(csv_report_gen.report, "html"))
+
+                for filename, content in generate_system_report(
+                        args.system_report_config):
+                    archive.writestr(filename, content)
 
 
 def list_groups(yaml_file):
@@ -269,6 +282,10 @@ def list_groups(yaml_file):
 
 def main():
     args = parse_args()
+
+    if args.sudo:
+        os.execv(shutil.which("sudo"),
+                 [__file__] + list(filter(lambda a: a != "--sudo", sys.argv)))
     if not os.path.exists(args.test_file):
         print(
             error(
