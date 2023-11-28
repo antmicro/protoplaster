@@ -8,6 +8,10 @@ import os
 import sys
 from jinja2 import Environment, DictLoader
 import shutil
+import threading
+import itertools
+
+CLEAR_LINE = "\033[2K"
 
 
 class SummaryConfig:
@@ -139,6 +143,9 @@ def run_command(config):
         return None
 
 
+spinner_frames = ["   ", ".  ", ".. ", "..."]
+
+
 def main():
     args = parse_args()
 
@@ -153,12 +160,32 @@ def main():
                              zipfile.ZIP_DEFLATED) as archive:
             sub_reports = []
             for config in command_configs:
-                sub_report = run_command(config)
+                sub_report = None
+                finish_event = threading.Event()
+
+                def run():
+                    nonlocal sub_report
+                    sub_report = run_command(config)
+                    finish_event.set()
+
+                thrd = threading.Thread(target=run)
+                print(f"running {config.name}", end="")
+                thrd.start()
+                for spinner_frame in itertools.cycle(spinner_frames):
+                    if finish_event.wait(0.5):
+                        break
+                    print(
+                        f"\r{CLEAR_LINE}running {config.name}{spinner_frame}",
+                        end="")
+
                 if sub_report:
                     sub_reports.append(sub_report)
                     if config.output_file:
                         archive.writestr(config.output_file,
                                          sub_report.raw_output)
+                    print(f"\r{CLEAR_LINE}{config.name} completed")
+                else:
+                    print(f"\r{CLEAR_LINE}{config.name} failed")
 
             archive.writestr("summary.html", generate_html(sub_reports))
 
