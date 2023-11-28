@@ -71,7 +71,7 @@ In the yaml file, you can define different groups of tests to run them for diffe
 In the yaml file example, there are two groups defined: base and additional. 
 Protoplaster, when run without a defined group, will execute every test in each group. 
 When the group is specified with the parameter `-g` or `--group`, only the tests in the specified group are going to be run. 
-You can also list existing groups in the YAML file, simply run `protoplaster --list-groups test.yaml`.
+You can also list existing groups in the yaml file, simply run `protoplaster --list-groups test.yaml`.
 
 ## Base modules parameters
 Each base module requires parameters for test initialization. 
@@ -119,7 +119,7 @@ This decorator tells Protoplaster what the name of the module is.
 With this information, Protoplaster can correctly initialize the test parameters. 
 The test class should contain a `name()` method. Its return value is used for the `device_name` field in CSV output.
 
-The description of the external module should be added to the yaml file as for other tests. 
+The description of the external module should be added to the YAML file as for other tests. 
 By default, external modules are expected in the `/etc/protoplaster` directory. 
 If you want to store them in a different path, use the `--custom-tests` argument to set your own path. 
 Individual tests run by Protoplaster should be present in the main class in the `test.py` file. 
