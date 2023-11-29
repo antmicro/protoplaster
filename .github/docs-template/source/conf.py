@@ -58,6 +58,8 @@ html_show_sphinx = False
 
 html_title = project
 
+html_static_path = ['_static/system_report']
+
 (
     html_logo,
     html_theme_options,

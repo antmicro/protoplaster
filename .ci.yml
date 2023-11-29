@@ -42,12 +42,15 @@ build-docs:
     - protoplaster -t example.yml --generate-docs
     - protoplaster -t example.yml --csv report.csv
     - protoplaster-test-report report.csv -t md
-    - tuttest README.md system-report-example > system-report-example.yml
-    - protoplaster-system-report -c system-report-example.yml
     - cp -r .github/docs-template docs/
     - cp README.md docs/source/readme.md
     - cp protoplaster.md docs/source/
     - cp report.md docs/source/
+    - tuttest README.md system-report-example > system-report-example.yml
+    - protoplaster-system-report -c system-report-example.yml
+    - echo -e "\`\`\`\n$(cat system-report-example.yml)\n\`\`\`" >>  docs/source/system-report-example.yml
+    - mkdir -p docs/source/_static/system_report
+    - unzip report.zip -d docs/source/_static/system_report
     - ./.github/scripts/sphinx.sh
     - ./.github/scripts/latex.sh
   artifacts:
