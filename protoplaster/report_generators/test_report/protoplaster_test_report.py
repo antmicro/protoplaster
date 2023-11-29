@@ -50,6 +50,17 @@ custom_columns_html = {
 }
 
 
+def generate_test_report(csv_content, type):
+    reader = csv.DictReader(csv_content.splitlines())
+    environment = Environment(
+        loader=FileSystemLoader(os.path.dirname(__file__)))
+    template = environment.get_template(f"report_table_template.{type}")
+    custom_columns = custom_columns_md if type == "md" else custom_columns_html
+    return template.render(fields=reader.fieldnames,
+                           reader=reader,
+                           custom_columns=custom_columns)
+
+
 def main():
     args, unnamed = parse_args()
 
@@ -60,19 +71,11 @@ def main():
     input_file = args.input_file if args.input_file else unnamed[0]
     output_file = args.output_file if args.output_file else input_file.split(
         ".")[0] + "." + args.type
-    custom_columns = custom_columns_md if args.type == "md" else custom_columns_html
 
     with open(input_file) as csv_file:
-        reader = csv.DictReader(csv_file)
-        environment = Environment(
-            loader=FileSystemLoader(os.path.dirname(__file__)))
-        template = environment.get_template(
-            f"report_table_template.{args.type}")
-        with open(output_file, "w") as file:
-            file.write(
-                template.render(fields=reader.fieldnames,
-                                reader=reader,
-                                custom_columns=custom_columns))
+        csv_content = csv_file.read()
+    with open(output_file, "w") as file:
+        file.write(generate_test_report(csv_content, args.type))
 
 
 if __name__ == "__main__":
