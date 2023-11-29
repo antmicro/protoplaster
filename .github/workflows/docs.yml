@@ -20,7 +20,7 @@ jobs:
 
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.11
       - name: Install protoplaster with pip
         run: |
           pip install .
@@ -38,12 +38,20 @@ jobs:
           protoplaster -t example.yml --csv report.csv 
           protoplaster-test-report report.csv -t md
 
+      - name: Generate system report from yml
+        run: |
+          tuttest README.md system-report-example > system-report-example.yml
+          protoplaster-system-report -c system-report-example.yml --sudo
+
       - name: Prepare docs template
         run: |
           cp -r .github/docs-template docs/
           cp README.md docs/source/readme.md
           cp protoplaster.md docs/source/
           cp report.md docs/source/
+          echo -e "\`\`\`\n$(cat system-report-example.yml)\n\`\`\`" >>  docs/source/system-report-example.yml
+          mkdir -p docs/source/_static/system_report
+          unzip report.zip -d docs/source/_static/system_report
 
       - name: Build html
         uses: docker://btdi/sphinx:min
