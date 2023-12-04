@@ -124,18 +124,23 @@ def run_command(config):
         out = get_cmd_output(f"sh -c '{config.script}'")
         summaries = []
         for summary_config in config.summary_configs:
-            summary_content = subprocess.check_output(
-                f"sh -c '{summary_config.script}'",
-                shell=True,
-                text=True,
-                stderr=subprocess.STDOUT,
-                env=os.environ | {
-                    "PROTOPLASTER_SCRIPTS":
-                    f"{os.path.dirname(__file__)}/scripts"
-                },
-                input=out)
-            summaries.append(
-                SubReportSummary(summary_config.title, summary_content))
+            try:
+                summary_content = subprocess.check_output(
+                    f"sh -c '{summary_config.script}'",
+                    shell=True,
+                    text=True,
+                    stderr=subprocess.STDOUT,
+                    env=os.environ | {
+                        "PROTOPLASTER_SCRIPTS":
+                        f"{os.path.dirname(__file__)}/scripts"
+                    },
+                    input=out)
+                summaries.append(
+                    SubReportSummary(summary_config.title, summary_content))
+            except:
+                summaries.append(
+                    SubReportSummary(summary_config.title,
+                                     "this summary is empty"))
         return SubReportResult(config.name, out, config.output_file, summaries)
     except:
         if config.on_fail:
