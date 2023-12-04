@@ -36,6 +36,11 @@ options:
   --generate-docs       Generate documentation
   -c CUSTOM_TESTS, --custom-tests CUSTOM_TESTS
                         Path to the custom tests sources
+  --report-output REPORT_OUTPUT
+                        Proplaster report archive
+  --system-report-config SYSTEM_REPORT_CONFIG
+                        Path to the system report yaml config file
+  --sudo                Run as sudo
 ```
 
 Protoplaster expects a yaml file describing tests as an input. The yaml file should have a structure specified as follows:
@@ -158,6 +163,23 @@ base:
     - path: "/dev/video0"
     - path: "/dev/video1"
 ```
+
+## Protoplaster test report
+Protoplaster provides `protoplaster-test-report`, a tool to convert test CSV output into a HTML or Markdown table.
+```
+usage: protoplaster-test-report [-h] [-i INPUT_FILE] -t {md,html} [-o OUTPUT_FILE]
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT_FILE, --input-file INPUT_FILE
+                        Path to the csv file
+  -t {md,html}, --type {md,html}
+                        Output type
+  -o OUTPUT_FILE, --output-file OUTPUT_FILE
+                        Path to the output file
+```
+
+
 ## System report
 Protoplaster provides `protoplaster-system-report`, a tool for obtaining information about system state and configuration.
 It executes a list of commands and saves their outputs. 
@@ -200,18 +222,20 @@ report_item_name:
 * `on-fail` – optional description of an item to run in case of failure. It can be used to run an alternative command when the original one fails or is not available.
 
 Example config file:
+<!-- name="system-report-example" -->
 ```yaml
 uname:
   run: uname -a
   summary:
-    - name: os info
+    - title: os info
       run: cat
+  output: uname.out
 dmesg:
   run: dmesg
   summary: 
-    - name: usb
+    - title: usb
       run: grep usb
-    - name: v4l
+    - title: v4l
       run: grep v4l
   output: dmesg.out
   superuser: required

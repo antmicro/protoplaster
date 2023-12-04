@@ -31,6 +31,10 @@
             }
             .text {
                 color: white;
+                font-family: sans-serif;
+            }
+            .code {
+                color: white;
             }
             .output_text {
                 font-size: 16px;
@@ -89,7 +93,7 @@
         {% for summary in sub_report.summaries %}
         <div id="{{sub_report.name}}_{{summary.title}}" class="hidden summary">
             <h3 class="text">{{summary.title}}</h3>
-            <pre><code class="text">{{summary.content}}</code></pre>
+            <pre><code class="code">{{summary.content}}</code></pre>
         </div>
         {% endfor %}
         {% endfor %}
