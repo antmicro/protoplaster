@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.11
       - name: Install protoplaster with pip
         run: |
           pip install .
@@ -35,13 +35,15 @@ jobs:
          python3-pip telnet iptables iproute2 bc cpio rsync
 
       - name: Run scripts in Renode
-        uses: antmicro/renode-linux-runner-action@v0
+        uses: antmicro/renode-linux-runner-action@v1
         with:
-          shared-dir: ./
+          shared-dirs: ./
           renode-run: |
-            ./protoplaster/protoplaster -t tests/basic.yml
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install .
+            protoplaster -t tests/basic.yml
           devices: |
             vivid
             gpio 0 32
             i2c 0x1C
-          python-packages: git+https://github.com/antmicro/protoplaster.git

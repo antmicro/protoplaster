@@ -241,9 +241,15 @@ dmesg:
   superuser: required
 ip:
   run: ip a
+  summary:
+    - title: Network interfaces state
+      run: python3 $PROTOPLASTER_SCRIPTS/generate_ip_table.py "$(cat)"
   output: ip.out
   on-fail:
     run: ifconfig -a
+    summary:
+      - title: Network interfaces state
+        run: python3 $PROTOPLASTER_SCRIPTS/generate_ifconfig_table.py "$(cat)"
     output: ifconfig.out
 ```
 
