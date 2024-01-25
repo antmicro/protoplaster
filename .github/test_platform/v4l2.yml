@@ -1,0 +1,9 @@
+name: v4l2
+shell: target
+before: [chroot]
+echo: true
+timeout: 10
+fail-fast: true
+disabled: false
+commands:
+  - modprobe vivid n_devs=2 node_types=0x1,0x1 vid_cap_nr=0,2

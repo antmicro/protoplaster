@@ -1,0 +1,15 @@
+name: renode_network
+shell: renode
+requires: [renode_config]
+echo: true
+timeout: 10
+fail-fast: true
+sleep: 0
+commands:
+  - emulation CreateSwitch "${{SWITCH_NAME}}"
+  - emulation CreateTap "${{TAP_INTERFACE}}" "tap"
+  - connector Connect host.tap ${{SWITCH_NAME}}
+  - connector Connect sysbus.ethernet ${{SWITCH_NAME}}
+vars:
+  SWITCH_NAME: switch0
+  TAP_INTERFACE: tap0

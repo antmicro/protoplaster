@@ -1,0 +1,30 @@
+$name?="hifive-unleashed"
+
+using sysbus
+mach create $name
+machine LoadPlatformDescription @action/device/hifive_unleashed/platform.repl
+
+# rootfs
+machine LoadPlatformDescriptionFromString 'virtio: Storage.VirtIOBlockDevice @ sysbus 0x100d0000 { IRQ -> plic@50 }'
+virtio LoadImage @images/rootfs.img
+
+machine LoadPlatformDescriptionFromString 'virtio2: Storage.VirtIOBlockDevice @ sysbus 0x100e0000 { IRQ -> plic@51 }'
+virtio2 LoadImage @/home/runner/work/protoplaster/protoplaster/drive.img true
+
+
+showAnalyzer uart0
+e51 LogFunctionNames true
+
+$fdt ?=    @images/hifive-unleashed-a00.dtb
+$elf ?=    @images/fw_payload.elf
+$image ?=  @images/Image
+$rootfs ?= @images/rootfs.cpio
+
+macro reset
+"""
+    sysbus LoadELF $elf
+    sysbus LoadFdt $fdt 0x88000000 "earlycon=sbi console=ttyS0 root=/dev/ram init=/sbin/init initrd=0x8d000000,28M"
+    sysbus LoadBinary $rootfs 0x8D000000
+    sysbus LoadBinary $image 0x8B000000
+"""
+runMacro $reset

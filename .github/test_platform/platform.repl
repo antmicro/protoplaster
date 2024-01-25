@@ -1,0 +1,83 @@
+// Custom board - HiFive Unleashed singlecore
+// Three u54 cores are disabled here to increase emulation speed
+
+e51: CPU.RiscV64 @ sysbus
+    cpuType: "rv64imac"
+    hartId: 0
+    privilegeArchitecture: PrivilegeArchitecture.Priv1_10
+    timeProvider: clint
+
+u54_1: CPU.RiscV64 @ sysbus
+    cpuType: "rv64gc"
+    hartId: 1
+    privilegeArchitecture: PrivilegeArchitecture.Priv1_10
+    timeProvider: clint
+
+debug: Memory.MappedMemory @sysbus 0x0
+    size: 0x1000
+
+e51DTim: Memory.MappedMemory @ sysbus 0x01000000
+    size: 0x2000
+
+u54Hart1ITim: Memory.MappedMemory @ sysbus 0x01808000
+    size: 0x7000
+
+clint: IRQControllers.CoreLevelInterruptor  @ sysbus 0x2000000
+    frequency: 1000000
+    numberOfTargets: 2
+    [0, 1] -> e51@[3, 7]
+    [2, 3] -> u54_1@[3, 7]
+
+plic: IRQControllers.PlatformLevelInterruptController @ sysbus 0xc000000
+    0 -> e51@11
+    [1,2] -> u54_1@[11,9]
+    numberOfSources: 53
+    numberOfContexts: 9
+    prioritiesEnabled : false
+
+uart0: UART.SiFive_UART @ sysbus 0x10010000
+    IRQ -> plic@4
+
+uart1: UART.SiFive_UART @ sysbus 0x10011000
+    IRQ -> plic@5
+
+qspi0Flash: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x2000000
+
+ddr: Memory.MappedMemory @ sysbus 0x80000000
+    size: 0x200000000
+
+ethernet: Network.CadenceGEM @ sysbus 0x10090000
+    moduleRevision: 0x0109
+    moduleId: 0x1007
+    IRQ -> plic@53
+
+phy: Network.EthernetPhysicalLayer @ ethernet 0
+    Id1: 0x0141
+    Id2: 0x0e40
+    BasicStatus: 0x62A4
+    AutoNegotiationAdvertisement: 0x1e1
+    AutoNegotiationLinkPartnerBasePageAbility: 0x1e1
+    MasterSlaveControl: 0x300
+    MasterSlaveStatus: 0x3000
+
+qspi0: SPI.HiFive_SPI @ sysbus 0x10040000
+    IRQ -> plic@51
+    numberOfSupportedSlaves: 1
+
+// The registration address value is taken from the device tree.
+// It is different in the documentation (0x10140000).
+qspi1: SPI.HiFive_SPI @ sysbus 0x10041000
+    IRQ -> plic@52
+    numberOfSupportedSlaves: 4
+
+qspi2: SPI.HiFive_SPI @ sysbus 0x10050000
+    IRQ -> plic@6
+    numberOfSupportedSlaves: 1
+
+pwm0: HiFive_PWM @ sysbus 0x10020000
+    IRQ -> plic@42
+
+pwm1: HiFive_PWM @ sysbus 0x10021000
+    IRQ -> plic@46
+
