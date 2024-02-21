@@ -33,10 +33,22 @@ jobs:
           tuttest README.md example > example.yml
           protoplaster -t example.yml --generate-docs
 
-      - name: Generate test report from yml
-        run: |
-          protoplaster -t example.yml --csv report.csv 
-          protoplaster-test-report report.csv -t md
+      - name: Generate test report in Renode
+        uses: antmicro/renode-linux-runner-action@main
+        with:
+          shared-dirs: ./
+          renode-run: |
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install .
+            protoplaster -t example.yml --csv report.csv
+            protoplaster-test-report report.csv -t md
+          devices: |
+            gpio 0 32
+            i2c 0x3C
+            i2c 0x70
+          tasks: |
+            ${{ github.workspace }}/.github/test_platform/v4l2.yml
 
       - name: Generate system report from yml
         run: |
