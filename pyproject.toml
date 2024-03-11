@@ -15,4 +15,4 @@ protoplaster-system-report = 'protoplaster.report_generators.system_report.proto
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.package-data]
-"*" = ["*.md", "*.css", "*.html", "*.yml"]
+"*" = ["*.md", "*.css", "*.html", "*.yml", "*.svg"]
