@@ -185,6 +185,20 @@ def generate_system_report(config_path):
 
     files.append(("system_report_summary.html", generate_html(sub_reports)))
 
+    # apart from html file we have to put in the archive style.css and all additional files stored in static/
+    with open(f"{os.path.dirname(__file__)}/style.css", "r") as style:
+        files.append(("style.css", style.read()))
+
+    def read_files_from_dir(dir, dest):
+        for root, dirs, files in os.walk(dir):
+            for file in files:
+                with open(os.path.join(dir, file), "r") as file_content:
+                    dest.append((f"static/{file}", file_content.read()))
+            for dirname in dirs:
+                read_files_from_dir(os.path.join(root, dirname), dest)
+
+    read_files_from_dir(f"{os.path.dirname(__file__)}/static", files)
+
     return files
 
 
