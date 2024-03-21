@@ -1,6 +1,6 @@
 # Protoplaster
 
-Copyright (c) 2022-2023 [Antmicro](https://www.antmicro.com)
+Copyright (c) 2022-2024 [Antmicro](https://www.antmicro.com)
 
 An automated framework for platform testing (Hardware and BSPs).
 
