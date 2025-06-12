@@ -24,8 +24,9 @@ class TestI2C:
         """
         i2c_bus = I2C(self.bus)
         for device in self.devices:
-            assert (i2c_bus.check_address(device['address'], True),
-                    f"No device found at address: {device['address']}")
+            assert i2c_bus.check_address(
+                device['address'],
+                True), f"No device found at address: {device['address']}"
 
     def name(self):
         return f"/dev/i2c-{self.bus}" if isinstance(self.bus,
