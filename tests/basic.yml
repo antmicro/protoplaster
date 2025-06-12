@@ -11,3 +11,5 @@ base:
   gpio:
   - number: 20
     value: 1
+  network:
+  - interface: "eth0"
