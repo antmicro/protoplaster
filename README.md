@@ -52,6 +52,7 @@ options:
   --generate-docs       Generate documentation
   -c, --custom-tests CUSTOM_TESTS
                         Path to the custom tests sources
+  -l, --log             Append test results to a log file
   --report-output REPORT_OUTPUT
                         Proplaster report archive
   --system-report-config SYSTEM_REPORT_CONFIG

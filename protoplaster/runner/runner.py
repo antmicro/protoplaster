@@ -12,12 +12,14 @@ from protoplaster.docs.docs import TestDocs
 from protoplaster.docs import __file__ as docs_path
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
+from protoplaster.conf.log_generator import LogGenerator
 from protoplaster.conf.parser import TestFile, load_yaml
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
 from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, SubReportResult, run_command
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
+LOG_PATH = str(os.getenv("HOME")) + "/.local/share/protoplaster.log"
 
 def list_tests(args):
     test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
@@ -175,9 +177,17 @@ def run_tests(args):
             generate_docs(
                 OrderedDict.fromkeys(test_modules).keys(), load_yaml(tf.name))
             sys.exit()
+
+        plugins = []
         csv_report_gen = CsvReportGenerator(args.csv_columns, metadata)
+        plugins.append(csv_report_gen)
+
+        if args.log:
+            log_report_gen = LogGenerator(LOG_PATH)
+            plugins.append(log_report_gen)
+
         ret = pytest.main(prepare_pytest_args(test_modules, args),
-                          plugins=[csv_report_gen])
+                          plugins=plugins)
     if args.csv:
         with open(f"{args.reports_dir}/{args.csv}", "w") as csv_file:
             csv_file.write(csv_report_gen.report)

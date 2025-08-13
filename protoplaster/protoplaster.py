@@ -89,6 +89,12 @@ def parse_args():
                         type=str,
                         default=f"{CONFIG_DIR}/tests/*/",
                         help="Path to the custom tests sources")
+    parser.add_argument(
+        "-l",
+        "--log",
+        action="store_true",
+        help="Append test results to a log file",
+    )
     parser.add_argument("--report-output",
                         type=str,
                         help="Proplaster report archive")
