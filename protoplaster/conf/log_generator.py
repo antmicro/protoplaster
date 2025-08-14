@@ -18,7 +18,7 @@ class LogGenerator:
             "module": (
                 lambda item, report: report.nodeid[report.nodeid.find("test.py") :]
             ),
-            "duration": (lambda item, report: report.duration),
+            "duration": (lambda item, report: round(report.duration, 4)),
             "message": (lambda item, report: self.get_test_message(report)),
             "status": (lambda item, report: report.outcome),
             "user_properties": (
@@ -33,7 +33,7 @@ class LogGenerator:
         handler = RotatingFileHandler(
             log_path, maxBytes=10 * 1024 * 1024, backupCount=5
         )
-        formatter = logging.Formatter("%(asctime)s %(message)s")
+        formatter = logging.Formatter("%(created)s %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
