@@ -21,6 +21,7 @@ TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
 LOG_PATH = str(os.getenv("HOME")) + "/.local/share/protoplaster.log"
 
+
 def list_tests(args):
     test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
     if (group := args.group) is not (None or ""):
