@@ -95,11 +95,17 @@ def info(text):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t",
-                        "--test-file",
+    parser.add_argument("-d",
+                        "--test-dir",
                         type=str,
-                        default=f"{CONFIG_DIR}/test.yaml",
-                        help="Path to the test yaml description")
+                        default=f"{CONFIG_DIR}",
+                        help="Path to the test directory")
+    parser.add_argument(
+        "-t",
+        "--test-file",
+        type=str,
+        default=f"test.yaml",
+        help="Path to the yaml test description in the test directory")
     parser.add_argument("-g", "--group", type=str, help="Group to execute")
     parser.add_argument("--list-groups",
                         action="store_true",
@@ -284,7 +290,7 @@ def generate_docs(tests_full_path, yaml_content):
 
 
 def prepare_pytest_args(tests, args):
-    pytest_args = f" -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} "
+    pytest_args = f" -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_dir}/{args.test_file} "
     if args.output:
         pytest_args += f"--junitxml={args.output} "
     if args.group:
@@ -294,12 +300,14 @@ def prepare_pytest_args(tests, args):
 
 
 def run_tests(args):
-    tests = extract_tests(args.test_file, args.group, args.custom_tests)
+    tests = extract_tests(f"{args.test_dir}/{args.test_file}", args.group,
+                          args.custom_tests)
     if tests == []:
         print(warning("No tests to run!"))
     if args.generate_docs:
         generate_docs(
-            OrderedDict.fromkeys(tests).keys(), parse_yaml(args.test_file))
+            OrderedDict.fromkeys(tests).keys(),
+            parse_yaml(f"{args.test_dir}/{args.test_file}"))
         sys.exit()
     csv_report_gen = CsvReportGenerator(args.csv_columns)
     pytest.main(prepare_pytest_args(tests, args), plugins=[csv_report_gen])
@@ -338,14 +346,15 @@ def main():
     if args.sudo:
         os.execv(shutil.which("sudo"),
                  [__file__] + list(filter(lambda a: a != "--sudo", sys.argv)))
-    if not os.path.exists(args.test_file) and not args.server:
+    if not os.path.exists(
+            f"{args.test_dir}/{args.test_file}") and not args.server:
         print(
             error(
-                f"Test file {args.test_file} does not exist or you don't have sufficient permitions"
+                f"Test file {args.test_dir}/{args.test_file} does not exist or you don't have sufficient permitions"
             ))
         exit(1)
     if args.list_groups:
-        list_groups(args.test_file)
+        list_groups(f"{args.test_dir}/{args.test_file}")
         sys.exit()
 
     if args.server:

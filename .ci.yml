@@ -39,8 +39,8 @@ build-docs:
     - pip install .
     - pip install git+https://github.com/antmicro/tuttest
     - tuttest README.md example > example.yml
-    - protoplaster -t example.yml --generate-docs
-    - protoplaster -t example.yml --csv report.csv
+    - protoplaster -d . -t example.yml --generate-docs
+    - protoplaster -d . -t example.yml --csv report.csv
     - protoplaster-test-report report.csv -t md
     - cp -r .github/docs-template docs/
     - cp README.md docs/source/readme.md
