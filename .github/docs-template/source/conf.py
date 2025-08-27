@@ -37,6 +37,8 @@ numfig = True
 
 # If you need to add extensions just add to those lists
 extensions = default_extensions
+extensions.append('sphinxcontrib.autohttp.flask')
+extensions.append('sphinxcontrib.autohttp.flaskqref')
 myst_enable_extensions = default_myst_enable_extensions
 myst_fence_as_directive = default_myst_fence_as_directive
 

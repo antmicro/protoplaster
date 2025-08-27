@@ -4,6 +4,7 @@
 :maxdepth: 2
 
 introduction
+api
 readme
 protoplaster
 report

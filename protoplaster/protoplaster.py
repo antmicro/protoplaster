@@ -42,6 +42,18 @@ tests_paths = {
 app = Flask(__name__)
 
 
+def create_docs_app() -> Flask:
+    """Create an app that can be used for building the docs
+
+    This only registers the available API routes, this cannot be used to run
+    the server! Used for dynamically building the API reference chapter in
+    the documentation.
+    """
+    app = Flask(__name__)
+    app.register_blueprint(protoplaster.api.v1.create_routes())
+    return app
+
+
 init()
 
 
