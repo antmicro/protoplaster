@@ -8,6 +8,7 @@ import yaml
 from collections import OrderedDict
 from colorama import init, Fore, Style
 from jinja2 import Environment, DictLoader, select_autoescape
+from flask import Flask
 from pathlib import Path
 import zipfile
 import shutil
@@ -37,6 +38,8 @@ from protoplaster.report_generators.test_report.protoplaster_test_report import 
 from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
 
+import protoplaster.api.v1
+
 CONFIG_DIR = "/etc/protoplaster"
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
@@ -59,6 +62,9 @@ tests_paths = {
     "UCD90320U": UCD90320U_test,
     "TCA9548A": TCA9548A_test,
 }
+
+app = Flask(__name__)
+
 
 init()
 
@@ -114,6 +120,9 @@ def parse_args():
         help="Path to the system report yaml config file",
         default=f"{os.path.dirname(system_report_file)}/default_commands.yml")
     parser.add_argument("--sudo", action='store_true', help="Run as sudo")
+    parser.add_argument("--server",
+                        action='store_true',
+                        help="Run in server mode")
     args = parser.parse_args()
     if args.csv_columns and not args.csv and not args.report_output:
         parser.error("--csv-columns requires --csv or --report-output")
@@ -299,6 +308,10 @@ def run_tests(args):
                     archive.writestr(filename, content)
 
 
+def run_server(args):
+    app.run()
+
+
 def list_groups(yaml_file):
     content = parse_yaml(yaml_file)
     for group in content:
@@ -311,7 +324,7 @@ def main():
     if args.sudo:
         os.execv(shutil.which("sudo"),
                  [__file__] + list(filter(lambda a: a != "--sudo", sys.argv)))
-    if not os.path.exists(args.test_file):
+    if not os.path.exists(args.test_file) and not args.server:
         print(
             error(
                 f"Test file {args.test_file} does not exist or you don't have sufficient permitions"
@@ -320,7 +333,11 @@ def main():
     if args.list_groups:
         list_groups(args.test_file)
         sys.exit()
-    run_tests(args)
+
+    if args.server:
+        run_server(args)
+    else:
+        run_tests(args)
 
 
 if __name__ == "__main__":
