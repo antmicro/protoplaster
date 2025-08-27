@@ -321,6 +321,7 @@ def run_tests(args):
 
 
 def run_server(args):
+    app.register_blueprint(protoplaster.api.v1.create_routes())
     app.run()
 
 
