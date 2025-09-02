@@ -2,16 +2,16 @@
 
 set -e
 
-apt-get update -qq
-DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
-  python3-pip \
-  python3-setuptools \
-  python3-wheel
-
 cd $(dirname $0)/../../docs
+
+python3 -m venv ./venv
+. ./venv/bin/activate
 
 pip3 install -r requirements.txt
 
 cd build/latex
 LATEXMKOPTS='-interaction=nonstopmode' make
 cp *.pdf ../html/
+
+cd -
+rm -r ./venv
