@@ -1,6 +1,25 @@
-from flask import Blueprint
+from flask import Blueprint, current_app, jsonify, request
+import os
+from datetime import datetime, timezone
+from werkzeug.utils import secure_filename
 
 configs_blueprint: Blueprint = Blueprint("protoplaster-configs", __name__)
+
+
+def file_to_config_entry(config_dir: str, filename: str):
+    path = os.path.join(config_dir, filename)
+
+    # use a stable ID (hash of filename + path)
+    id = "cfg-" + hashlib.sha1(path.encode()).hexdigest()[:8]
+
+    mtime = os.path.getmtime(path)
+    created = datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat()
+
+    return {
+        "id": id,
+        "name": filename,
+        "created": created,
+    }
 
 
 @configs_blueprint.route("/api/v1/configs")
@@ -34,8 +53,23 @@ def fetch_configs():
           }
         ]
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+
+    config_dir = current_app.config["CONFIG_DIR"]
+    if not config_dir:
+        return jsonify({"error": "CONFIG_DIR not configured"}), 500
+
+    try:
+        filenames = [
+            f for f in os.listdir(config_dir)
+            if os.path.isfile(os.path.join(config_dir, f))
+        ]
+    except FileNotFoundError:
+        return jsonify({"error": f"Directory not found: {config_dir}"}), 404
+
+    configs = [file_to_config_entry(config_dir, f) for f in filenames]
+    print(configs)
+
+    return jsonify(configs)
 
 
 @configs_blueprint.route("/api/v1/configs", methods=["POST"])
@@ -70,8 +104,25 @@ def upload_config(scopes: list[str] = []):
 
         HTTP/1.1 200 OK
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    config_dir = current_app.config.get("CONFIG_DIR")
+    if not config_dir:
+        return jsonify({"error": "CONFIG_DIR not configured"}), 500
+
+    if "file" not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    filename = secure_filename(file.filename)
+    save_path = os.path.join(config_dir, filename)
+    try:
+        file.save(save_path)
+    except Exception as e:
+        return jsonify({"error": f"Failed to save file: {str(e)}"}), 500
+
+    return jsonify(file_to_config_entry(config_dir, filename)), 201
 
 
 @configs_blueprint.route("/api/v1/configs/<string:config_name>")
