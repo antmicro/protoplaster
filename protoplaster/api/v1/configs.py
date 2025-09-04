@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, send_from_directory
 import os
 from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
@@ -9,14 +9,10 @@ configs_blueprint: Blueprint = Blueprint("protoplaster-configs", __name__)
 def file_to_config_entry(config_dir: str, filename: str):
     path = os.path.join(config_dir, filename)
 
-    # use a stable ID (hash of filename + path)
-    id = "cfg-" + hashlib.sha1(path.encode()).hexdigest()[:8]
-
     mtime = os.path.getmtime(path)
     created = datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat()
 
     return {
-        "id": id,
         "name": filename,
         "created": created,
     }
@@ -67,13 +63,12 @@ def fetch_configs():
         return jsonify({"error": f"Directory not found: {config_dir}"}), 404
 
     configs = [file_to_config_entry(config_dir, f) for f in filenames]
-    print(configs)
 
     return jsonify(configs)
 
 
 @configs_blueprint.route("/api/v1/configs", methods=["POST"])
-def upload_config(scopes: list[str] = []):
+def upload_config():
     """Upload a test config
 
     :form file: yaml file with the test config
@@ -122,11 +117,11 @@ def upload_config(scopes: list[str] = []):
     except Exception as e:
         return jsonify({"error": f"Failed to save file: {str(e)}"}), 500
 
-    return jsonify(file_to_config_entry(config_dir, filename)), 201
+    return jsonify(file_to_config_entry(config_dir, filename))
 
 
 @configs_blueprint.route("/api/v1/configs/<string:config_name>")
-def fetch_one_config():
+def fetch_one_config(config_name: str):
     """Fetch information about a config
 
     :status 200: no error
@@ -154,12 +149,20 @@ def fetch_one_config():
           "created": "Mon, 25 Aug 2025 16:58:35 +0200",
         }
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    config_dir = current_app.config["CONFIG_DIR"]
+    if not config_dir:
+        return jsonify({"error": "CONFIG_DIR not configured"}), 500
+
+    if not os.path.exists(os.path.join(config_dir, config_name)):
+        return jsonify({"error": f"File not found: {config_name}"}), 404
+
+    config = file_to_config_entry(config_dir, config_name)
+
+    return jsonify(config)
 
 
 @configs_blueprint.route("/api/v1/configs/<string:config_name>/file")
-def fetch_config_file():
+def fetch_config_file(config_name: str):
     """Fetch a config file
 
     :status 200: no error
@@ -185,12 +188,21 @@ def fetch_config_file():
           network:
             - interface: enp14s0
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    config_dir = current_app.config["CONFIG_DIR"]
+    config_file = os.path.join(config_dir, config_name)
+
+    if not os.path.isfile(config_file):
+        return jsonify({"error": "Configuration file not found"}), 404
+
+    return send_from_directory(os.path.abspath(config_dir),
+                               config_name,
+                               as_attachment=True,
+                               mimetype="text/yaml")
 
 
-@configs_blueprint.route("/api/v1/configs/<string:name>", methods=["DELETE"])
-def delete_config(scopes: list[str] = []):
+@configs_blueprint.route("/api/v1/configs/<string:config_name>",
+                         methods=["DELETE"])
+def delete_config(config_name: str):
     """Remove a test config
 
     :param name: filename of the test config
@@ -210,5 +222,11 @@ def delete_config(scopes: list[str] = []):
 
         HTTP/1.1 200 OK
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    config_dir = current_app.config["CONFIG_DIR"]
+    config_path = os.path.join(config_dir, config_name)
+
+    if not os.path.isfile(config_path):
+        return jsonify({"error": "Configuration file not found"}), 404
+
+    os.remove(config_path)
+    return {}
