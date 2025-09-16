@@ -12,6 +12,7 @@ from protoplaster.runner.runner import run_tests, list_groups
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
 
 CONFIG_DIR = "/etc/protoplaster"
+REPORTS_DIR = "/var/lib/protoplaster/reports"
 
 
 def create_docs_app() -> Flask:
@@ -48,6 +49,11 @@ def parse_args():
                         type=str,
                         default=f"{CONFIG_DIR}",
                         help="Path to the test directory")
+    parser.add_argument("-r",
+                        "--reports-dir",
+                        type=str,
+                        default=f"{REPORTS_DIR}",
+                        help="Path to the reports directory")
     parser.add_argument(
         "-t",
         "--test-file",

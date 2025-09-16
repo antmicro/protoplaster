@@ -227,7 +227,7 @@ def run_tests(args):
     csv_report_gen = CsvReportGenerator(args.csv_columns)
     pytest.main(prepare_pytest_args(tests, args), plugins=[csv_report_gen])
     if args.csv:
-        with open(args.csv, "w") as csv_file:
+        with open(f"{args.reports_dir}/{args.csv}", "w") as csv_file:
             csv_file.write(csv_report_gen.report)
     if args.report_output:
         with open(args.report_output, "wb") as archive_file:
