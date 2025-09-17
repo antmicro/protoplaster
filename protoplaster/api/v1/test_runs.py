@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, jsonify, request, current_app
 
 test_runs_blueprint: Blueprint = Blueprint("protoplaster-test-runs", __name__)
 
@@ -9,7 +9,7 @@ def fetch_test_runs():
 
     :status 200: no error
 
-    :>jsonarr integer run_id: run id
+    :>jsonarr string run_id: run id
     :>jsonarr string config_name: name of config for this test run
     :>jsonarr string test_suite_name: name of the test suite for this test run
     :>jsonarr string created_at: UTC datetime of test run creation (RFC822)
@@ -63,12 +63,13 @@ def fetch_test_runs():
           }
         ]
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    manager = current_app.config["RUN_MANAGER"]
+    runs = manager.list_runs()
+    return jsonify(runs)
 
 
 @test_runs_blueprint.route("/api/v1/test-runs", methods=["POST"])
-def trigger_test_run(scopes: list[str] = []):
+def trigger_test_run():
     """Trigger a test run
 
 
@@ -97,12 +98,24 @@ def trigger_test_run(scopes: list[str] = []):
 
         HTTP/1.1 200 OK
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    data = request.get_json()
+    config_name = data["config_name"]
+
+    config_dir = current_app.config["ARGS"].test_dir
+    config_path = os.path.join(config_dir, config_name)
+
+    if not os.path.isfile(config_path):
+        return jsonify({"error": "Configuration file not found"}), 404
+
+    manager = current_app.config["RUN_MANAGER"]
+    args = current_app.config["ARGS"]
+    print("creating test run")
+    run = manager.create_run(config_name, args)
+    return jsonify(run), 200
 
 
-@test_runs_blueprint.route("/api/v1/test-runs/<int:identifier>")
-def fetch_one_test_run(identifier: int):
+@test_runs_blueprint.route("/api/v1/test-runs/<string:identifier>")
+def fetch_one_test_run(identifier: str):
     """Fetch information about a test run
 
     :param identifier: test run identifier
@@ -147,18 +160,23 @@ def fetch_one_test_run(identifier: int):
           }
         }
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    manager = current_app.config["RUN_MANAGER"]
+    run = manager.get_run(identifier)
+
+    if run is None:
+        return jsonify({"error": f"Run not found: {identifier}"}), 404
+
+    return jsonify(run)
 
 
-@test_runs_blueprint.route("/api/v1/test-runs/<int:identifier>",
+@test_runs_blueprint.route("/api/v1/test-runs/<string:identifier>",
                            methods=["DELETE"])
-def delete_test_run(identifier: int):
-    """Cancel a test run
+def delete_test_run(identifier: str):
+    """Cancel a pending test run
 
     :param identifier: test run identifier
     :status 200: no error
-    :status 400: test run not in progress
+    :status 400: test run not pending
     :status 404: test run does not exist
 
     **Example Request**
@@ -186,11 +204,20 @@ def delete_test_run(identifier: int):
           }
         }
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    manager = current_app.config["RUN_MANAGER"]
+    run = manager.cancel_run(identifier)
+    if not run:
+        return jsonify({"error": "Test run not found"}), 404
+
+    if run.get("status") != RunStatus.PENDING:
+        return jsonify({"error": "Test run not pending"}), 400
+
+    run = manager.cancel_run(identifier)
+
+    return jsonify(run)
 
 
-@test_runs_blueprint.route("/api/v1/test-runs/<int:identifier>/report")
+@test_runs_blueprint.route("/api/v1/test-runs/<string:identifier>/report")
 def fetch_test_run_report(identifier: int):
     """Fetch test run report
 

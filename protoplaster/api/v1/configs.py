@@ -50,7 +50,7 @@ def fetch_configs():
         ]
     """  # noqa: E501
 
-    config_dir = current_app.config["CONFIG_DIR"]
+    config_dir = current_app.config["ARGS"].test_dir
     if not config_dir:
         return jsonify({"error": "CONFIG_DIR not configured"}), 500
 
@@ -99,7 +99,7 @@ def upload_config():
 
         HTTP/1.1 200 OK
     """  # noqa: E501
-    config_dir = current_app.config.get("CONFIG_DIR")
+    config_dir = current_app.config["ARGS"].test_dir
     if not config_dir:
         return jsonify({"error": "CONFIG_DIR not configured"}), 500
 
@@ -149,7 +149,7 @@ def fetch_one_config(config_name: str):
           "created": "Mon, 25 Aug 2025 16:58:35 +0200",
         }
     """  # noqa: E501
-    config_dir = current_app.config["CONFIG_DIR"]
+    config_dir = current_app.config["ARGS"].test_dir
     if not config_dir:
         return jsonify({"error": "CONFIG_DIR not configured"}), 500
 
@@ -188,7 +188,7 @@ def fetch_config_file(config_name: str):
           network:
             - interface: enp14s0
     """  # noqa: E501
-    config_dir = current_app.config["CONFIG_DIR"]
+    config_dir = current_app.config["ARGS"].test_dir
     config_file = os.path.join(config_dir, config_name)
 
     if not os.path.isfile(config_file):
@@ -222,7 +222,7 @@ def delete_config(config_name: str):
 
         HTTP/1.1 200 OK
     """  # noqa: E501
-    config_dir = current_app.config["CONFIG_DIR"]
+    config_dir = current_app.config["ARGS"].test_dir
     config_path = os.path.join(config_dir, config_name)
 
     if not os.path.isfile(config_path):
