@@ -54,3 +54,15 @@ def yaml_file(request):
 @pytest.fixture
 def artifacts_dir(request):
     return request.config.getoption("--artifacts-dir")
+
+
+@pytest.fixture
+def record_artifact(request):
+    artifacts = []
+
+    request.node._artifacts = artifacts
+
+    def _record(name: str):
+        artifacts.append(name)
+
+    yield _record

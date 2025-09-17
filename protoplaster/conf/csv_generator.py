@@ -18,7 +18,8 @@ class CsvReportGenerator:
              ),
             "duration": (lambda item, report: report.duration),
             "message": (lambda item, report: self.get_test_message(report)),
-            "status": (lambda item, report: report.outcome)
+            "status": (lambda item, report: report.outcome),
+            "artifacts": (lambda item, report: getattr(item, "_artifacts", []))
         }
         if columns:
             self.columns = self.columns.replace(" ",

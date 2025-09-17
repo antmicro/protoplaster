@@ -15,7 +15,7 @@ class TestCamera:
     {%- endmacro %}
     """
 
-    def test_frame(self, artifacts_dir):
+    def test_frame(self, record_artifact, artifacts_dir):
         """
         {% macro test_frame(device) -%}
           try to capture frame
@@ -31,6 +31,7 @@ class TestCamera:
             with open(os.path.join(artifacts_dir, self.save_file),
                       'wb') as file:
                 file.write(frame)
+            record_artifact(self.save_file)
 
     def test_device_name(self):
         """
