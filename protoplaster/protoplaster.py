@@ -13,6 +13,7 @@ from protoplaster.report_generators.system_report.protoplaster_system_report imp
 
 CONFIG_DIR = "/etc/protoplaster"
 REPORTS_DIR = "/var/lib/protoplaster/reports"
+ARTIFACTS_DIR = "/var/lib/protoplaster/artifacts"
 
 
 def create_docs_app() -> Flask:
@@ -54,6 +55,11 @@ def parse_args():
                         type=str,
                         default=f"{REPORTS_DIR}",
                         help="Path to the reports directory")
+    parser.add_argument("-a",
+                        "--artifacts-dir",
+                        type=str,
+                        default=f"{ARTIFACTS_DIR}",
+                        help="Path to the test artifacts directory")
     parser.add_argument(
         "-t",
         "--test-file",

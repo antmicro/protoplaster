@@ -1,6 +1,7 @@
 from protoplaster.conf.module import ModuleName
 from protoplaster.tests.camera.camera import Camera
 import pyudev
+import os
 
 
 @ModuleName("camera")
@@ -14,7 +15,7 @@ class TestCamera:
     {%- endmacro %}
     """
 
-    def test_frame(self):
+    def test_frame(self, artifacts_dir):
         """
         {% macro test_frame(device) -%}
           try to capture frame
@@ -27,7 +28,8 @@ class TestCamera:
         frame = device.get_frame()
         assert len(frame) > 0, "The frame is invalid"
         if hasattr(self, "save_file"):
-            with open(self.save_file, 'wb') as file:
+            with open(os.path.join(artifacts_dir, self.save_file),
+                      'wb') as file:
                 file.write(frame)
 
     def test_device_name(self):

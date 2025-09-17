@@ -11,6 +11,10 @@ def pytest_addoption(parser):
                      action="store",
                      type=str,
                      help="Group to execute")
+    parser.addoption("--artifacts-dir",
+                     action="store",
+                     type=str,
+                     help="Directory where tests can store artifacts")
 
 
 @pytest.fixture(scope='class', autouse=True)
@@ -45,3 +49,8 @@ def yaml_file(request):
         for c in content
     }
     return {k: iter(content[k]) for k in content}
+
+
+@pytest.fixture
+def artifacts_dir(request):
+    return request.config.getoption("--artifacts-dir")

@@ -210,6 +210,8 @@ def prepare_pytest_args(tests, args):
         pytest_args += f"--junitxml={args.output} "
     if args.group:
         pytest_args += f"--group={args.group} "
+    if args.artifacts_dir:
+        pytest_args += f"--artifacts-dir={args.artifacts_dir} "
     pytest_args = " ".join(tests) + pytest_args
     return pytest_args.strip().split(" ")
 
@@ -225,6 +227,7 @@ def run_tests(args):
             parse_yaml(f"{args.test_dir}/{args.test_file}"))
         sys.exit()
     csv_report_gen = CsvReportGenerator(args.csv_columns)
+    os.makedirs(args.artifacts_dir, exist_ok=True)
     pytest.main(prepare_pytest_args(tests, args), plugins=[csv_report_gen])
     if args.csv:
         with open(f"{args.reports_dir}/{args.csv}", "w") as csv_file:
