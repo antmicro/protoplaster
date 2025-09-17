@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, send_from_directory
+import os
+from protoplaster.runner.metadata import RunStatus
 
 test_runs_blueprint: Blueprint = Blueprint("protoplaster-test-runs", __name__)
 
@@ -241,8 +243,28 @@ def fetch_test_run_report(identifier: int):
         enp14s0,exist,test.py::TestNetwork::test_exist,0.0007359918672591448,,passed
 
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    manager = current_app.config["RUN_MANAGER"]
+    run = manager.get_run(identifier)
+    if not run:
+        return jsonify({"error": "Test run not found"}), 404
+
+    if (run.get("status") == RunStatus.PENDING
+            or run.get("status") == RunStatus.RUNNING):
+        return jsonify({"error": "Test run not finished"}), 404
+
+    report_dir = current_app.config["ARGS"].reports_dir
+    report_file = identifier + ".csv"
+    report_path = os.path.join(report_dir, report_file)
+
+    if not os.path.isfile(report_path):
+        return jsonify({"error": "Report file not found"}), 404
+
+    return send_from_directory(os.path.abspath(report_dir),
+                               report_file,
+                               as_attachment=True,
+                               mimetype="text/csv")
+
+
 @test_runs_blueprint.route(
     "/api/v1/test-runs/<string:identifier>/artifacts/<path:artifact_name>")
 def fetch_artifact(identifier: str, artifact_name: str):
