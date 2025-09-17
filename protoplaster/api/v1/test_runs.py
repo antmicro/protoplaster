@@ -287,5 +287,22 @@ def fetch_artifact(identifier: str, artifact_name: str):
         Content-Type: <depends on artifact>
         Content-Disposition: attachment; filename="frame.raw"
     """  # noqa: E501
-    #TODO: Add implementation
-    return {}, 200
+    manager = current_app.config["RUN_MANAGER"]
+    run = manager.get_run(identifier)
+    if not run:
+        return jsonify({"error": "Test run not found"}), 404
+
+    if (run.get("status") == RunStatus.PENDING
+            or run.get("status") == RunStatus.RUNNING):
+        return jsonify({"error": "Test run not finished"}), 404
+
+    artifacts_dir = current_app.config["ARGS"].artifacts_dir
+    artifact_path = os.path.join(artifacts_dir, identifier, artifact_name)
+
+    if not os.path.isfile(artifact_path):
+        return jsonify({"error": "Artifact file not found"}), 404
+
+    return send_from_directory(os.path.abspath(
+        os.path.join(artifacts_dir, identifier)),
+                               artifact_name,
+                               as_attachment=True)
