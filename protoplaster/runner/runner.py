@@ -230,7 +230,8 @@ def run_tests(args):
         sys.exit()
     csv_report_gen = CsvReportGenerator(args.csv_columns)
     os.makedirs(args.artifacts_dir, exist_ok=True)
-    pytest.main(prepare_pytest_args(tests, args), plugins=[csv_report_gen])
+    ret = pytest.main(prepare_pytest_args(tests, args),
+                      plugins=[csv_report_gen])
     if args.csv:
         with open(f"{args.reports_dir}/{args.csv}", "w") as csv_file:
             csv_file.write(csv_report_gen.report)
@@ -246,3 +247,4 @@ def run_tests(args):
                 for filename, content in generate_system_report(
                         args.system_report_config):
                     archive.writestr(filename, content)
+    return ret

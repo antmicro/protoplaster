@@ -15,7 +15,11 @@ def run_test(run, base_args):
     args.csv = run["id"] + ".csv"
     args.artifacts_dir = os.path.join(args.artifacts_dir, run["id"])
 
-    run_tests(args)
+    ret = run_tests(args)
 
-    run["status"] = RunStatus.FINISHED
+    if ret == 0:
+        run["status"] = RunStatus.FINISHED
+    else:
+        run["status"] = RunStatus.FAILED
+
     run["finished_at"] = datetime.now(timezone.utc).isoformat()
