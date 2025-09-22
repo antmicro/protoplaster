@@ -56,3 +56,18 @@ build-docs:
   artifacts:
     paths:
       - docs/build/html/*
+
+api-test:
+  stage: tests
+  image: debian:bookworm
+  script:
+    - PATH="/root/.local/bin:$PATH"
+    - apt -y update
+    - apt -y install python3 python3-venv git curl jq
+    - python3 -m venv ./venv
+    - source ./venv/bin/activate
+    - pip install .
+    - ./tests/test-api.sh
+  artifacts:
+    paths:
+      - /srv/protoplaster/*
