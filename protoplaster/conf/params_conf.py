@@ -7,10 +7,6 @@ def pytest_addoption(parser):
                      action="store",
                      type=str,
                      help="Test description yaml")
-    parser.addoption("--group",
-                     action="store",
-                     type=str,
-                     help="Group to execute")
     parser.addoption("--artifacts-dir",
                      action="store",
                      type=str,
@@ -30,15 +26,11 @@ def setup_tests(yaml_file, request):
 def yaml_file(request):
     with open(request.config.getoption("--yaml_file")) as file:
         content = yaml.safe_load(file)
-    group = request.config.getoption("--group")
-    if group is not None and group in content.keys():
-        content = content[group]
-    elif group is None:
-        content = {
-            mod_key: content[group_key][mod_key]
-            for group_key in content
-            for mod_key in content[group_key]
-        }
+    content = {
+        mod_key: content[group_key][mod_key]
+        for group_key in content
+        for mod_key in content[group_key]
+    }
     for c in content:
         if '__path__' in content[c]:
             content[c] = content[c]['tests']

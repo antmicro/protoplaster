@@ -1,134 +1,42 @@
 import ast
 import os
 import sys
-import pytest
-import yaml
-from collections import OrderedDict
-from jinja2 import Environment, DictLoader, select_autoescape
-from pathlib import Path
 import zipfile
+from collections import OrderedDict
+from pathlib import Path
+
+import pytest
+from jinja2 import Environment, DictLoader, select_autoescape
 
 from protoplaster.docs.docs import TestDocs
 from protoplaster.docs import __file__ as docs_path
-from protoplaster.tests.i2c.test import __file__ as i2c_test
-from protoplaster.tests.gpio.gpio.test import __file__ as gpio_test
-from protoplaster.tests.camera.test import __file__ as camera_test
-from protoplaster.tests.fpga.test import __file__ as fpga_test
-from protoplaster.tests.network.test import __file__ as network_test
-from protoplaster.tests.adc.adc.test import __file__ as adc_test
-from protoplaster.tests.adc.LTC2493.test import __file__ as LTC2493_test
-from protoplaster.tests.adc.LTC2499.test import __file__ as LTC2499_test
-from protoplaster.tests.dac.dac.test import __file__ as dac_test
-from protoplaster.tests.memtester.test import __file__ as mem_test
-from protoplaster.tests.dac.LTC2655.test import __file__ as LTC2655_test
-from protoplaster.tests.dac.LTC2657.test import __file__ as LTC2657_test
-from protoplaster.tests.gpio.PI4IO.test import __file__ as PI4IO_test
-from protoplaster.tests.pmic.DA9062.test import __file__ as DA9062_test
-from protoplaster.tests.pmic.UCD90320U.test import __file__ as UCD90320U_test
-from protoplaster.tests.thermometer.TMP431.test import __file__ as TMP431_test
-from protoplaster.tests.i2c_mux.TCA9548A.test import __file__ as TCA9548A_test
-from protoplaster.tests.simple.test import __file__ as simple_test
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
+from protoplaster.conf.parser import TestFile, load_yaml
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
 from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, SubReportResult, run_command
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
-tests_paths = {
-    "i2c": i2c_test,
-    "gpio": gpio_test,
-    "camera": camera_test,
-    "fpga": fpga_test,
-    "network": network_test,
-    "adc": adc_test,
-    "LTC2493": LTC2493_test,
-    "LTC2499": LTC2499_test,
-    "dac": dac_test,
-    "LTC2655": LTC2655_test,
-    "LTC2657": LTC2657_test,
-    "PI4IO": PI4IO_test,
-    "memtester": mem_test,
-    "TMP431": TMP431_test,
-    "DA9062": DA9062_test,
-    "UCD90320U": UCD90320U_test,
-    "TCA9548A": TCA9548A_test,
-    "simple": simple_test,
-}
+
+def list_tests(args):
+    test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
+    if (group := args.group) is not (None or ""):
+        test_file.filter_suite(group)
+
+    for test in test_file.tests.keys():
+        print(test)
 
 
-def parse_yaml(yaml_file):
-    with open(yaml_file) as file:
-        content = yaml.safe_load(file)
-    return content
+def list_test_suites(args):
+    test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
+    if (group := args.group) is not (None or ""):
+        test_file.filter_suite(group)
 
-
-def get_list_of_tests(tests_dict):
-    return tests_dict if isinstance(tests_dict, list) else [tests_dict]
-
-
-def load_module(module_path, module_name):
-    if not os.path.isfile(f"{module_path}/test.py"):
-        print(
-            warning(f'Additional module "{module_name}" could not be loaded!'))
-        return False
-    file_abs_path = os.path.abspath(module_path)
-    tests_paths[module_name] = f"{file_abs_path}/test.py"
-    sys.path.append(file_abs_path)
-    print(
-        info(
-            f'Additional module loaded "{module_name}" at path {file_abs_path}'
-        ))
-    return True
-
-
-def list_groups(yaml_file):
-    content = parse_yaml(yaml_file)
-    for group in content:
-        print(group)
-
-
-def extract_tests(yaml_file, group, custom_path):
-    content = parse_yaml(yaml_file)
-
-    if group is not None and group in content:
-        content = content[group]
-    elif group is None:
-        content = {
-            mod_key: content[group_key][mod_key]
-            for group_key in content
-            for mod_key in content[group_key]
-        }
-    else:
-        print(error(f'Group "{group}" not defined - Exiting!'))
-        sys.exit(1)
-
-    tests = []
-    for module_name in content["tests"]:
-        if module_name in tests_paths:
-            content["tests"][module_name] = get_list_of_tests(
-                content["tests"][module_name])
-        elif os.path.exists(f"{CONFIG_DIR}/{module_name}") and load_module(
-                f"{CONFIG_DIR}/{module_name}", module_name):
-            content["tests"][module_name] = get_list_of_tests(
-                content["tests"][module_name])
-        elif os.path.exists(f"{custom_path}") and load_module(
-                f"{custom_path}", module_name):
-            content["tests"][module_name] = get_list_of_tests(
-                content["tests"][module_name])
-        else:
-            print(
-                warning(f'Unknown module found: "{module_name}" - Skipping!'))
-            continue
-        tests += [
-            tests_paths[module_name] for _ in content["tests"][module_name]
-        ]
-
-    metadata_cmds = []
-    if "metadata" in content:
-        metadata_cmds = content["metadata"]
-
-    return tests, metadata_cmds
+    for name, suite in test_file.test_suites.items():
+        print(f"{name}:")
+        for test in suite.tests.keys():
+            print(f"- {test}")
 
 
 def generate_rst_doc(tests_doc_list, docs_dict):
@@ -216,11 +124,9 @@ def generate_docs(tests_full_path, yaml_content):
 
 
 def prepare_pytest_args(tests, args):
-    pytest_args = f" -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_dir}/{args.test_file} "
+    pytest_args = f" -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} "
     if args.output:
         pytest_args += f"--junitxml={args.output} "
-    if args.group:
-        pytest_args += f"--group={args.group} "
     if args.artifacts_dir:
         pytest_args += f"--artifacts-dir={args.artifacts_dir} "
     pytest_args = " ".join(tests) + pytest_args
@@ -242,24 +148,30 @@ def generate_metadata(args, metadata_cmds):
 
 
 def run_tests(args):
-    tests, metadata_cmds = extract_tests(f"{args.test_dir}/{args.test_file}",
-                                         args.group, args.custom_tests)
+    test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
+    if (group := args.group) is not (None or ""):
+        test_file.filter_suite(group)
+
+    test_modules = test_file.list_test_modules()
+    metadata_cmds = test_file.list_metadata_commands()
 
     os.makedirs(args.artifacts_dir, exist_ok=True)
 
     if metadata_cmds:
         generate_metadata(args, metadata_cmds)
 
-    if tests == []:
+    if test_modules == []:
         print(warning("No tests to run!"))
-    if args.generate_docs:
-        generate_docs(
-            OrderedDict.fromkeys(tests).keys(),
-            parse_yaml(f"{args.test_dir}/{args.test_file}"))
-        sys.exit()
-    csv_report_gen = CsvReportGenerator(args.csv_columns)
-    ret = pytest.main(prepare_pytest_args(tests, args),
-                      plugins=[csv_report_gen])
+
+    with test_file.merged_test_file() as tf:
+        args.test_file = tf.name
+        if args.generate_docs:
+            generate_docs(
+                OrderedDict.fromkeys(test_modules).keys(), load_yaml(tf.name))
+            sys.exit()
+        csv_report_gen = CsvReportGenerator(args.csv_columns)
+        ret = pytest.main(prepare_pytest_args(test_modules, args),
+                          plugins=[csv_report_gen])
     if args.csv:
         with open(f"{args.reports_dir}/{args.csv}", "w") as csv_file:
             csv_file.write(csv_report_gen.report)

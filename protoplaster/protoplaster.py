@@ -2,18 +2,16 @@
 import argparse
 import os
 import sys
-from colorama import init, Fore, Style
+from colorama import init
 from flask import Flask
 import shutil
 
 import protoplaster.api.v1
+from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR
 from protoplaster.runner.manager import RunManager
-from protoplaster.runner.runner import run_tests, list_groups
+from protoplaster.runner.runner import list_tests, list_test_suites, run_tests
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
-
-CONFIG_DIR = "/etc/protoplaster"
-REPORTS_DIR = "/var/lib/protoplaster/reports"
-ARTIFACTS_DIR = "/var/lib/protoplaster/artifacts"
+from protoplaster.tools.tools import error
 
 
 def create_docs_app() -> Flask:
@@ -51,10 +49,26 @@ def parse_args():
         type=str,
         default=f"test.yaml",
         help="Path to the yaml test description in the test directory")
-    parser.add_argument("-g", "--group", type=str, help="Group to execute")
+    parser.add_argument("-g",
+                        "--group",
+                        type=str,
+                        help="Group to execute [deprecated]")
+    parser.add_argument("-s",
+                        "--test-suite",
+                        dest="group",
+                        metavar="TEST_SUITE",
+                        type=str,
+                        help="Test suite to execute")
     parser.add_argument("--list-groups",
+                        dest="list_test_suites",
                         action="store_true",
-                        help="List possible groups to execute")
+                        help="List possible groups to execute [deprecated]")
+    parser.add_argument("--list-test-suites",
+                        action="store_true",
+                        help="List possible test suites to execute")
+    parser.add_argument("--list-tests",
+                        action="store_true",
+                        help="List all defined tests")
     parser.add_argument("-o",
                         "--output",
                         type=str,
@@ -114,8 +128,11 @@ def main():
                 f"Test file {args.test_dir}/{args.test_file} does not exist or you don't have sufficient permitions"
             ))
         exit(1)
-    if args.list_groups:
-        list_groups(f"{args.test_dir}/{args.test_file}")
+    if args.list_tests:
+        list_tests(args)
+        sys.exit()
+    elif args.list_test_suites:
+        list_test_suites(args)
         sys.exit()
 
     if args.server:
