@@ -1,19 +1,22 @@
-base:
-  tests:
+tests:
+  simple_test:
     i2c:
     - bus: 0
       devices:
       - name: "Sensor name"
         address: 0x1C
+    gpio:
+    - number: 20
+      value: 1
+
+  camera_test:
     camera:
     - device: "/dev/video0"
       camera_name: "vivid"
       driver_name: "vivid"
-    gpio:
-    - number: 20
-      value: 1
-    network:
-    - interface: "eth0"
-    memtester:
-    - memory: "10M"
-      iterations: 2
+
+test-suites:
+  local:
+    tests:
+    - simple_test
+    - camera_test
