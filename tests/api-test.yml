@@ -1,3 +1,4 @@
 base:
-  simple:
-  - device: "simple"
+  tests:
+    simple:
+    - device: "simple"

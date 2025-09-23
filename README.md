@@ -48,27 +48,29 @@ Protoplaster expects a yaml file describing tests as an input. The yaml file sho
 <!-- name="example" -->
 ```yaml
 base:                # A group specifier
-  i2c:               # A module specifier
-  - bus: 0           # An interface specifier
-    devices:         # Multiple instances of devices can be defined in one module
-    - name: "Sensor name"
-      address: 0x3c  # The given device parameters determine which tests will be run for the module
-  - bus: 0
-    devices:
-    - name: "I2C-bus multiplexer"
-      address: 0x70
-  camera:
-  - device: "/dev/video0"
-    camera_name: "vivid"
-    driver_name: "vivid"
-  - device: "/dev/video2"
-    camera_name: "vivid"
-    driver_name: "vivid"
-    save_file: "frame.raw"
+  tests:
+    i2c:               # A module specifier
+    - bus: 0           # An interface specifier
+      devices:         # Multiple instances of devices can be defined in one module
+      - name: "Sensor name"
+        address: 0x3c  # The given device parameters determine which tests will be run for the module
+    - bus: 0
+      devices:
+      - name: "I2C-bus multiplexer"
+        address: 0x70
+    camera:
+    - device: "/dev/video0"
+      camera_name: "vivid"
+      driver_name: "vivid"
+    - device: "/dev/video2"
+      camera_name: "vivid"
+      driver_name: "vivid"
+      save_file: "frame.raw"
 additional:
-  gpio:
-  - number: 20
-    value: 1
+  tests:
+    gpio:
+    - number: 20
+      value: 1
 ```
 
 ### Groups

@@ -1,0 +1,29 @@
+base:
+  tests:
+    i2c:
+    - bus: 0
+      devices:
+      - name: "Sensor name"
+        address: 0x1C
+    camera:
+    - device: "/dev/video0"
+      camera_name: "vivid"
+      driver_name: "vivid"
+    gpio:
+    - number: 20
+      value: 1
+    network:
+    - interface: "eth0"
+  metadata:
+    uname:
+      run: uname -r
+      summary:
+        - title: Kernel version
+          run: cat
+      output: uname.out
+    distro-name:
+      run: "grep ^NAME= /etc/os-release | cut -d= -f 2"
+      summary:
+        - title: Distribution name
+          run: cat
+      output: distro.txt

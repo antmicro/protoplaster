@@ -31,8 +31,7 @@ from protoplaster.tests.simple.test import __file__ as simple_test
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
-from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report
-from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
+from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, SubReportResult, run_command
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
@@ -105,21 +104,31 @@ def extract_tests(yaml_file, group, custom_path):
         sys.exit(1)
 
     tests = []
-    for module_name in content:
+    for module_name in content["tests"]:
         if module_name in tests_paths:
-            content[module_name] = get_list_of_tests(content[module_name])
+            content["tests"][module_name] = get_list_of_tests(
+                content["tests"][module_name])
         elif os.path.exists(f"{CONFIG_DIR}/{module_name}") and load_module(
                 f"{CONFIG_DIR}/{module_name}", module_name):
-            content[module_name] = get_list_of_tests(content[module_name])
+            content["tests"][module_name] = get_list_of_tests(
+                content["tests"][module_name])
         elif os.path.exists(f"{custom_path}") and load_module(
                 f"{custom_path}", module_name):
-            content[module_name] = get_list_of_tests(content[module_name])
+            content["tests"][module_name] = get_list_of_tests(
+                content["tests"][module_name])
         else:
             print(
                 warning(f'Unknown module found: "{module_name}" - Skipping!'))
             continue
-        tests += [tests_paths[module_name] for _ in content[module_name]]
-    return tests
+        tests += [
+            tests_paths[module_name] for _ in content["tests"][module_name]
+        ]
+
+    metadata_cmds = []
+    if "metadata" in content:
+        metadata_cmds = content["metadata"]
+
+    return tests, metadata_cmds
 
 
 def generate_rst_doc(tests_doc_list, docs_dict):
@@ -218,9 +227,29 @@ def prepare_pytest_args(tests, args):
     return pytest_args.strip().split(" ")
 
 
+def generate_metadata(args, metadata_cmds):
+
+    cmd_results = []
+    for cmd in metadata_cmds.items():
+        command_config = CommandConfig(cmd)
+        result = run_command(command_config)
+        cmd_results.append(result)
+        with open(os.path.join(args.artifacts_dir, result.output_file),
+                  "w") as f:
+            f.write(result.raw_output)
+
+    return cmd_results
+
+
 def run_tests(args):
-    tests = extract_tests(f"{args.test_dir}/{args.test_file}", args.group,
-                          args.custom_tests)
+    tests, metadata_cmds = extract_tests(f"{args.test_dir}/{args.test_file}",
+                                         args.group, args.custom_tests)
+
+    os.makedirs(args.artifacts_dir, exist_ok=True)
+
+    if metadata_cmds:
+        generate_metadata(args, metadata_cmds)
+
     if tests == []:
         print(warning("No tests to run!"))
     if args.generate_docs:
@@ -229,7 +258,6 @@ def run_tests(args):
             parse_yaml(f"{args.test_dir}/{args.test_file}"))
         sys.exit()
     csv_report_gen = CsvReportGenerator(args.csv_columns)
-    os.makedirs(args.artifacts_dir, exist_ok=True)
     ret = pytest.main(prepare_pytest_args(tests, args),
                       plugins=[csv_report_gen])
     if args.csv:
