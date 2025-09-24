@@ -28,21 +28,6 @@ def create_docs_app() -> Flask:
     return app
 
 
-init()
-
-
-def warning(text):
-    return Fore.YELLOW + f"[WARNING] {text}" + Style.RESET_ALL
-
-
-def error(text):
-    return Fore.RED + f"[ERROR] {text}" + Style.RESET_ALL
-
-
-def info(text):
-    return f"[INFO] {text}"
-
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d",
@@ -116,6 +101,7 @@ def run_server(args):
 
 
 def main():
+    init()
     args = parse_args()
 
     if args.sudo:
