@@ -15,7 +15,7 @@ import shutil
 from protoplaster.docs.docs import TestDocs
 from protoplaster.docs import __file__ as docs_path
 from protoplaster.i2c.test import __file__ as i2c_test
-from protoplaster.gpio.test import __file__ as gpio_test
+from protoplaster.gpio.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
 from protoplaster.fpga.test import __file__ as fpga_test
 from protoplaster.network.test import __file__ as network_test

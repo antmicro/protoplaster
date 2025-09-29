@@ -1,5 +1,6 @@
 from protoplaster.conf.module import ModuleName
-from protoplaster.gpio.gpio import GPIO, Direction
+from protoplaster.gpio.PI4IO.PI4IO import PI4IOE5V96224
+from protoplaster.gpio.gpio.gpio import GPIO, Direction
 
 
 @ModuleName("gpio")
