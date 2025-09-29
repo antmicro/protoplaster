@@ -1,9 +1,19 @@
+from pathlib import Path
 from .metadata import RunStatus
 from datetime import datetime, timezone
 import time
 from protoplaster.runner.runner import run_tests
 from copy import deepcopy
 import os
+
+
+def load_metadata(artifacts_dir: str, name: str):
+    metadata_file = Path(artifacts_dir) / name
+    if not metadata_file.exists():
+        return None
+
+    with open(metadata_file, "r") as f:
+        return f.read().rstrip()
 
 
 def run_test(run, base_args):
@@ -16,7 +26,12 @@ def run_test(run, base_args):
     args.csv = run["id"] + ".csv"
     args.artifacts_dir = os.path.join(args.artifacts_dir, run["id"])
 
-    ret = run_tests(args)
+    ret, metadata = run_tests(args)
+
+    run["metadata"] = {
+        name: load_metadata(args.artifacts_dir, name)
+        for name in metadata
+    }
 
     if ret == 0:
         run["status"] = RunStatus.FINISHED

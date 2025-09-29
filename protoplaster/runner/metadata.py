@@ -20,4 +20,5 @@ def new_run_metadata(config_name, test_suite_name):
         "created_at": datetime.utcnow().isoformat(),
         "started_at": None,
         "finished_at": None,
+        "metadata": dict(),
     }

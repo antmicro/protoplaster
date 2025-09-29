@@ -193,4 +193,4 @@ def run_tests(args):
                 for filename, content in generate_system_report(
                         args.system_report_config):
                     archive.writestr(filename, content)
-    return ret
+    return ret, metadata
