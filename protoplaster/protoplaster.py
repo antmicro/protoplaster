@@ -30,6 +30,7 @@ from protoplaster.gpio.PI4IO.test import __file__ as PI4IO_test
 from protoplaster.pmic.DA9062.test import __file__ as DA9062_test
 from protoplaster.pmic.UCD90320U.test import __file__ as UCD90320U_test
 from protoplaster.thermometer.TMP431.test import __file__ as TMP431_test
+from protoplaster.i2c_mux.TCA9548A.test import __file__ as TCA9548A_test
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
@@ -56,6 +57,7 @@ tests_paths = {
     "TMP431": TMP431_test,
     "DA9062": DA9062_test,
     "UCD90320U": UCD90320U_test,
+    "TCA9548A": TCA9548A_test,
 }
 
 init()
