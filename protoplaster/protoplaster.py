@@ -22,6 +22,8 @@ from protoplaster.network.test import __file__ as network_test
 from protoplaster.adc.adc.test import __file__ as adc_test
 from protoplaster.adc.LTC2493.test import __file__ as LTC2493_test
 from protoplaster.adc.LTC2499.test import __file__ as LTC2499_test
+from protoplaster.dac.dac.test import __file__ as dac_test
+
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
@@ -40,6 +42,7 @@ tests_paths = {
     "adc": adc_test,
     "LTC2493": LTC2493_test,
     "LTC2499": LTC2499_test,
+    "dac": dac_test
 }
 
 init()
