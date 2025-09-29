@@ -26,6 +26,7 @@ from protoplaster.dac.dac.test import __file__ as dac_test
 from protoplaster.memtester.test import __file__ as mem_test
 from protoplaster.dac.LTC2655.test import __file__ as LTC2655_test
 from protoplaster.dac.LTC2657.test import __file__ as LTC2657_test
+from protoplaster.gpio.PI4IO.test import __file__ as PI4IO_test
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
@@ -47,6 +48,7 @@ tests_paths = {
     "dac": dac_test,
     "LTC2655": LTC2655_test,
     "LTC2657": LTC2657_test,
+    "PI4IO": PI4IO_test,
     "memtester": mem_test,
 }
 
