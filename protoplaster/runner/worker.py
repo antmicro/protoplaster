@@ -1,6 +1,7 @@
 from pathlib import Path
 from .metadata import RunStatus
 from datetime import datetime, timezone
+from email.utils import format_datetime
 import time
 from protoplaster.runner.runner import run_tests
 from copy import deepcopy
@@ -18,7 +19,7 @@ def load_metadata(artifacts_dir: str, name: str):
 
 def run_test(run, base_args):
     run["status"] = RunStatus.RUNNING
-    run["started_at"] = datetime.now(timezone.utc).isoformat()
+    run["started_at"] = format_datetime(datetime.now(timezone.utc))
 
     args = deepcopy(base_args)
     args.test_file = run["config_name"]
@@ -38,4 +39,4 @@ def run_test(run, base_args):
     else:
         run["status"] = RunStatus.FAILED
 
-    run["finished_at"] = datetime.now(timezone.utc).isoformat()
+    run["finished_at"] = format_datetime(datetime.now(timezone.utc))

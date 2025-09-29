@@ -3,6 +3,7 @@ from threading import Lock
 from .metadata import new_run_metadata, RunStatus
 from .worker import run_test
 from datetime import datetime, timezone
+from email.utils import format_datetime
 
 
 class RunManager:
@@ -53,6 +54,6 @@ class RunManager:
         if run["status"] == RunStatus.PENDING and future:
             future.cancel()
             run["status"] = RunStatus.ABORTED
-            run["finished_at"] = datetime.now(timezone.utc).isoformat()
+            run["finished_at"] = format_datetime(datetime.now(timezone.utc))
 
         return run

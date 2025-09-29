@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, jsonify, request, send_from_directory
 import os
+from email.utils import format_datetime
 from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
 
@@ -10,7 +11,7 @@ def file_to_config_entry(config_dir: str, filename: str):
     path = os.path.join(config_dir, filename)
 
     mtime = os.path.getmtime(path)
-    created = datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat()
+    created = format_datetime(datetime.fromtimestamp(mtime, tz=timezone.utc))
 
     return {
         "name": filename,

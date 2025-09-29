@@ -1,5 +1,6 @@
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
+from email.utils import format_datetime
 import uuid
 
 
@@ -15,10 +16,10 @@ def new_run_metadata(config_name, test_suite_name):
     return {
         "id": str(uuid.uuid4()),
         "config_name": config_name,
-        "test_suite_name": test_suite_name,
+        "test_suite_name": "" if test_suite_name is None else test_suite_name,
         "status": RunStatus.PENDING,
-        "created_at": datetime.utcnow().isoformat(),
-        "started_at": None,
-        "finished_at": None,
+        "created_at": format_datetime(datetime.now(timezone.utc)),
+        "started_at": "",
+        "finished_at": "",
         "metadata": dict(),
     }
