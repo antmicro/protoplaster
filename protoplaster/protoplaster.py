@@ -19,6 +19,7 @@ from protoplaster.gpio.test import __file__ as gpio_test
 from protoplaster.camera.test import __file__ as camera_test
 from protoplaster.fpga.test import __file__ as fpga_test
 from protoplaster.network.test import __file__ as network_test
+from protoplaster.adc.adc.test import __file__ as adc_test
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
@@ -34,6 +35,7 @@ tests_paths = {
     "camera": camera_test,
     "fpga": fpga_test,
     "network": network_test,
+    "adc": adc_test,
 }
 
 init()
