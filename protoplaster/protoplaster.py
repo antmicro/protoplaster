@@ -23,6 +23,7 @@ from protoplaster.adc.adc.test import __file__ as adc_test
 from protoplaster.adc.LTC2493.test import __file__ as LTC2493_test
 from protoplaster.adc.LTC2499.test import __file__ as LTC2499_test
 from protoplaster.dac.dac.test import __file__ as dac_test
+from protoplaster.memtester.test import __file__ as mem_test
 from protoplaster.dac.LTC2655.test import __file__ as LTC2655_test
 from protoplaster.dac.LTC2657.test import __file__ as LTC2657_test
 
@@ -46,6 +47,7 @@ tests_paths = {
     "dac": dac_test,
     "LTC2655": LTC2655_test,
     "LTC2657": LTC2657_test,
+    "memtester": mem_test,
 }
 
 init()
