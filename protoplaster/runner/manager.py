@@ -13,7 +13,8 @@ class RunManager:
         self.futures = {}
         self.lock = Lock()
 
-    def create_run(self, config_name: str, base_args):
+    def create_run(self, config_name: str, test_suite_name: str | None,
+                   base_args):
 
         def on_done(f):
             try:
@@ -22,7 +23,7 @@ class RunManager:
             except Exception as e:
                 print(f"[{run['id']}] failed: {e}")
 
-        run = new_run_metadata(config_name)
+        run = new_run_metadata(config_name, test_suite_name)
         with self.lock:
             self.runs[run["id"]] = run
 

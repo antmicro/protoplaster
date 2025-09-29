@@ -12,6 +12,7 @@ def run_test(run, base_args):
 
     args = deepcopy(base_args)
     args.test_file = run["config_name"]
+    args.group = run["test_suite_name"]
     args.csv = run["id"] + ".csv"
     args.artifacts_dir = os.path.join(args.artifacts_dir, run["id"])
 

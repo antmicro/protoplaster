@@ -102,6 +102,7 @@ def trigger_test_run():
     """  # noqa: E501
     data = request.get_json()
     config_name = data["config_name"]
+    test_suite_name = data.get("test_suite_name", None)
 
     config_dir = current_app.config["ARGS"].test_dir
     config_path = os.path.join(config_dir, config_name)
@@ -111,9 +112,8 @@ def trigger_test_run():
 
     manager = current_app.config["RUN_MANAGER"]
     args = current_app.config["ARGS"]
-    print("creating test run")
-    run = manager.create_run(config_name, args)
-    return jsonify(run), 200
+    run = manager.create_run(config_name, test_suite_name, args)
+    return jsonify(run)
 
 
 @test_runs_blueprint.route("/api/v1/test-runs/<string:identifier>")
