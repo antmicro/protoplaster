@@ -5,3 +5,4 @@ build
 venv
 protoplaster/docs/test_*.rst
 protoplaster.md
+.venv
