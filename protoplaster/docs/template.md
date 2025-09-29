@@ -11,12 +11,10 @@ Running Protoplaster runs the tests described in the following chapters:
 
 {% for module_doc in tests_doc_list -%}
  {% set prefix = [] -%}
- {% for macro_name in module_doc.class_macros -%}
-  {% import macro_name as jinja2_class_macros with context -%}
-  {% if jinja2_class_macros[macro_name](prefix) -%}
-   {{ jinja2_class_macros[macro_name](prefix) }}
+ {% import module_doc.class_name as jinja2_macros -%}
+  {% if jinja2_macros[module_doc.class_name](prefix) -%}
+   {{ jinja2_macros[module_doc.class_name](prefix) }}
   {% endif -%}
- {% endfor -%}
  {% for devices_spec in module_doc.test_details -%}
   {% for dev_type in devices_spec -%}
    {% set val_list = [] -%}
@@ -29,7 +27,6 @@ Running Protoplaster runs the tests described in the following chapters:
 * {{ val_list[0] }}:
    {% endif -%}
    {%- for macro_name in module_doc.test_macros -%}
-    {% import macro_name as jinja2_macros -%}
     {% if jinja2_macros[macro_name](dev_type) %}
   * {{ jinja2_macros[macro_name](dev_type) }}
     {% endif -%}

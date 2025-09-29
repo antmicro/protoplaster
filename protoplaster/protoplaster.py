@@ -204,7 +204,6 @@ def generate_docs(tests_full_path, yaml_content):
         templates[TOP_LEVEL_TEMPLATE_PATH] = jinja2_doc.read()
 
     for test_path in tests_full_path:
-        class_macros = []
         module_details = []
         method_macros = []
 
@@ -228,38 +227,38 @@ def generate_docs(tests_full_path, yaml_content):
                         '- Exiting!'))
                 sys.exit(3)
             templates[tests_class.name] = class_doc
-            class_macros.append(tests_class.name)
 
-        functions = [
-            f for f in ast.walk(tree)
-            if isinstance(f, ast.FunctionDef) and f.name.startswith("test")
-        ]
-        for func in functions:
-            function_doc = ast.get_docstring(func)
-            if function_doc is None:
-                print(
-                    error(f'Docstring for the "{func.name}" function ' +
-                          'is not defined - Exiting!'))
-                sys.exit(4)
-            elif func.name not in function_doc:
-                print(
-                    error(f'Macro in the docstring for the "{func.name}" ' +
-                          'function should have the same name as function ' +
-                          '- Exiting!'))
-                sys.exit(5)
-            templates[func.name] = function_doc
-            method_macros.append(func.name)
+            functions = [
+                f for f in ast.walk(tests_class)
+                if isinstance(f, ast.FunctionDef) and f.name.startswith("test")
+            ]
+            for func in functions:
+                function_doc = ast.get_docstring(func)
+                if function_doc is None:
+                    print(
+                        error(f'Docstring for the "{func.name}" function ' +
+                              'is not defined - Exiting!'))
+                    sys.exit(4)
+                elif func.name not in function_doc:
+                    print(
+                        error(
+                            f'Macro in the docstring for the "{func.name}" ' +
+                            'function should have the same name as function ' +
+                            '- Exiting!'))
+                    sys.exit(5)
+                templates[tests_class.name] += function_doc
+                method_macros.append(func.name)
+            # collect data from yaml file
+            for test_group in yaml_content:
+                for test_module in yaml_content[test_group]:
+                    module = test_path.split("/")
+                    if module[-2] == test_module:
+                        module_details.append(
+                            yaml_content[test_group][test_module])
 
-        # collect data from yaml file
-        for test_group in yaml_content:
-            for test_module in yaml_content[test_group]:
-                module = test_path.split("/")
-                if module[-2] == test_module:
-                    module_details.append(
-                        yaml_content[test_group][test_module])
-
-        test_doc = TestDocs(class_macros, module_details, method_macros)
-        tests_doc_list.append(test_doc)
+            test_doc = TestDocs(tests_class.name, module_details,
+                                method_macros)
+            tests_doc_list.append(test_doc)
     generate_rst_doc(tests_doc_list, templates)
 
 
