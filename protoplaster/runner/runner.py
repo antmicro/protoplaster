@@ -137,6 +137,7 @@ def generate_metadata(args, metadata_cmds):
 
     cmd_results = []
     for cmd in metadata_cmds.items():
+        cmd[1]["output"] = cmd[0]
         command_config = CommandConfig(cmd)
         result = run_command(command_config)
         cmd_results.append(result)
@@ -158,7 +159,12 @@ def run_tests(args):
     os.makedirs(args.artifacts_dir, exist_ok=True)
 
     if metadata_cmds:
-        generate_metadata(args, metadata_cmds)
+        metadata = [
+            result.output_file
+            for result in generate_metadata(args, metadata_cmds)
+        ]
+    else:
+        metadata = []
 
     if test_modules == []:
         print(warning("No tests to run!"))
@@ -169,7 +175,7 @@ def run_tests(args):
             generate_docs(
                 OrderedDict.fromkeys(test_modules).keys(), load_yaml(tf.name))
             sys.exit()
-        csv_report_gen = CsvReportGenerator(args.csv_columns)
+        csv_report_gen = CsvReportGenerator(args.csv_columns, metadata)
         ret = pytest.main(prepare_pytest_args(test_modules, args),
                           plugins=[csv_report_gen])
     if args.csv:

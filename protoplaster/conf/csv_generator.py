@@ -1,3 +1,4 @@
+from itertools import chain
 import pytest
 import csv
 import io
@@ -5,7 +6,7 @@ import io
 
 class CsvReportGenerator:
 
-    def __init__(self, columns):
+    def __init__(self, columns, metadata):
         self.columns = columns
         self.report = []
         self.retrieve_field = {
@@ -19,7 +20,8 @@ class CsvReportGenerator:
             "duration": (lambda item, report: report.duration),
             "message": (lambda item, report: self.get_test_message(report)),
             "status": (lambda item, report: report.outcome),
-            "artifacts": (lambda item, report: getattr(item, "_artifacts", []))
+            "artifacts": (lambda item, report: list(
+                chain(getattr(item, "_artifacts", []), metadata)))
         }
         if columns:
             self.columns = self.columns.replace(" ",
