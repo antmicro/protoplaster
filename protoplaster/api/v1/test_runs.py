@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app, send_from_directory
 import os
+from email.utils import format_datetime
 from protoplaster.runner.metadata import RunStatus
 
 test_runs_blueprint: Blueprint = Blueprint("protoplaster-test-runs", __name__)
@@ -11,7 +12,7 @@ def fetch_test_runs():
 
     :status 200: no error
 
-    :>jsonarr string run_id: run id
+    :>jsonarr string id: run id
     :>jsonarr string config_name: name of config for this test run
     :>jsonarr string test_suite_name: name of the test suite for this test run
     :>jsonarr string created_at: UTC datetime of test run creation (RFC822)
@@ -42,7 +43,7 @@ def fetch_test_runs():
 
         [
           {
-            "run_id": "25d9f4a2-2556-4647-b3cc-762348dc51ce",
+            "id": "25d9f4a2-2556-4647-b3cc-762348dc51ce",
             "config_name": "config1.yaml"
             "test_suite_name": "simple-test"
             "status": "finished",
@@ -99,6 +100,18 @@ def trigger_test_run():
     .. sourcecode:: http
 
         HTTP/1.1 200 OK
+        Content-Type: application/json
+
+        {
+          "id": "25d9f4a2-2556-4647-b3cc-762348dc51ce",
+          "config_name": "config1.yaml"
+          "test_suite_name": "simple-test"
+          "status": "pending",
+          "created_at": "Mon, 25 Aug 2025 15:56:35 +0200",
+          "started_at": "",
+          "finished_at": "",
+          "metadata": {}
+        }
     """  # noqa: E501
     data = request.get_json()
     config_name = data["config_name"]
@@ -125,6 +138,8 @@ def fetch_one_test_run(identifier: str):
     :status 404: test run does not exist
 
     :>json string id: test run identifier
+    :>json string config_name: name of config for this test run
+    :>json string test_suite_name: name of the test suite for this test run
     :>json string created_at: UTC creation time (RFC822)
     :>json string started_at: UTC creation time (RFC822)
     :>json string finished_at: UTC completion time (RFC822)
