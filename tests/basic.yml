@@ -13,3 +13,6 @@ base:
     value: 1
   network:
   - interface: "eth0"
+  memtester:
+  - memory: "10M"
+    iterations: 2
