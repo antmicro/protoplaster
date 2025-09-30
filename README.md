@@ -19,41 +19,61 @@ pip install git+https://github.com/antmicro/protoplaster.git
 ## Usage
 
 ```
-usage: protoplaster [-h] [-t TEST_FILE] [-g GROUP] [--list-groups] [-o OUTPUT] [--csv CSV] [--csv-columns CSV_COLUMNS] [--generate-docs] [-c CUSTOM_TESTS]
+usage: protoplaster [-h] [-d TEST_DIR] [-r REPORTS_DIR] [-a ARTIFACTS_DIR]
+                    [-t TEST_FILE] [-g GROUP] [-s TEST_SUITE] [--list-groups]
+                    [--list-test-suites] [--list-tests] [-o OUTPUT]
+                    [--csv CSV] [--csv-columns CSV_COLUMNS] [--generate-docs]
+                    [-c CUSTOM_TESTS] [--report-output REPORT_OUTPUT]
+                    [--system-report-config SYSTEM_REPORT_CONFIG] [--sudo]
+                    [--server]
 
 options:
   -h, --help            show this help message and exit
-  -t TEST_FILE, --test-file TEST_FILE
-                        Path to the test yaml description
-  -g GROUP, --group GROUP
-                        Group to execute
-  --list-groups         List possible groups to execute
-  -o OUTPUT, --output OUTPUT
-                        A junit-xml style report of the tests results
+  -d, --test-dir TEST_DIR
+                        Path to the test directory
+  -r, --reports-dir REPORTS_DIR
+                        Path to the reports directory
+  -a, --artifacts-dir ARTIFACTS_DIR
+                        Path to the test artifacts directory
+  -t, --test-file TEST_FILE
+                        Path to the yaml test description in the test
+                        directory
+  -g, --group GROUP     Group to execute [deprecated]
+  -s, --test-suite TEST_SUITE
+                        Test suite to execute
+  --list-groups         List possible groups to execute [deprecated]
+  --list-test-suites    List possible test suites to execute
+  --list-tests          List all defined tests
+  -o, --output OUTPUT   A junit-xml style report of the tests results
   --csv CSV             Generate a CSV report of the tests results
   --csv-columns CSV_COLUMNS
-                        Comma-separated list of columns to be included in generated CSV
+                        Comma-separated list of columns to be included in
+                        generated CSV
   --generate-docs       Generate documentation
-  -c CUSTOM_TESTS, --custom-tests CUSTOM_TESTS
+  -c, --custom-tests CUSTOM_TESTS
                         Path to the custom tests sources
   --report-output REPORT_OUTPUT
                         Proplaster report archive
   --system-report-config SYSTEM_REPORT_CONFIG
                         Path to the system report yaml config file
   --sudo                Run as sudo
+  --server              Run in server mode
 ```
 
 Protoplaster expects a yaml file describing tests as an input. The yaml file should have a structure specified as follows:
 
 <!-- name="example" -->
 ```yaml
+includes:
+  - addition.yml        # Import additional definitions from external file
+
 tests:
-  base:                # A group specifier
-    i2c:               # A module specifier
-    - bus: 0           # An interface specifier
-      devices:         # Multiple instances of devices can be defined in one module
+  base:                 # Test name
+    i2c:                # A module specifier
+    - bus: 0            # An interface specifier
+      devices:          # Multiple instances of devices can be defined in one module
       - name: "Sensor name"
-        address: 0x3c  # The given device parameters determine which tests will be run for the module
+        address: 0x3c   # The given device parameters determine which tests will be run for the module
     - bus: 0
       devices:
       - name: "I2C-bus multiplexer"
@@ -70,14 +90,31 @@ tests:
     gpio:
     - number: 20
       value: 1
+
+metadata:               # Additional metadata to be generated on tested device
+  uname:                # Metadata name
+    run: uname -r       # Command to run
+
+test-suites:
+  basic:                # Test suite name
+    tests:              # Tests to include
+      - base
+  full:
+    tests:
+      - basic           # Test suites can include other test suites
+      - additional
+    metadata:           # Metadata to generate for this test
+      - uname
 ```
 
-### Groups
-In the YAML file, you can define different groups of tests to run them for different use cases. 
-In the YAML file example, there are two groups defined: base and additional. 
-Protoplaster, when run without a defined group, will execute every test in each group. 
-When the group is specified with the parameter `-g` or `--group`, only the tests in the specified group are going to be run. 
-You can also list existing groups in the YAML file, simply run `protoplaster --list-groups test.yaml`.
+### Test suites
+In the YAML file, you can define different groups of tests in the `test-suites` section
+to run them for different use cases.
+In the YAML file example, there are two suites defined: `basic` and `full`.
+Protoplaster, when run without a defined test suite, will execute all tests defined in given file.
+When the test suite is specified with the parameter `-s` or `--test-suite`,
+only the tests in the specified suite are going to be run.
+You can also list existing groups in the YAML file, simply run `protoplaster --list-test-suites test.yaml`.
 
 ## Base modules parameters
 Each base module requires parameters for test initialization. 
@@ -134,6 +171,7 @@ An example of an extended module test:
 
 ```python
 from protoplaster.conf.module import ModuleName
+
 
 @ModuleName("additional_camera")
 class TestAdditionalCamera:
