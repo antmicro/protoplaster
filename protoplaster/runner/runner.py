@@ -10,23 +10,23 @@ import zipfile
 
 from protoplaster.docs.docs import TestDocs
 from protoplaster.docs import __file__ as docs_path
-from protoplaster.i2c.test import __file__ as i2c_test
-from protoplaster.gpio.gpio.test import __file__ as gpio_test
-from protoplaster.camera.test import __file__ as camera_test
-from protoplaster.fpga.test import __file__ as fpga_test
-from protoplaster.network.test import __file__ as network_test
-from protoplaster.adc.adc.test import __file__ as adc_test
-from protoplaster.adc.LTC2493.test import __file__ as LTC2493_test
-from protoplaster.adc.LTC2499.test import __file__ as LTC2499_test
-from protoplaster.dac.dac.test import __file__ as dac_test
-from protoplaster.memtester.test import __file__ as mem_test
-from protoplaster.dac.LTC2655.test import __file__ as LTC2655_test
-from protoplaster.dac.LTC2657.test import __file__ as LTC2657_test
-from protoplaster.gpio.PI4IO.test import __file__ as PI4IO_test
-from protoplaster.pmic.DA9062.test import __file__ as DA9062_test
-from protoplaster.pmic.UCD90320U.test import __file__ as UCD90320U_test
-from protoplaster.thermometer.TMP431.test import __file__ as TMP431_test
-from protoplaster.i2c_mux.TCA9548A.test import __file__ as TCA9548A_test
+from protoplaster.tests.i2c.test import __file__ as i2c_test
+from protoplaster.tests.gpio.gpio.test import __file__ as gpio_test
+from protoplaster.tests.camera.test import __file__ as camera_test
+from protoplaster.tests.fpga.test import __file__ as fpga_test
+from protoplaster.tests.network.test import __file__ as network_test
+from protoplaster.tests.adc.adc.test import __file__ as adc_test
+from protoplaster.tests.adc.LTC2493.test import __file__ as LTC2493_test
+from protoplaster.tests.adc.LTC2499.test import __file__ as LTC2499_test
+from protoplaster.tests.dac.dac.test import __file__ as dac_test
+from protoplaster.tests.memtester.test import __file__ as mem_test
+from protoplaster.tests.dac.LTC2655.test import __file__ as LTC2655_test
+from protoplaster.tests.dac.LTC2657.test import __file__ as LTC2657_test
+from protoplaster.tests.gpio.PI4IO.test import __file__ as PI4IO_test
+from protoplaster.tests.pmic.DA9062.test import __file__ as DA9062_test
+from protoplaster.tests.pmic.UCD90320U.test import __file__ as UCD90320U_test
+from protoplaster.tests.thermometer.TMP431.test import __file__ as TMP431_test
+from protoplaster.tests.i2c_mux.TCA9548A.test import __file__ as TCA9548A_test
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
