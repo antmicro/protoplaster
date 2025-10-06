@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Test runs</h2>
+
+<div class="d-flex justify-content-end mb-3">
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#triggerTestRunModal">
+    <i class="bi bi-play-fill"></i> Trigger test run
+  </button>
+</div>
+
+<table class="table table-bordered device-table">
+  <thead class="table-light">
+    <tr>
+      <th>ID</th>
+      <th>Config</th>
+      <th>Status</th>
+      <th>Started</th>
+      <th>Finished</th>
+      <th style="width: 20%">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for run in runs %}
+    <tr>
+      <td>{{ run.id }}</td>
+      <td>{{ run.config_name }}</td>
+      <td>
+        {% if run.status == 'finished' %}
+          <span class="badge bg-success">Passed</span>
+        {% elif run.status == 'failed' %}
+          <span class="badge bg-danger">Failed</span>
+        {% elif run.status == 'pending' %}
+          <span class="badge bg-secondary">Pending</span>
+        {% elif run.status == 'running' %}
+          <span class="badge bg-warning text-dark">Running</span>
+        {% elif run.status == 'aborted' %}
+          <span class="badge bg-secondary">Aborted</span>
+        {% endif %}
+      </td>
+      <td>{{ run.started_at or '-' }}</td>
+      <td>{{ run.finished_at or '-' }}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary btn-details" data-run-id="{{ run.id }}">Details</button>
+        <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="{{ run.id }}" {% if run.status not in ['pending'] %}disabled{% endif %}>Abort</button>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-center text-muted">No test runs yet</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Trigger Test Run Modal -->
+<div class="modal fade" id="triggerTestRunModal" tabindex="-1" aria-labelledby="triggerTestRunModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="triggerRunForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="triggerTestRunModalLabel">Trigger new test run</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="configSelect" class="form-label">Configuration</label>
+            <select id="configSelect" class="form-select" required>
+              {% for cfg in configs %}
+                <option value="{{ cfg.name }}">{{ cfg.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="testSuiteName" class="form-label">Test suite</label>
+            <input type="text" name="name" class="form-control" id="testSuiteName">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Trigger</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Test Details Modal -->
+<div class="modal fade" id="testDetailsModal" tabindex="-1" aria-labelledby="testDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="testDetailsModalLabel">Test Run Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <dl class="row">
+          <dt class="col-sm-3">Run ID</dt><dd class="col-sm-9" id="detail-id">-</dd>
+          <dt class="col-sm-3">Config</dt><dd class="col-sm-9" id="detail-config">-</dd>
+          <dt class="col-sm-3">Status</dt><dd class="col-sm-9" id="detail-status">-</dd>
+          <dt class="col-sm-3">Start time</dt><dd class="col-sm-9" id="detail-start">-</dd>
+          <dt class="col-sm-3">Finish time</dt><dd class="col-sm-9" id="detail-end">-</dd>
+        </dl>
+        <h6>Artifacts</h6>
+        <ul id="artifact-list" class="list-group mb-3">
+          <li class="list-group-item text-muted">No artifacts</li>
+        </ul>
+        <div class="text-end">
+          <a id="report-link" href="#" class="btn btn-outline-secondary" target="_blank">
+            <i class="bi bi-file-earmark-text"></i> Download CSV Report
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Trigger run form
+  document.getElementById('triggerRunForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const config = document.getElementById('configSelect').value;
+    const testSuite = document.getElementById('testSuiteName').value;
+    let payload = { config_name: config, test_suite_name: testSuite};
+
+    const resp = await fetch('/api/v1/test-runs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (resp.ok) location.reload();
+    else alert('Failed to trigger test run');
+  });
+
+  // Details modal
+  document.querySelectorAll('.btn-details').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.closest("button").dataset.runId;
+      const resp = await fetch(`/api/v1/test-runs/${id}`);
+      if (!resp.ok) return alert('Failed to fetch run details');
+      const data = await resp.json();
+
+      const resp_art = await fetch(`/api/v1/test-runs/${id}/artifacts`);
+      if (!resp_art.ok) return alert('Failed to fetch run artifacts');
+      const data_art = await resp_art.json();
+
+      document.getElementById('detail-id').textContent = data.id;
+      document.getElementById('detail-config').textContent = data.config_name;
+      document.getElementById('detail-status').textContent = data.status;
+      document.getElementById('detail-start').textContent = data.started_at || '-';
+      document.getElementById('detail-end').textContent = data.finished_at || '-';
+
+      // Populate artifacts
+      const artifactList = document.getElementById('artifact-list');
+      artifactList.innerHTML = '';
+      if (data_art && data_art.length > 0) {
+        data_art.forEach(artifact => {
+          const li = document.createElement('li');
+          li.className = 'list-group-item d-flex justify-content-between align-items-center';
+          li.textContent = artifact.name;
+          const a = document.createElement('a');
+          a.href = `/api/v1/test-runs/${id}/artifacts/${encodeURIComponent(artifact.name)}`;
+          a.className = 'btn btn-sm btn-outline-primary';
+          a.textContent = 'Download';
+          li.appendChild(a);
+          artifactList.appendChild(li);
+        });
+      } else {
+        artifactList.innerHTML = '<li class="list-group-item text-muted">No artifacts</li>';
+      }
+
+      // Report link
+      const reportLink = document.getElementById('report-link');
+      reportLink.href = `/api/v1/test-runs/${id}/report`;
+
+      new bootstrap.Modal(document.getElementById('testDetailsModal')).show();
+    });
+  });
+});
+</script>
+{% endblock %}
+

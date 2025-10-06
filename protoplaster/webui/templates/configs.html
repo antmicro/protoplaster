@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Configs</h2>
+
+<div class="d-flex justify-content-end mb-3">
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addConfigModal">
+    <i class="bi bi-plus"></i> Add new config
+  </button>
+</div>
+
+<table class="table table-bordered device-table">
+  <thead class="table-light">
+    <tr>
+      <th>Name</th>
+      <th style="width: 20%">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cfg in configs %}
+    <tr>
+      <td>{{ cfg.name }}</td>
+      <td>
+        <button class="btn btn-remove btn-sm"><i class="bi bi-trash"></i> Remove</button>
+        <button class="btn btn-download btn-sm"><i class="bi bi-download"></i> Download</button>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="3" class="text-center text-muted">No configs found</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="modal fade" id="addConfigModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="uploadForm" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Config</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="configFile" class="form-label">Config file</label>
+            <input type="file" id="configFile" name="file" class="form-control" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Upload</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll(".btn-remove").forEach(btn => {
+  btn.addEventListener("click", async e => {
+    const row = e.target.closest("tr");
+    const name = row.querySelector("td").textContent.trim();
+    if (!confirm(`Delete config "${name}"?`)) return;
+    const resp = await fetch(`/api/v1/configs/${name}`, { method: "DELETE" });
+    if (resp.ok) {
+      location.reload();
+    } else {
+      alert("Failed to delete config");
+    }
+  });
+});
+
+document.getElementById("uploadForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const resp = await fetch("/api/v1/configs", {
+    method: "POST",
+    body: formData
+  });
+  if (resp.ok) {
+    const modal = bootstrap.Modal.getInstance(document.getElementById("addConfigModal"));
+    modal.hide();
+    location.reload();
+  } else {
+    alert("Upload failed");
+  }
+});
+
+document.querySelectorAll(".btn-download").forEach(btn => {
+  btn.addEventListener("click", async e => {
+    const row = e.target.closest("tr");
+    const name = row.querySelector("td").textContent.trim();
+
+    const resp = await fetch(`/api/v1/configs/${name}/file`);
+    if (!resp.ok) {
+      alert("Failed to download config file");
+      return;
+    }
+
+    const blob = await resp.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,58 @@
+from flask import render_template, request, redirect, url_for
+from . import webui_blueprint
+import requests
+from protoplaster.webui.devices import get_all_devices, get_device_by_name, add_device, remove_device
+
+
+@webui_blueprint.route("/")
+def index():
+    return redirect(url_for("webui.devices"))
+
+
+@webui_blueprint.route("/devices")
+def devices():
+    """List all known devices."""
+    devices = get_all_devices()
+    return render_template("devices.html", devices=devices, active="devices")
+
+
+@webui_blueprint.route("/devices/add", methods=["POST"])
+def add_device_route():
+    """Add a new remote device."""
+    name = request.form.get("name")
+    url = request.form.get("url")
+    add_device(name, url)
+    return redirect(url_for("webui.devices"))
+
+
+@webui_blueprint.route("/devices/remove/<device_name>", methods=["POST"])
+def remove_device_route(device_name):
+    """Remove a device."""
+    remove_device(device_name)
+    return redirect(url_for("webui.devices"))
+
+
+@webui_blueprint.route("/configs")
+def configs():
+    device_name = request.args.get("device")
+    devices = get_all_devices()
+    selected_device = get_device_by_name(device_name) or devices[0]
+    r = requests.get(f"{selected_device['url']}/api/v1/configs", timeout=2)
+    configs = r.json()
+    return render_template("configs.html",
+                           configs=configs,
+                           devices=devices,
+                           selected_device=selected_device,
+                           active="configs")
+
+
+@webui_blueprint.route("/runs")
+def test_runs():
+    r = requests.get(f"http://localhost:5000/api/v1/test-runs", timeout=2)
+    runs = r.json()
+    r = requests.get(f"http://localhost:5000/api/v1/configs", timeout=2)
+    configs = r.json()
+    return render_template("runs.html",
+                           runs=runs,
+                           configs=configs,
+                           active="runs")

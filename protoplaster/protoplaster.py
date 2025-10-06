@@ -7,6 +7,7 @@ from flask import Flask
 import shutil
 
 import protoplaster.api.v1
+import protoplaster.webui
 from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR
 from protoplaster.runner.manager import RunManager
 from protoplaster.runner.runner import list_tests, list_test_suites, run_tests
@@ -115,6 +116,7 @@ def run_server(args):
     app.config["ARGS"] = args
     app.config["RUN_MANAGER"] = RunManager()
     app.register_blueprint(protoplaster.api.v1.create_routes())
+    app.register_blueprint(protoplaster.webui.webui_blueprint)
     app.run(port=int(args.port))
 
 
