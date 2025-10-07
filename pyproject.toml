@@ -6,10 +6,14 @@ authors=[{name = "Antmicro Ltd"}]
 license={text = "Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)"}
 dynamic = ["dependencies"]
 
+[tool.setuptools.packages.find]
+include = ["protoplaster*", "manager*"]
+
 [project.scripts]
 protoplaster = 'protoplaster.protoplaster:main'
 protoplaster-test-report = 'protoplaster.report_generators.test_report.protoplaster_test_report:main'
 protoplaster-system-report = 'protoplaster.report_generators.system_report.protoplaster_system_report:main'
+protoplaster-mgmt = 'manager.protoplaster_mgmt:main'
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}

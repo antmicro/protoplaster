@@ -11,7 +11,7 @@ check-code-quality:
     - apt -y update
     - apt -y install python3 pipx git
     - pipx install yapf==0.40.2
-    - yapf -ipr protoplaster/
+    - yapf -ipr protoplaster/ manager/
     - test $(git status --porcelain | wc -l) -eq 0 || { git diff; false; }
 
 installation-test:

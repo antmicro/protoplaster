@@ -296,3 +296,30 @@ ip:
 ### Running as root
 By default, `sudo` doesn't preserve `PATH`. 
 To run `protoplaster-system-report` installed by a non-root user as root, invoke `protoplaster-system-report --sudo`
+
+## Protoplaster manager
+Protoplaster provides `protoplaster-mgmt`, a tool to remotely control Protoplaster via the API.
+For more detailed information, see the help messages associated with each subcommand.
+
+```
+usage: protoplaster-mgmt [-h] [--url URL] [--config CONFIG] [--config-dir CONFIG_DIR] [--report-dir REPORT_DIR] [--artifact-dir ARTIFACT_DIR] {configs,runs} ...
+
+Tool for managing Protoplaster via remote API
+
+options:
+  -h, --help            show this help message and exit
+  --url URL             URL to a device running Protoplaster server (default: http://127.0.0.1:5000/)
+  --config CONFIG       Config file with values for url, config-dir, report-dir, artifact-dir
+  --config-dir CONFIG_DIR
+                        Directory to save fetched config (default: ./)
+  --report-dir REPORT_DIR
+                        Directory to save a test report (default: ./)
+  --artifact-dir ARTIFACT_DIR
+                        Directory to save a test artifact (default: ./)
+
+available commands:
+  {configs,runs}
+    configs             Configs management
+    runs                Test runs management
+
+```
