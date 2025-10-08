@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app, send_from_directory
 import os
 from email.utils import format_datetime
+from datetime import datetime, timezone
 from protoplaster.runner.metadata import RunStatus
 
 test_runs_blueprint: Blueprint = Blueprint("protoplaster-test-runs", __name__)
@@ -280,6 +281,71 @@ def fetch_test_run_report(identifier: int):
                                mimetype="text/csv")
 
 
+def file_to_artifacts_entry(artifacts_dir: str, filename: str):
+    path = os.path.join(artifacts_dir, filename)
+
+    mtime = os.path.getmtime(path)
+    created = format_datetime(datetime.fromtimestamp(mtime, tz=timezone.utc))
+
+    return {
+        "name": filename,
+        "created": created,
+    }
+
+
+@test_runs_blueprint.route("/api/v1/test-runs/<string:identifier>/artifacts")
+def fetch_artifacts(identifier: str):
+    """Fetch a list of test run artifacts.
+
+    :param identifier: test run identifier
+    :status 200: no error, file returned
+    :status 404: test run not completed or does not exist
+
+    :>file: artifact file with content type inferred automatically
+
+    **Example request**
+
+        GET /api/v1/runs/25d9f4a2-2556-4647-b3cc-762348dc51ce/artifacts HTTP/1.1
+
+    **Example response**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+
+        [
+          {
+            "name": "frame.raw",
+            "created": "Mon, 25 Aug 2025 16:58:35 +0200",
+          }
+        ]
+    """  # noqa: E501
+    manager = current_app.config["RUN_MANAGER"]
+    run = manager.get_run(identifier)
+    if not run:
+        return jsonify({"error": "Test run not found"}), 404
+
+    if (run.get("status") == RunStatus.PENDING
+            or run.get("status") == RunStatus.RUNNING):
+        return jsonify({"error": "Test run not finished"}), 404
+
+    artifacts_dir = os.path.join(current_app.config["ARGS"].artifacts_dir,
+                                 identifier)
+
+    try:
+        filenames = [
+            f for f in os.listdir(artifacts_dir)
+            if os.path.isfile(os.path.join(artifacts_dir, f))
+        ]
+    except FileNotFoundError:
+        return jsonify({"error": f"Directory not found: {artifacts_dir}"}), 404
+
+    artifacts = [file_to_artifacts_entry(artifacts_dir, f) for f in filenames]
+
+    return jsonify(artifacts)
+
+
 @test_runs_blueprint.route(
     "/api/v1/test-runs/<string:identifier>/artifacts/<path:artifact_name>")
 def fetch_artifact(identifier: str, artifact_name: str):
@@ -294,7 +360,7 @@ def fetch_artifact(identifier: str, artifact_name: str):
 
     **Example request**
 
-        GET /api/v1/runs/25d9f4a2-2556-4647-b3cc-762348dc51ce/artifacst/frame.raw HTTP/1.1
+        GET /api/v1/runs/25d9f4a2-2556-4647-b3cc-762348dc51ce/artifacts/frame.raw HTTP/1.1
 
     **Example response**
 
