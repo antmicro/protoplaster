@@ -100,6 +100,10 @@ def parse_args():
     parser.add_argument("--server",
                         action='store_true',
                         help="Run in server mode")
+    parser.add_argument("--port",
+                        type=str,
+                        default="5000",
+                        help="Port to use when running in server mode")
     args = parser.parse_args()
     if args.csv_columns and not args.csv and not args.report_output:
         parser.error("--csv-columns requires --csv or --report-output")
@@ -111,7 +115,7 @@ def run_server(args):
     app.config["ARGS"] = args
     app.config["RUN_MANAGER"] = RunManager()
     app.register_blueprint(protoplaster.api.v1.create_routes())
-    app.run()
+    app.run(port=int(args.port))
 
 
 def main():
