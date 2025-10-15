@@ -171,7 +171,7 @@ def main():
             f"{args.test_dir}/{args.test_file}") and not args.server:
         print(
             error(
-                f"Test file {args.test_dir}/{args.test_file} does not exist or you don't have sufficient permitions"
+                f"Test file {args.test_dir}/{args.test_file} does not exist or you don't have sufficient permissions"
             ))
         exit(1)
     if args.list_tests:
