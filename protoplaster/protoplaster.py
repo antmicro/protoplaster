@@ -4,6 +4,7 @@ import os
 import sys
 from colorama import init
 from flask import Flask
+from flask_cors import CORS
 import shutil
 
 import protoplaster.api.v1
@@ -124,6 +125,7 @@ def parse_args():
 
 def run_server(args):
     app = Flask(__name__)
+    CORS(app)
     app.config["ARGS"] = args
     app.config["RUN_MANAGER"] = RunManager()
     app.register_blueprint(protoplaster.api.v1.create_routes())

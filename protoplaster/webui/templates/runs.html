@@ -2,7 +2,17 @@
 {% block content %}
 <h2>Test runs</h2>
 
-<div class="d-flex justify-content-end mb-3">
+<div class="d-flex justify-content-between mb-3">
+  <form method="get" class="d-flex align-items-center">
+    <label for="deviceSelect" class="me-2 fw-semibold">Device:</label>
+    <select id="deviceSelect" name="device" class="form-select" style="width: 200px;" onchange="this.form.submit()">
+      {% for device in devices %}
+      <option value="{{ device.name }}" {% if device.name == selected_device.name %}selected{% endif %}>
+      {{ device.name }}
+      </option>
+      {% endfor %}
+    </select>
+  </form>
   <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#triggerTestRunModal">
     <i class="bi bi-play-fill"></i> Trigger test run
   </button>
@@ -52,27 +62,38 @@
 
 <!-- Trigger Test Run Modal -->
 <div class="modal fade" id="triggerTestRunModal" tabindex="-1" aria-labelledby="triggerTestRunModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <form id="triggerRunForm">
         <div class="modal-header">
-          <h5 class="modal-title" id="triggerTestRunModalLabel">Trigger new test run</h5>
+          <h5 class="modal-title" id="triggerTestRunModalLabel">Trigger Test Run</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
+
+          <!-- Device selection -->
           <div class="mb-3">
-            <label for="configSelect" class="form-label">Configuration</label>
-            <select id="configSelect" class="form-select" required>
-              {% for cfg in configs %}
-                <option value="{{ cfg.name }}">{{ cfg.name }}</option>
+            <label for="runDeviceSelect" class="form-label">Device</label>
+            <select class="form-select" id="runDeviceSelect" name="device" multiple required>
+              {% for device in devices %}
+              <option value="{{ device.url }}" {% if device.name == 'Local device' %}selected{% endif %}>{{ device.name }}</option>
               {% endfor %}
             </select>
           </div>
+
+          <!-- Config selection -->
+          <div class="mb-3">
+            <label for="configSelect" class="form-label">Config</label>
+            <select class="form-select" id="configSelect" name="config">
+            </select>
+          </div>
+
           <div class="mb-3">
             <label for="testSuiteName" class="form-label">Test suite</label>
             <input type="text" name="name" class="form-control" id="testSuiteName">
           </div>
         </div>
+
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary">Trigger</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -114,21 +135,93 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+  async function fetchConfigs(deviceUrl) {
+    try {
+      const resp = await fetch(`${deviceUrl}/api/v1/configs`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const configs = await resp.json();
+      return configs.map(cfg => cfg.name);
+    } catch (err) {
+      console.error(`Failed to fetch configs from ${deviceUrl}:`, err);
+      return [];
+    }
+  }
+
+  function getIntersectMap(arr, map) {
+    const returnMap = new Map()
+    for (let i = 0; i < arr.length; i++) {
+      if (!map.size) {
+        returnMap.set(arr[i], i)
+      } else {
+        if (map.has(arr[i]) && !returnMap.has(arr[i])) {
+          returnMap.set(arr[i], i)
+        }
+      }
+    }
+    return returnMap
+  }
+
+  function getIntersection(arrays) {
+    const initialMap = new Map()
+    const resultMap = arrays?.reduce(function _(acc, currentVal) {
+      return getIntersectMap(currentVal, acc)
+    }, initialMap)
+
+    return Array.from(resultMap.keys())
+  }
+
+  async function updateConfigList() {
+    const configSelect = document.getElementById('configSelect');
+    const deviceSelect = document.getElementById('deviceSelect');
+    const selectedDevices = Array.from(runDeviceSelect.selectedOptions).map(opt => opt.value);
+
+    configSelect.innerHTML = '<option disabled>Loading...</option>';
+
+    if (selectedDevices.length === 0) {
+      configSelect.innerHTML = '<option disabled>Select at least one device</option>';
+      return;
+    }
+
+    // Fetch config lists in parallel
+    const allConfigs = await Promise.all(selectedDevices.map(fetchConfigs));
+    commonConfigs = getIntersection(allConfigs);
+
+    // Populate dropdown
+    configSelect.innerHTML = '';
+    if (commonConfigs.length === 0) {
+      configSelect.innerHTML = '<option disabled>No common configs found!</option>';
+    } else {
+      commonConfigs.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        configSelect.appendChild(opt);
+      });
+    }
+  }
+
+  const modal = document.getElementById('triggerTestRunModal');
+  modal.addEventListener('show.bs.modal', updateConfigList);
+
   // Trigger run form
   document.getElementById('triggerRunForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const config = document.getElementById('configSelect').value;
     const testSuite = document.getElementById('testSuiteName').value;
-    let payload = { config_name: config, test_suite_name: testSuite};
+    const selectedDevices = Array.from(runDeviceSelect.selectedOptions).map(opt => opt.value);
 
-    const resp = await fetch('/api/v1/test-runs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (resp.ok) location.reload();
-    else alert('Failed to trigger test run');
+    for (const deviceUrl of selectedDevices) {
+      try {
+        const resp = await fetch(`${deviceUrl}/api/v1/test-runs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ config_name: config, test_suite_name: testSuite}),
+        });
+      } catch (err) {
+        console.error(`Error triggering on ${deviceUrl}:`, err);
+      }
+    }
+    location.reload();
   });
 
   // Details modal
@@ -174,6 +267,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
       new bootstrap.Modal(document.getElementById('testDetailsModal')).show();
     });
+  });
+
+  runDeviceSelect.addEventListener('change', async function() {
+    const deviceUrl = runDeviceSelect.value;
+    updateConfigList();
+  });
+
+  document.getElementById('deviceSelect').addEventListener('change', function() {
+    window.location.href = `/configs?device=${encodeURIComponent(deviceId)}`;
+    const deviceId = this.value;
   });
 });
 </script>

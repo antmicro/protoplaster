@@ -3,6 +3,12 @@
 {% block content %}
 <h2>Devices</h2>
 
+<div class="d-flex justify-content-end mb-3">
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
+    <i class="bi bi-plus"></i> Add new device
+  </button>
+</div>
+
 <table class="table table-bordered device-table">
   <thead class="table-light">
     <tr>
@@ -33,5 +39,32 @@
     {% endfor %}
   </tbody>
 </table>
+
+<div class="modal fade" id="addDeviceModal" tabindex="-1" aria-labelledby="addDeviceModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="{{ url_for('webui.add_device_route') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addDeviceModalLabel">Add new device</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="deviceName" class="form-label">Device name</label>
+            <input type="text" name="name" class="form-control" id="deviceName" required>
+          </div>
+          <div class="mb-3">
+            <label for="deviceUrl" class="form-label">Device URL</label>
+            <input type="url" name="url" class="form-control" id="deviceUrl" placeholder="http://example:5000" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Add</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 
 {% endblock %}
