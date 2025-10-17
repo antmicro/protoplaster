@@ -19,8 +19,6 @@ from protoplaster.report_generators.system_report.protoplaster_system_report imp
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
-LOG_PATH = str(os.getenv("HOME")) + "/.local/share/protoplaster.log"
-
 
 def list_tests(args):
     test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
@@ -184,7 +182,8 @@ def run_tests(args):
         plugins.append(csv_report_gen)
 
         if args.log:
-            log_report_gen = LogGenerator(LOG_PATH)
+            log_report_gen = LogGenerator(
+                f"{args.artifacts_dir}/protoplaster.log")
             plugins.append(log_report_gen)
 
         ret = pytest.main(prepare_pytest_args(test_modules, args),
