@@ -157,8 +157,6 @@ def run_tests(args):
     test_modules = test_file.list_test_modules()
     metadata_cmds = test_file.list_metadata_commands()
 
-    os.makedirs(args.artifacts_dir, exist_ok=True)
-
     if metadata_cmds:
         metadata = [
             result.output_file

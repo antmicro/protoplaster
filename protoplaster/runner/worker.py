@@ -27,6 +27,13 @@ def run_test(run, base_args):
     args.csv = run["id"] + ".csv"
     args.artifacts_dir = os.path.join(args.artifacts_dir, run["id"])
 
+    os.makedirs(args.artifacts_dir, exist_ok=True)
+
+    if not (os.path.exists(args.test_dir) or os.path.exists(args.reports_dir)
+            or os.path.exists(args.reports_dir)):
+        run["status"] = RunStatus.FAILED
+        return
+
     ret, metadata = run_tests(args)
 
     run["metadata"] = {

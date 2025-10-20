@@ -45,6 +45,11 @@ def parse_args():
                         default=f"{ARTIFACTS_DIR}",
                         help="Path to the test artifacts directory")
     parser.add_argument(
+        "-m",
+        "--mkdir",
+        action="store_true",
+        help="Try to create test/reports/artifacts directories if missing")
+    parser.add_argument(
         "-t",
         "--test-file",
         type=str,
@@ -133,6 +138,29 @@ def main():
     if args.sudo:
         os.execv(shutil.which("sudo"),
                  [__file__] + list(filter(lambda a: a != "--sudo", sys.argv)))
+
+    if not os.path.exists(args.test_dir):
+        if args.mkdir:
+            os.makedirs(args.test_dir, exist_ok=True)
+        else:
+            print(error(f"Tests dir ({args.test_dir}) does not exist!"))
+            exit(1)
+
+    if not os.path.exists(args.reports_dir):
+        if args.mkdir:
+            os.makedirs(args.reports_dir, exist_ok=True)
+        else:
+            print(error(f"Reports dir ({args.reports_dir}) does not exist!"))
+            exit(1)
+
+    if not os.path.exists(args.artifacts_dir):
+        if args.mkdir:
+            os.makedirs(args.artifacts_dir, exist_ok=True)
+        else:
+            print(
+                error(f"Artifacts dir ({args.artifacts_dir}) does not exist!"))
+            exit(1)
+
     if not os.path.exists(
             f"{args.test_dir}/{args.test_file}") and not args.server:
         print(
