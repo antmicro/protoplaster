@@ -6,6 +6,7 @@ from colorama import init
 from flask import Flask
 from flask_cors import CORS
 import shutil
+from waitress import serve
 
 import protoplaster.api.v1
 import protoplaster.webui
@@ -134,7 +135,8 @@ def run_server(args):
     app.config["RUN_MANAGER"] = RunManager()
     app.register_blueprint(protoplaster.api.v1.create_routes())
     app.register_blueprint(protoplaster.webui.webui_blueprint)
-    app.run(port=int(args.port))
+
+    serve(app, host="0.0.0.0", port=int(args.port))
 
 
 def main():
