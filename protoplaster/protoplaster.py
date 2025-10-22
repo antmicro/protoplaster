@@ -9,7 +9,8 @@ import shutil
 
 import protoplaster.api.v1
 import protoplaster.webui
-from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR
+import protoplaster.webui.devices
+from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME
 from protoplaster.runner.manager import RunManager
 from protoplaster.runner.runner import list_tests, list_test_suites, run_tests
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
@@ -124,6 +125,8 @@ def parse_args():
 
 
 def run_server(args):
+    protoplaster.webui.devices.add_device(LOCAL_DEVICE_NAME,
+                                          f"http://127.0.0.1:{args.port}")
     app = Flask(__name__)
     CORS(app)
     app.config["ARGS"] = args

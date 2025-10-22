@@ -1,4 +1,6 @@
-_devices = [{"name": "Local device", "url": "http://127.0.0.1:5000"}]
+from protoplaster.conf.consts import LOCAL_DEVICE_NAME
+
+_devices = []
 
 
 def get_all_devices():
@@ -19,7 +21,7 @@ def add_device(name, url):
 
 def remove_device(device_name):
     global _devices
-    if device_name == "Local device":
+    if device_name == LOCAL_DEVICE_NAME:
         raise ValueError("Cannot remove the local device")
     before = len(_devices)
     _devices = [d for d in _devices if d["name"] != device_name]
