@@ -2,6 +2,12 @@
 {% block content %}
 <h2>Configs</h2>
 
+<div class="mt-3">
+    <div id="uploadAlert" class="alert d-none" role="alert">
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
 <div class="d-flex justify-content-between mb-3">
   <form method="get" class="d-flex align-items-center">
     <label for="deviceSelect" class="me-2 fw-semibold">Device:</label>
@@ -60,7 +66,7 @@
         <div class="modal-body">
           <div class="mb-3">
             <label for="configFile" class="form-label">Config file</label>
-            <input type="file" id="configFile" name="file" class="form-control" required />
+            <input type="file" id="configFile" name="file" accept=".yaml,.yml" class="form-control" required />
           </div>
         </div>
         <div class="modal-footer">
@@ -87,9 +93,17 @@ document.querySelectorAll(".btn-remove").forEach(btn => {
   });
 });
 
+
+function showAlert(message, type) {
+  const uploadAlert = document.getElementById("uploadAlert");
+  uploadAlert.textContent = message;
+  uploadAlert.className = `alert alert-dismissible fade show alert-${type}`;
+}
+
 document.getElementById("uploadForm").addEventListener("submit", async e => {
   e.preventDefault();
   const selectedDevices = Array.from(cfgDeviceSelect.selectedOptions).map(opt => opt.value);
+  const modal = bootstrap.Modal.getInstance(document.getElementById("addConfigModal"));
   for (const deviceUrl of selectedDevices) {
     try {
       const formData = new FormData(e.target);
@@ -97,11 +111,18 @@ document.getElementById("uploadForm").addEventListener("submit", async e => {
         method: "POST",
         body: formData
       });
+      const data = await resp.json();
+      if (!resp.ok) {
+        modal.hide();
+        showAlert(data.error || "Upload failed", "danger");
+        return;
+      }
     } catch (err) {
         console.error(`Error uploading config to ${deviceUrl}:`, err);
+
+        showAlert("Upload failed" + err.message, "danger");
     }
   }
-  const modal = bootstrap.Modal.getInstance(document.getElementById("addConfigModal"));
   modal.hide();
   location.reload();
 });

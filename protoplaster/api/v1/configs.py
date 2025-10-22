@@ -111,6 +111,11 @@ def upload_config():
     if file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
 
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in {".yaml", ".yml"}:
+        return jsonify({"error":
+                        "Only YAML (.yaml, .yml) files are allowed"}), 400
+
     filename = secure_filename(file.filename)
     save_path = os.path.join(config_dir, filename)
     try:
