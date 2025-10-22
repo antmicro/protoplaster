@@ -14,6 +14,8 @@ def get_device_by_name(device_name):
 def add_device(name, url):
     if any(d["name"] == name for d in _devices):
         raise ValueError(f"Device '{name}' already exists")
+    if any(d["url"] == url for d in _devices):
+        raise ValueError(f"Device with URL '{url}' already exists")
     device = {"name": name, "url": url}
     _devices.append(device)
     return device

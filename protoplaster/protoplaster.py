@@ -129,6 +129,7 @@ def run_server(args):
                                           f"http://127.0.0.1:{args.port}")
     app = Flask(__name__)
     CORS(app)
+    app.secret_key = "protoplaster-secret"
     app.config["ARGS"] = args
     app.config["RUN_MANAGER"] = RunManager()
     app.register_blueprint(protoplaster.api.v1.create_routes())

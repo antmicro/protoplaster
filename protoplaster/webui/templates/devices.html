@@ -3,6 +3,19 @@
 {% block content %}
 <h2>Devices</h2>
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="mt-3">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
 <div class="d-flex justify-content-end mb-3">
   <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
     <i class="bi bi-plus"></i> Add new device

@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, flash
 from . import webui_blueprint
 import requests
 from protoplaster.webui.devices import get_all_devices, get_device_by_name, add_device, remove_device
@@ -21,7 +21,10 @@ def add_device_route():
     """Add a new remote device."""
     name = request.form.get("name")
     url = request.form.get("url")
-    add_device(name, url)
+    try:
+        add_device(name, url)
+    except ValueError as e:
+        flash(str(e), "danger")
     return redirect(url_for("webui.devices"))
 
 
