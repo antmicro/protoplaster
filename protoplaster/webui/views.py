@@ -51,8 +51,6 @@ def configs():
 
 @webui_blueprint.route("/runs")
 def test_runs():
-    r = requests.get(f"http://localhost:5000/api/v1/configs", timeout=2)
-    configs = r.json()
     device_name = request.args.get("device")
     devices = get_all_devices()
     selected_device = get_device_by_name(device_name) or devices[0]
@@ -60,7 +58,6 @@ def test_runs():
     runs = r.json()
     return render_template("runs.html",
                            runs=runs,
-                           configs=configs,
                            devices=devices,
                            selected_device=selected_device,
                            active="runs")
