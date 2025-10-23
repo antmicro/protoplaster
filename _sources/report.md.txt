@@ -1,0 +1,9 @@
+Protoplaster tests report
+==================
+|device name|test name|module|duration|message|status|artifacts|
+|---|---|---|---|---|---|---|
+|/dev/i2c-0|addresses|test.py::TestI2C::test_addresses|15ms 565us|AssertionError: No device found at address: 60assert False +  where False = <bound method I2C.check_address of <protoplaster.tests.i2c.i2c.I2C object at 0x3fd7206710>>(60, True) +    where <bound method I2C.check_address of <protoplaster.tests.i2c.i2c.I2C object at 0x3fd7206710>> = <protoplaster.tests.i2c.i2c.I2C object at 0x3fd7206710>.check_address|<span style='color:red'>failed|['uname']|
+|/dev/video0|frame|test.py::TestCamera::test_frame|232ms 497us||<span style='color:green'>passed|['uname']|
+|/dev/video0|device_name|test.py::TestCamera::test_device_name|206ms 69us||<span style='color:green'>passed|['uname']|
+|/dev/video0|driver_name|test.py::TestCamera::test_driver_name|204ms 114us||<span style='color:green'>passed|['uname']|
+|/sys/class/gpio/20|read_write|test.py::TestGPIO::test_read_write|12ms 455us||<span style='color:green'>passed|['uname']|
