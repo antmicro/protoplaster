@@ -31,7 +31,7 @@ jobs:
       - name: Generate docs from yml
         run: |
           tuttest README.md example > example.yml
-          protoplaster -d . -a /tmp -t example.yml --generate-docs
+          protoplaster -d . -r . -a /tmp -t example.yml --generate-docs
 
       - name: Generate test report in Renode
         uses: antmicro/renode-linux-runner-action@main

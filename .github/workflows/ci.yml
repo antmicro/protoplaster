@@ -42,7 +42,7 @@ jobs:
             python -m venv .venv
             source .venv/bin/activate
             pip install .
-            protoplaster -d tests -t basic.yml
+            protoplaster -d tests -r . -a . -t basic.yml
           devices: |
             vivid
             gpio 0 32
