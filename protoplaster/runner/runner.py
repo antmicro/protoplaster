@@ -16,6 +16,7 @@ from protoplaster.conf.log_generator import LogGenerator
 from protoplaster.conf.parser import TestFile, load_yaml
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
 from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, SubReportResult, run_command
+from protoplaster.tools.tools import error, warning
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
