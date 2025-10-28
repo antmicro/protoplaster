@@ -6,7 +6,6 @@ from typing import Any
 
 import yaml
 
-from protoplaster.conf.consts import CONFIG_DIR
 from protoplaster.tests.i2c.test import __file__ as i2c_test
 from protoplaster.tests.gpio.gpio.test import __file__ as gpio_test
 from protoplaster.tests.camera.test import __file__ as camera_test
@@ -111,7 +110,7 @@ class Test(ConfigObj):
     body: list[TestBody]
 
     def __init__(self, origin: Path, name: str, content: dict[str, Any],
-                 custom_path: StrPath) -> None:
+                 test_dir: StrPath, custom_path: StrPath) -> None:
         self.name = name
         self.origin = origin
         self.body = list()
@@ -122,7 +121,7 @@ class Test(ConfigObj):
             if module_name in test_modules_paths:
                 params = wrap_list(params)
             elif (module_path :=
-                  to_path(CONFIG_DIR) / module_name).exists() and load_module(
+                  to_path(test_dir) / module_name).exists() and load_module(
                       module_path, module_name):
                 params = wrap_list(params)
             elif custom_path.exists() and load_module(custom_path,
@@ -260,14 +259,15 @@ class TestFile:
 
         if (tests := file_content.get("tests")) is not None:
             for name, content in tests.items():
-                test = Test(self.file, name, content, custom_path)
+                test = Test(self.file, name, content, test_dir, custom_path)
 
                 if name in self.tests.keys():
                     pr_warn(
                         f'{test.module_path()}: test redefined (previous definition in {self.tests[name].module_path()})'
                     )
 
-                self.tests[name] = Test(self.file, name, content, custom_path)
+                self.tests[name] = Test(self.file, name, content, test_dir,
+                                        custom_path)
 
         if (metadata := file_content.get("metadata")) is not None:
             for name, content in metadata.items():
