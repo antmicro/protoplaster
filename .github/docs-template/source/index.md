@@ -6,6 +6,7 @@
 introduction
 readme
 api
+webui
 protoplaster
 report
 system_report
