@@ -4,8 +4,8 @@
 :maxdepth: 2
 
 introduction
-api
 readme
+api
 protoplaster
 report
 system_report
