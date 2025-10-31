@@ -247,9 +247,13 @@ def fetch_test_run_report(identifier: int):
 
     **Example request**
 
+    .. sourcecode:: http
+
         GET /api/v1/test-runs/25d9f4a2-2556-4647-b3cc-762348dc51ce/report HTTP/1.1
 
     **Example response**
+
+    .. sourcecode:: http
 
         HTTP/1.1 200 OK
         Content-Type: text/csv
@@ -257,7 +261,6 @@ def fetch_test_run_report(identifier: int):
 
         device name,test name,module,duration,message,status
         enp14s0,exist,test.py::TestNetwork::test_exist,0.0007359918672591448,,passed
-
     """  # noqa: E501
     manager = current_app.config["RUN_MANAGER"]
     run = manager.get_run(identifier)
@@ -304,6 +307,8 @@ def fetch_artifacts(identifier: str):
     :>file: artifact file with content type inferred automatically
 
     **Example request**
+
+    .. sourcecode:: http
 
         GET /api/v1/runs/25d9f4a2-2556-4647-b3cc-762348dc51ce/artifacts HTTP/1.1
 
@@ -360,9 +365,13 @@ def fetch_artifact(identifier: str, artifact_name: str):
 
     **Example request**
 
+    .. sourcecode:: http
+
         GET /api/v1/runs/25d9f4a2-2556-4647-b3cc-762348dc51ce/artifacts/frame.raw HTTP/1.1
 
     **Example response**
+
+    .. sourcecode:: http
 
         HTTP/1.1 200 OK
         Content-Type: <depends on artifact>
