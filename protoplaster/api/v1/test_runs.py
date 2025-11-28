@@ -392,7 +392,8 @@ def fetch_artifact(identifier: str, artifact_name: str):
     if not os.path.isfile(artifact_path):
         return jsonify({"error": "Artifact file not found"}), 404
 
+    as_attachment = request.args.get("preview") != "true"
     return send_from_directory(os.path.abspath(
         os.path.join(artifacts_dir, identifier)),
                                artifact_name,
-                               as_attachment=True)
+                               as_attachment=as_attachment)

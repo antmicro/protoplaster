@@ -203,6 +203,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById('triggerTestRunModal');
   modal.addEventListener('show.bs.modal', updateConfigList);
 
+  function canArtifactOpen(contentType) {
+    return contentType === "application/json"
+          || contentType === "application/pdf"
+          || ["text", "image", "audio", "video"].includes(contentType.split("/")[0]);
+  }
+
   // Trigger run form
   document.getElementById('triggerRunForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -246,15 +252,33 @@ document.addEventListener("DOMContentLoaded", function () {
       const artifactList = document.getElementById('artifact-list');
       artifactList.innerHTML = '';
       if (data_art && data_art.length > 0) {
-        data_art.forEach(artifact => {
+        const contentTypes = await Promise.all(data_art.map(async (artifact) => {
+            const url =  `/api/v1/test-runs/${id}/artifacts/${encodeURIComponent(artifact.name)}`;
+            return [url, await fetch(url, { method: 'HEAD' })
+                .then(r => r.ok && r.headers.get('Content-Type'))
+                .catch(console.error)]
+        }));
+        data_art.forEach((artifact, i) => {
+          const [url, contentType] = contentTypes[i];
           const li = document.createElement('li');
           li.className = 'list-group-item d-flex justify-content-between align-items-center';
           li.textContent = artifact.name;
-          const a = document.createElement('a');
-          a.href = `/api/v1/test-runs/${id}/artifacts/${encodeURIComponent(artifact.name)}`;
-          a.className = 'btn btn-sm btn-outline-primary';
-          a.textContent = 'Download';
-          li.appendChild(a);
+          const buttons = document.createElement('div');
+          const buttonClasses = 'btn btn-sm btn-outline-primary';
+          if (contentType && canArtifactOpen(contentType)) {
+            const openButton = document.createElement('a');
+            openButton.href = `${url}?preview=true`;
+            openButton.className = buttonClasses;
+            openButton.textContent = 'Open';
+            openButton.style["margin-right"] = '1em';
+            buttons.appendChild(openButton);
+          } 
+          const downloadButton = document.createElement('a');
+          downloadButton.href = url;
+          downloadButton.className = buttonClasses;
+          downloadButton.textContent = 'Download';
+          buttons.appendChild(downloadButton);
+          li.appendChild(buttons)
           artifactList.appendChild(li);
         });
       } else {
