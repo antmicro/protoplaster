@@ -56,7 +56,7 @@ def parse_args():
         "-t",
         "--test-file",
         type=str,
-        default=f"test.yaml",
+        default="test.yaml",
         help="Path to the yaml test description in the test directory")
     parser.add_argument("-g",
                         "--group",
