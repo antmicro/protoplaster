@@ -10,3 +10,4 @@ Flask==3.1.2
 flask-cors==6.0.1
 requests==2.32.5
 waitress==3.0.2
+eyescan @ git+https://github.com/antmicro/dac-eyescan-test.git@3228304

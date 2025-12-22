@@ -15,6 +15,7 @@ from protoplaster.tests.adc.adc.test import __file__ as adc_test
 from protoplaster.tests.adc.LTC2493.test import __file__ as LTC2493_test
 from protoplaster.tests.adc.LTC2499.test import __file__ as LTC2499_test
 from protoplaster.tests.dac.dac.test import __file__ as dac_test
+from protoplaster.tests.dac.ti_dac38j8x_eyescan.test import __file__ as ti_dac38j8x_eyescan_test
 from protoplaster.tests.memtester.test import __file__ as mem_test
 from protoplaster.tests.dac.LTC2655.test import __file__ as LTC2655_test
 from protoplaster.tests.dac.LTC2657.test import __file__ as LTC2657_test
@@ -47,6 +48,7 @@ test_modules_paths = {
     "UCD90320U": UCD90320U_test,
     "TCA9548A": TCA9548A_test,
     "simple": simple_test,
+    "ti_dac38j8x_eyescan": ti_dac38j8x_eyescan_test,
 }
 
 
