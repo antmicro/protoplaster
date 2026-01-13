@@ -13,11 +13,10 @@ class TestDA9062:
     """
 
     def setup_class(self):
-        if not hasattr(self, 'current_selections'):
-            self.current_selections = []
-        if not hasattr(self, 'current_voltages'):
-            self.current_voltages = []
-        self.pmic = DA9062(self.bus, self.address)
+        self.current_selections = getattr(self, "current_selections", [])
+        self.current_voltages = getattr(self, "current_voltages", [])
+        self.smbus_force = getattr(self, "smbus_force", False)
+        self.pmic = DA9062(self.bus, self.address, self.smbus_force)
 
     def test_is_alive(self):
         """

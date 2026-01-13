@@ -11,8 +11,11 @@ class UCD90320URegs(IntEnum):
 
 class UCD90320U:
 
-    def __init__(self, i2c_bus, i2c_address):
-        self.bus = SMBus(i2c_bus)
+    def __init__(self,
+                 i2c_bus: int,
+                 i2c_address: int,
+                 smbus_force: bool = False):
+        self.bus = SMBus(i2c_bus, smbus_force)
         self.address = i2c_address
 
     def is_alive(self):

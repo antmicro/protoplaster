@@ -18,7 +18,8 @@ class TestTCA9548A:
         check if TCA9548A responds correctly to simple requests
         {%- endmacro %}
         """
-        mux = TCA9548A(self.i2c_bus, self.i2c_address)
+        self.smbus_force = getattr(self, "smbus_force", False)
+        mux = TCA9548A(self.i2c_bus, self.i2c_address, self.smbus_force)
         assert mux.is_alive(), "TCA9548A does not respond correctly"
 
     def name(self):

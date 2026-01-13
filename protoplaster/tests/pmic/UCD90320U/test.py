@@ -19,7 +19,8 @@ class TestUCD90320U:
           check if UCD90320U responds correctly to simple requests
         {%- endmacro %}
         """
-        pmic = UCD90320U(self.bus, self.address)
+        self.smbus_force = getattr(self, "smbus_force", False)
+        pmic = UCD90320U(self.bus, self.address, self.smbus_force)
         assert pmic.is_alive(), "UCD90320U does not respond correctly"
 
     def name(self):

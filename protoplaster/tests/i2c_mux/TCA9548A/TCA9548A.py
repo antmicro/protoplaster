@@ -4,8 +4,11 @@ from protoplaster.tests.i2c_mux.I2CMux import I2CMux
 
 class TCA9548A(I2CMux):
 
-    def __init__(self, i2c_bus: int, i2c_address: int):
-        self.bus = SMBus(i2c_bus)
+    def __init__(self,
+                 i2c_bus: int,
+                 i2c_address: int,
+                 smbus_force: bool = False):
+        self.bus = SMBus(i2c_bus, force=smbus_force)
         self.address = i2c_address
 
     def is_alive(self):

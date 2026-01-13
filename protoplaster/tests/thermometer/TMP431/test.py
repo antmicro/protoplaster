@@ -18,7 +18,8 @@ class TestTMP431:
           check if TMP431 responds correctly to simple requests
         {%- endmacro %}
         """
-        thermometer = TMP431(self.bus, self.address)
+        self.smbus_force = getattr(self, "smbus_force", False)
+        thermometer = TMP431(self.bus, self.address, self.smbus_force)
         assert thermometer.is_alive(), f"TMP431 does not respond correctly"
 
     def name(self):

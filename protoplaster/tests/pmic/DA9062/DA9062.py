@@ -80,8 +80,8 @@ ldo_selection = {"A": LDOSelection.A, "B": LDOSelection.B}
 class DA9062:
     DEVICE_ID = 0x62
 
-    def __init__(self, i2c_bus, i2c_address):
-        self.bus = SMBus(i2c_bus)
+    def __init__(self, i2c_bus, i2c_address, smbus_force):
+        self.bus = SMBus(i2c_bus, force=smbus_force)
         self.i2c_address = i2c_address
 
     def is_alive(self):

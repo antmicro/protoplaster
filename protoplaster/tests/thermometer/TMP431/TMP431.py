@@ -14,8 +14,11 @@ class TMP431:
     DEVICE_ID = 0x31
     MANUFACTURER_ID = 0x55
 
-    def __init__(self, i2c_bus, i2c_address):
-        self.bus = SMBus(i2c_bus)
+    def __init__(self,
+                 i2c_bus: int,
+                 i2c_address: int,
+                 smbus_force: bool = False):
+        self.bus = SMBus(i2c_bus, force=smbus_force)
         self.address = i2c_address
 
     def is_alive(self):
