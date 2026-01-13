@@ -19,17 +19,17 @@ except OSError:
 class EyeScan:
 
     def __init__(self, ftdi_dev: int, bit: int) -> None:
-        self.eyescan_file = tempfile.TemporaryFile()
+        self.eyescan_file = tempfile.NamedTemporaryFile()
         self.axis_multiplier = {"x": 1, "y": 10}
 
         # Check if the eyescan library is available
         assert TI_DAC38J8X_EYESCAN_LIBRARY, "TI DAC38J8X eyescan library is not available."
 
-        perform_eyescan(ftdi_dev, self.eyescan_file, bit)
+        perform_eyescan(ftdi_dev, self.eyescan_file.name, bit)
 
     def parse_file(self) -> list[dict]:
         samples_by_lane = defaultdict(lambda: defaultdict(list))
-        with open(self.data_path) as file:
+        with open(self.data_path.name) as file:
             for row in csv.reader(file, delimiter="\t"):
                 lane, bit, y, x, amp = map(int, row)
                 samples_by_lane[lane][(y, x)].append((bit, amp))
@@ -63,7 +63,7 @@ class EyeScan:
                                     axis_multiplier=self.axis_multiplier)
 
     def get_eyescan_file_path(self) -> str:
-        return self.eyescan_file.path
+        return self.eyescan_file.name
 
     def get_eye_size(self, sample: list[dict]) -> tuple[int, int]:
         max_value = max(pixel["amp"] for pixel in sample)
