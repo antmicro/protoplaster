@@ -29,7 +29,7 @@ class EyeScan:
 
     def parse_file(self) -> list[dict]:
         samples_by_lane = defaultdict(lambda: defaultdict(list))
-        with open(self.data_path.name) as file:
+        with open(self.eyescan_file.name) as file:
             for row in csv.reader(file, delimiter="\t"):
                 lane, bit, y, x, amp = map(int, row)
                 samples_by_lane[lane][(y, x)].append((bit, amp))
