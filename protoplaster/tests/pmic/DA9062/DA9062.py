@@ -93,15 +93,17 @@ class DA9062:
         return False
 
     def read_register(self, reg_addr):
-        high_byte = (reg_addr >> 8) & 0b11
-        low_byte = reg_addr & 0xFF
-
-        set_page_cmd = i2c_msg.write(self.i2c_address, [0, high_byte])
-        set_register_cmd = i2c_msg.write(self.i2c_address, [low_byte])
-        read_register_cmd = i2c_msg.read(self.i2c_address, 1)
-        self.bus.i2c_rdwr(set_page_cmd, set_register_cmd, read_register_cmd)
-        register_value = list(read_register_cmd)[0]
-        return register_value
+        page_select = 0x80
+        if reg_addr >= 0x80 and reg_addr <= 0xFF:
+            page_select = 0x81
+        if reg_addr >= 0x100 and reg_addr <= 0x17F:
+            page_select = 0x82
+        if reg_addr >= 0x180 and reg_addr <= 0x1FF:
+            page_select = 0x83
+        # This assumes that after single read, we will go back to the page 0
+        # this is enforced by 7th bit in page_select
+        self.bus.write_byte_data(self.i2c_address, 0, page_select)
+        return self.bus.read_byte_data(self.i2c_address, reg_addr)
 
     # returns DEVICE_ID
     def get_device_id(self):
