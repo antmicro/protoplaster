@@ -234,11 +234,11 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.btn-details').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const id = e.target.closest("button").dataset.runId;
-      const resp = await fetch(`/api/v1/test-runs/${id}`);
+      const resp = await fetch(`{{ selected_device.url }}/api/v1/test-runs/${id}`);
       if (!resp.ok) return alert('Failed to fetch run details');
       const data = await resp.json();
 
-      const resp_art = await fetch(`/api/v1/test-runs/${id}/artifacts`);
+      const resp_art = await fetch(`{{ selected_device.url }}/api/v1/test-runs/${id}/artifacts`);
       if (!resp_art.ok) return alert('Failed to fetch run artifacts');
       const data_art = await resp_art.json();
 
@@ -253,7 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
       artifactList.innerHTML = '';
       if (data_art && data_art.length > 0) {
         const contentTypes = await Promise.all(data_art.map(async (artifact) => {
-            const url =  `/api/v1/test-runs/${id}/artifacts/${encodeURIComponent(artifact.name)}`;
+            const url =  `{{ selected_device.url }}/api/v1/test-runs/${id}/artifacts/${encodeURIComponent(artifact.name)}`;
             return [url, await fetch(url, { method: 'HEAD' })
                 .then(r => r.ok && r.headers.get('Content-Type'))
                 .catch(console.error)]
@@ -287,7 +287,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Report link
       const reportLink = document.getElementById('report-link');
-      reportLink.href = `/api/v1/test-runs/${id}/report`;
+      reportLink.href = `{{ selected_device.url }}/api/v1/test-runs/${id}/report`;
 
       new bootstrap.Modal(document.getElementById('testDetailsModal')).show();
     });
