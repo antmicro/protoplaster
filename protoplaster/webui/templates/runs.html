@@ -264,6 +264,29 @@ document.addEventListener("DOMContentLoaded", function () {
     location.reload();
   });
 
+  // Abort button
+  document.querySelectorAll('.btn-abort').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      if (!confirm("Are you sure you want to abort this test run?")) return;
+
+      const btn = e.target.closest("button");
+      const id = btn.dataset.runId;
+      try {
+        const resp = await fetch(`{{ selected_device.url }}/api/v1/test-runs/${id}`, { method: 'DELETE' });
+        if (!resp.ok) {
+          const data = await resp.json();
+          alert(`Failed to abort: ${data.error || resp.statusText}`);
+        } else {
+          // Refresh statuses
+          poll();
+        }
+      } catch (err) {
+        console.error("Error aborting run:", err);
+        alert("An error occurred while trying to abort the run.");
+      }
+    });
+  });
+
   // Details modal
   document.querySelectorAll('.btn-details').forEach(btn => {
     btn.addEventListener('click', async (e) => {
