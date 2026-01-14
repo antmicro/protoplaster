@@ -93,7 +93,7 @@
 
 <!-- Test Details Modal -->
 <div class="modal fade" id="testDetailsModal" tabindex="-1" aria-labelledby="testDetailsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="testDetailsModalLabel">Test Run Details</h5>
@@ -111,6 +111,13 @@
         <ul id="artifact-list" class="list-group mb-3">
           <li class="list-group-item text-muted">No artifacts</li>
         </ul>
+        <h6>Test Results</h6>
+        <div class="table-responsive border rounded mb-3" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-striped table-hover mb-0" id="results-table" style="font-size: 0.9em;">
+            <thead class="table-light sticky-top"></thead>
+            <tbody></tbody>
+          </table>
+        </div>
         <div class="text-end">
           <a id="report-link" href="#" class="btn btn-outline-secondary" target="_blank">
             <i class="bi bi-file-earmark-text"></i> Download CSV Report
@@ -310,6 +317,52 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       } else {
         artifactList.innerHTML = '<li class="list-group-item text-muted">No artifacts</li>';
+      }
+
+      // Populate test results table
+      resp_report = await fetch(`{{ selected_device.url }}/api/v1/test-runs/${id}/report?format=json`)
+      if (resp_report.ok) {
+        const resultsTable = document.getElementById('results-table');
+        const thead = resultsTable.querySelector('thead');
+        const tbody = resultsTable.querySelector('tbody');
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+
+        // XXX(pkoscik): CSV rows saved as a JSON object for easier JS implementation
+        const rows = await resp_report.json();
+        if (rows.length > 0) {
+          // Generate table headers using the first row's keys.
+          // This is safe because the JSON is converted from a CSV where every row has the same columns.
+          const headers = Object.keys(rows[0]);
+          const headerRow = document.createElement('tr');
+          headers.forEach(h => {
+            const th = document.createElement('th');
+            th.textContent = h.charAt(0).toUpperCase() + h.slice(1);
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+
+          rows.forEach(row => {
+            const tr = document.createElement('tr');
+            headers.forEach(key => {
+              const td = document.createElement('td');
+              const val = row[key];
+
+              if (key == 'status') {
+                const color = {passed: 'success', failed: 'danger', skipped: 'warning'}[val] || 'secondary';
+                td.innerHTML = `<span class="badge bg-${color}">${val}</span>`;
+              } else if (key == 'message') {
+                td.innerHTML = `<div style="max-height: 60px; overflow-y: auto;">${val}</div>`;
+              } else {
+                td.textContent = val;
+              }
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="100%" class="text-center text-muted">No results found.</td></tr>';
+        }
       }
 
       // Report link
