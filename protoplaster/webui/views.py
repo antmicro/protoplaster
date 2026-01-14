@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, flash
 from . import webui_blueprint
 import requests
 from protoplaster.webui.devices import get_all_devices, get_device_by_name, add_device, remove_device
+from protoplaster.conf.consts import WEBUI_POLLING_INTERVAL
 
 
 @webui_blueprint.route("/")
@@ -60,4 +61,5 @@ def test_runs():
                            runs=runs,
                            devices=devices,
                            selected_device=selected_device,
-                           active="runs")
+                           active="runs",
+                           polling_interval=WEBUI_POLLING_INTERVAL)

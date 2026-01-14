@@ -31,24 +31,12 @@
   </thead>
   <tbody>
     {% for run in runs %}
-    <tr>
+    <tr data-run-id="{{ run.id }}">
       <td>{{ run.id }}</td>
       <td>{{ run.config_name }}</td>
-      <td>
-        {% if run.status == 'finished' %}
-          <span class="badge bg-success">Passed</span>
-        {% elif run.status == 'failed' %}
-          <span class="badge bg-danger">Failed</span>
-        {% elif run.status == 'pending' %}
-          <span class="badge bg-secondary">Pending</span>
-        {% elif run.status == 'running' %}
-          <span class="badge bg-warning text-dark">Running</span>
-        {% elif run.status == 'aborted' %}
-          <span class="badge bg-secondary">Aborted</span>
-        {% endif %}
-      </td>
-      <td>{{ run.started_at or '-' }}</td>
-      <td>{{ run.finished_at or '-' }}</td>
+      <td class="status-cell"></td>
+      <td class="start-cell"></td>
+      <td class="end-cell"></td>
       <td>
         <button class="btn btn-sm btn-outline-primary btn-details" data-run-id="{{ run.id }}">Details</button>
         <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="{{ run.id }}" {% if run.status not in ['pending'] %}disabled{% endif %}>Abort</button>
@@ -135,6 +123,45 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+  const statusMap = {
+    finished: ['success', 'Passed'],
+    failed: ['danger', 'Failed'],
+    pending: ['secondary', 'Pending'],
+    running: ['warning text-dark', 'Running'],
+    aborted: ['secondary', 'Aborted']
+  };
+
+  const updateRow = (row, data) => {
+    const [cls, text] = statusMap[data.status];
+    row.querySelector('.status-cell').innerHTML = `<span class="badge bg-${cls}">${text}</span>`;
+    row.querySelector('.start-cell').textContent = data.started_at || '-';
+    row.querySelector('.end-cell').textContent = data.finished_at || '-';
+    row.querySelector('.btn-abort').disabled = data.status !== 'pending';
+  };
+
+  document.querySelectorAll('tr[data-run-id]').forEach(row => {
+      const id = row.dataset.runId;
+      const initialData = {{runs|tojson}}.find(r => r.id == id);
+      if (initialData) updateRow(row, initialData);
+  });
+
+  const poll = async () => {
+    try {
+      const resp = await fetch(`{{ selected_device.url }}/api/v1/test-runs`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+      const runs = await resp.json();
+      for (const run of runs) {
+        const row = document.querySelector(`tr[data-run-id="${run.id}"]`);
+        if (row) updateRow(row, run);
+      }
+    } catch (err) {
+      console.error(`Failed to fetch test runs data:`, err);
+    }
+  };
+
+  setInterval(poll, {{polling_interval * 1000 }});
+
   async function fetchConfigs(deviceUrl) {
     try {
       const resp = await fetch(`${deviceUrl}/api/v1/configs`);
