@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app, send_from_directory
 import os
+import csv
 from email.utils import format_datetime
 from datetime import datetime, timezone
 from protoplaster.runner.metadata import RunStatus
@@ -240,18 +241,20 @@ def fetch_test_run_report(identifier: str):
     """Fetch test run report
 
     :param identifier: test run identifier
+    :query format: (optional) "json" to return parsed JSON data instead of CSV
     :status 200: no error
     :status 404: test run not completed or does not exist, or report file does not exist
 
-    :>file text/csv: CSV file containing the full test report
+    :>file text/csv: (default) CSV file containing the full test report
+    :>jsonarr dict: (if format=json) List of test result objects
 
-    **Example request**
+    **Example request (CSV)**
 
     .. sourcecode:: http
 
         GET /api/v1/test-runs/25d9f4a2-2556-4647-b3cc-762348dc51ce/report HTTP/1.1
 
-    **Example response**
+    **Example response (CSV)**
 
     .. sourcecode:: http
 
@@ -261,6 +264,30 @@ def fetch_test_run_report(identifier: str):
 
         device name,test name,module,duration,message,status
         enp14s0,exist,test.py::TestNetwork::test_exist,0.0007359918672591448,,passed
+
+    **Example request (JSON)**
+
+    .. sourcecode:: http
+
+        GET /api/v1/test-runs/25d9f4a2-2556-4647-b3cc-762348dc51ce/report?format=json HTTP/1.1
+
+    **Example response (JSON)**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+
+        [
+            {
+                "device name": "enp14s0",
+                "test name": "exist",
+                "module": "test.py::TestNetwork::test_exist",
+                "duration": "0.0007359918672591448",
+                "message": "",
+                "status": "passed"
+            }
+        ]
     """  # noqa: E501
     manager = current_app.config["RUN_MANAGER"]
     run = manager.get_run(identifier)
@@ -277,6 +304,14 @@ def fetch_test_run_report(identifier: str):
 
     if not os.path.isfile(report_path):
         return jsonify({"error": "Report file not found"}), 404
+
+    if request.args.get("format") == "json":
+        try:
+            with open(report_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                return jsonify(list(reader))
+        except Exception as e:
+            return jsonify({"error": f"Failed to parse report: {str(e)}"}), 500
 
     return send_from_directory(os.path.abspath(report_dir),
                                report_file,
