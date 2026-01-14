@@ -236,7 +236,7 @@ def delete_test_run(identifier: str):
 
 
 @test_runs_blueprint.route("/api/v1/test-runs/<string:identifier>/report")
-def fetch_test_run_report(identifier: int):
+def fetch_test_run_report(identifier: str):
     """Fetch test run report
 
     :param identifier: test run identifier
