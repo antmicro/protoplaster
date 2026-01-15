@@ -1,3 +1,4 @@
+myst_parser==4.0.1
 pytest==7.4.3
 pyyaml==5.3.1
 smbus2==0.3.0
