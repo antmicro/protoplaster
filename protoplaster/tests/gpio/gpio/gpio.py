@@ -18,19 +18,25 @@ class GPIO:
         self.direction = direction
         self.path = path
         self.gpio_name = gpio_name if gpio_name is not None else f"gpio{number}"
+        self.unexport_gpio = True
 
     def __enter__(self):
         self.export()
         return self
 
     def __exit__(self, *args, **kwargs):
-        self.unexport()
+        if self.unexport_gpio:
+            self.unexport()
 
     def export(self):
-        assert os.path.isfile(
-            f"{self.path}/export"), "Sysfs interface for GPIO does not exist"
-        with open(f"{self.path}/export", 'w') as file:
-            file.write(str(self.number))
+        if not os.path.isdir(f"{self.path}/{self.gpio_name}"):
+            assert os.path.isfile(f"{self.path}/export"
+                                  ), "Sysfs interface for GPIO does not exist"
+            with open(f"{self.path}/export", 'w') as file:
+                file.write(str(self.number))
+            self.unexport_gpio = True
+        else:
+            self.unexport_gpio = False
         assert os.path.isdir(
             f"{self.path}/{self.gpio_name}"), "GPIO could not be initiated"
         with open(f"{self.path}/{self.gpio_name}/direction", 'w') as file:
