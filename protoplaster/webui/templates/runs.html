@@ -333,7 +333,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (rows.length > 0) {
           // Generate table headers using the first row's keys.
           // This is safe because the JSON is converted from a CSV where every row has the same columns.
-          const headers = Object.keys(rows[0]);
+          const headers = Object.keys(rows[0]).filter(h => h !== "artifacts");
           const headerRow = document.createElement('tr');
           headers.forEach(h => {
             const th = document.createElement('th');
