@@ -32,8 +32,8 @@ class TestDA9062:
           verify that the DA9062 PMIC returns the expected variant ID: `{{ device['variant_id'] }}`
         {%- endmacro %}
         """
-        assert self.pmic.get_variant_id(
-        ) == self.variant_id, "The Variant ID does not match the provided value"
+        val = self.pmic.get_variant_id()
+        assert val == self.variant_id, f"The Variant ID does not match. Expected: {self.variant_id}, Actual: {val}"
 
     def test_customer_id(self):
         """
@@ -41,8 +41,8 @@ class TestDA9062:
           verify that the DA9062 PMIC returns the expected customer ID: `{{ device['customer_id'] }}`
         {%- endmacro %}
         """
-        assert self.pmic.get_customer_id(
-        ) == self.customer_id, "The Customer ID does not match the provided value"
+        val = self.pmic.get_customer_id()
+        assert val == self.customer_id, f"The Customer ID does not match. Expected: {self.customer_id}, Actual: {val}"
 
     def test_config_id(self):
         """
@@ -50,8 +50,8 @@ class TestDA9062:
           verify that the DA9062 PMIC returns the expected config ID: `{{ device['config_id'] }}`
         {%- endmacro %}
         """
-        assert self.pmic.get_config_id(
-        ) == self.config_id, "The Config ID does not match the provided value"
+        val = self.pmic.get_config_id()
+        assert val == self.config_id, f"The Config ID does not match. Expected: {self.config_id}, Actual: {val}"
 
     def test_current_selections(self):
         """
@@ -61,10 +61,9 @@ class TestDA9062:
         {%- endmacro %}
         """
         for ldo in self.current_selections:
-            assert self.pmic.get_ldo_curr_selection(
-                ldo['ldo_id']
-            ) == ldo_selection[ldo[
-                'ldo_selection']], f"The selction of ldo({ldo['ldo_id']}) does not match the provided value"
+            val = self.pmic.get_ldo_curr_selection(ldo['ldo_id'])
+            exp = ldo_selection[ldo['ldo_selection']]
+            assert val == exp, f"The selection of ldo({ldo['ldo_id']}) does not match. Expected: {exp}, Actual: {val}"
 
     def test_current_ldos(self):
         """
@@ -76,11 +75,11 @@ class TestDA9062:
         for ldo in self.current_voltages:
             curr_voltage = self.pmic.get_ldo_curr_voltage(ldo['ldo_id'])
             if 'max_voltage' in ldo:
-                assert curr_voltage <= ldo[
-                    'max_voltage'], f"The voltage of ldo({ldo['ldo_id']}) is above the maximum allowed value."
+                assert curr_voltage <= ldo['max_voltage'], \
+                    f"The voltage of ldo({ldo['ldo_id']}) is {curr_voltage}, above max {ldo['max_voltage']}."
             if 'min_volatge' in ldo:
-                assert ldo[
-                    'min_volatge'] <= curr_voltage, f"The voltage of ldo({ldo['ldo_id']}) is below the minimum allowed value."
+                assert ldo['min_volatge'] <= curr_voltage, \
+                    f"The voltage of ldo({ldo['ldo_id']}) is {curr_voltage}, below min {ldo['min_volatge']}."
 
     def name(self):
         return f"DA9062({self.bus}, {hex(self.address)})"
