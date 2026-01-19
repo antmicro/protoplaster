@@ -25,7 +25,8 @@ usage: protoplaster [-h] [-d TEST_DIR] [-r REPORTS_DIR] [-a ARTIFACTS_DIR]
                     [--csv CSV] [--csv-columns CSV_COLUMNS] [--generate-docs]
                     [-c CUSTOM_TESTS] [--report-output REPORT_OUTPUT]
                     [--system-report-config SYSTEM_REPORT_CONFIG] [--sudo]
-                    [--server]
+                    [--server] [--port PORT]
+                    [--external-devices EXTERNAL_DEVICES]
 
 options:
   -h, --help            show this help message and exit
@@ -59,6 +60,10 @@ options:
                         Path to the system report yaml config file
   --sudo                Run as sudo
   --server              Run in server mode
+  --port PORT           Port to use when running in server mode
+  --external-devices EXTERNAL_DEVICES
+                        Path to yaml config file with additional external
+                        devices
 ```
 
 Protoplaster expects a yaml file describing tests as an input. The yaml file should have a structure specified as follows:
@@ -116,6 +121,18 @@ Protoplaster, when run without a defined test suite, will execute all tests defi
 When the test suite is specified with the parameter `-s` or `--test-suite`,
 only the tests in the specified suite are going to be run.
 You can also list existing groups in the YAML file, simply run `protoplaster --list-test-suites test.yaml`.
+
+### External Devices
+
+When running in server mode, you can provide a YAML configuration file to automatically register external devices using the `--external-devices` argument.
+
+The configuration file should be a YAML dictionary mapping device names to their IP addresses or URLs:
+
+```yaml
+node1: 10.0.1.2
+node2: 10.0.1.3:2100
+lab_device: http://192.168.1.50:8037
+```
 
 ## Base modules parameters
 Each base module requires parameters for test initialization. 

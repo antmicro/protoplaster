@@ -2,6 +2,7 @@
 import argparse
 import os
 import sys
+import yaml
 from colorama import init
 from flask import Flask
 from flask_cors import CORS
@@ -119,15 +120,51 @@ def parse_args():
                         type=str,
                         default="5000",
                         help="Port to use when running in server mode")
+    parser.add_argument(
+        "--external-devices",
+        type=str,
+        help="Path to yaml config file with additional external devices")
     args = parser.parse_args()
+
     if args.csv_columns and not args.csv and not args.report_output:
         parser.error("--csv-columns requires --csv or --report-output")
+
+    if args.external_devices and not args.server:
+        parser.error("--external-devices requires --server")
+
     return args
+
+
+def load_external_devices(args):
+    if not args.external_devices:
+        return
+
+    if not os.path.exists(args.external_devices):
+        print(
+            error(f"External devices file not found: {args.external_devices}"))
+        exit(1)
+
+    try:
+        with open(args.external_devices) as f:
+            devices = yaml.safe_load(f) or {}
+
+        for name, addr in devices.items():
+            addr = str(addr)
+            try:
+                protoplaster.webui.devices.add_device(name, addr)
+                print(f"Added external device: {name} at {addr}")
+            except ValueError as e:
+                print(error(f"Skipping {name}: {e}"))
+
+    except Exception as e:
+        print(error(f"Failed to load external devices: {e}"))
 
 
 def run_server(args):
     protoplaster.webui.devices.add_device(LOCAL_DEVICE_NAME,
                                           f"http://127.0.0.1:{args.port}")
+    load_external_devices(args)
+
     app = Flask(__name__)
     CORS(app)
     app.secret_key = "protoplaster-secret"
