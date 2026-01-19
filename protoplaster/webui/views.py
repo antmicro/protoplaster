@@ -1,4 +1,5 @@
 from flask import render_template, request, redirect, url_for, flash
+from urllib.parse import urlparse, urlunparse
 from . import webui_blueprint
 import requests
 from protoplaster.webui.devices import get_all_devices, get_device_by_name, add_device, remove_device
@@ -21,9 +22,21 @@ def devices():
 def add_device_route():
     """Add a new remote device."""
     name = request.form.get("name")
-    url = request.form.get("url")
+    raw_url = request.form.get("url")
+
+    # Check for missing scheme manually first. We do this string check because
+    # `urlparse` gets confused by "host:port". If "://" is missing, we force http.
+    if "://" not in raw_url:
+        raw_url = f"http://{raw_url}"
+
+    parsed = urlparse(raw_url)
+    if parsed.port is None:
+        parsed = parsed._replace(netloc=f"{parsed.netloc}:5000")
+
+    final_url = urlunparse(parsed)
+
     try:
-        add_device(name, url)
+        add_device(name, final_url)
     except ValueError as e:
         flash(str(e), "danger")
     return redirect(url_for("webui.devices"))
