@@ -38,10 +38,18 @@ def human_readable_time(seconds):
     return " ".join(t)
 
 
+def format_artifacts(raw_value):
+    if not raw_value or raw_value == "[]":
+        return []
+    cleaned = raw_value.strip("[]")
+    return [item.strip().strip("'\"") for item in cleaned.split(",")]
+
+
 custom_columns_md = {
     "status": (lambda value: f"<span style='color:green'>{value}"
                if value == "passed" else f"<span style='color:red'>{value}"),
-    "duration": (lambda value: human_readable_time(float(value)))
+    "duration": (lambda value: human_readable_time(float(value))),
+    "artifacts": (lambda value: ", ".join(format_artifacts(value))),
 }
 
 custom_columns_html = {
@@ -56,7 +64,11 @@ custom_columns_html = {
     "message":
     (lambda value:
      (f'<div style="max-height: 60px; overflow-y: auto;">{html.escape(value)}</div>',
-      ""))
+      "")),
+    "artifacts": (lambda value: (" ".join([
+        f'<span class="badge bg-secondary">{item}</span>'
+        for item in format_artifacts(value)
+    ]), "")),
 }
 
 
