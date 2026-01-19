@@ -1,29 +1,38 @@
+<!-- This template is shared between the `protoplaster-test-report` and the Web UI details -->
+{% if not embed %}
 <!DOCTYPE html>
 <html>
-    <head>
-        <style>
-            {% include "style.css" %}
-        </style>
-    </head>
-    <body>
-        <table>
-            <tr>
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+{% endif %}
+
+<table class="table table-sm table-striped table-hover mb-0" style="font-size: 0.9em;">
+    <thead class="table-light sticky-top">
+        <tr>
+        {%- for field in fields %}
+            <th>{{field|capitalize}}</th>
+        {%- endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {%- for row in reader%}
+        <tr>
             {%- for field in fields %}
-                <th>{{field}}</th>
+            {%- if field not in custom_columns %}
+            <td>{{row[field]}}</td>
+            {%- else %}
+            {%- set value, style = custom_columns[field](row[field]) %}
+            <td class="{{style}}">{{value | safe}}</td>
+            {%- endif %}
             {%- endfor %}
-            </tr>
-            {%- for row in reader%}
-            <tr>
-                {%- for field in fields %}
-                {%- if field not in custom_columns %}
-                <td>{{row[field]}}</td>
-                {%- else %}
-                {%- set value, style = custom_columns[field](row[field]) %}
-                <td class={{style}}>{{value}}</td>
-                {%- endif %}
-                {%- endfor %}
-            </tr>
-            {%- endfor %}
-        </table>
-    </body>
+        </tr>
+        {%- endfor %}
+    </tbody>
+</table>
+
+{% if not embed %}
+</body>
 </html>
+{% endif %}

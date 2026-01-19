@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, request, current_app, send_from_directory
 import os
-import csv
 from email.utils import format_datetime
 from datetime import datetime, timezone
 from protoplaster.runner.metadata import RunStatus
+from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
 
 test_runs_blueprint: Blueprint = Blueprint("protoplaster-test-runs", __name__)
 
@@ -305,13 +305,16 @@ def fetch_test_run_report(identifier: str):
     if not os.path.isfile(report_path):
         return jsonify({"error": "Report file not found"}), 404
 
-    if request.args.get("format") == "json":
+    if request.args.get("format") == "html":
         try:
             with open(report_path, newline='', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                return jsonify(list(reader))
+                csv_content = f.read()
+            if not csv_content.strip():
+                return '<div class="text-center text-muted p-3">No results found.</div>'
+            return generate_test_report(csv_content, "html", embed=True)
         except Exception as e:
-            return jsonify({"error": f"Failed to parse report: {str(e)}"}), 500
+            return jsonify({"error":
+                            f"Failed to generate report: {str(e)}"}), 500
 
     return send_from_directory(os.path.abspath(report_dir),
                                report_file,

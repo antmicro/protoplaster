@@ -2,6 +2,7 @@
 import argparse
 import csv
 import os
+import html
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -44,13 +45,22 @@ custom_columns_md = {
 }
 
 custom_columns_html = {
-    "status": (lambda value: (value, "status-passed"
-                              if value == "passed" else "status-failed")),
-    "duration": (lambda value: (human_readable_time(float(value)), ""))
+    "status":
+    (lambda value:
+     (f'<span class="badge bg-success">{value}</span>'
+      if value == "passed" else f'<span class="badge bg-danger">{value}</span>'
+      if value == "failed" else
+      f'<span class="badge bg-warning">{value}</span>' if value == "skipped"
+      else f'<span class="badge bg-secondary">{value}</span>', "")),
+    "duration": (lambda value: (human_readable_time(float(value)), "")),
+    "message":
+    (lambda value:
+     (f'<div style="max-height: 60px; overflow-y: auto;">{html.escape(value)}</div>',
+      ""))
 }
 
 
-def generate_test_report(csv_content, type):
+def generate_test_report(csv_content, type, embed=False):
     reader = csv.DictReader(csv_content.splitlines())
     environment = Environment(
         loader=FileSystemLoader(os.path.dirname(__file__)))
@@ -58,7 +68,8 @@ def generate_test_report(csv_content, type):
     custom_columns = custom_columns_md if type == "md" else custom_columns_html
     return template.render(fields=reader.fieldnames,
                            reader=reader,
-                           custom_columns=custom_columns)
+                           custom_columns=custom_columns,
+                           embed=embed)
 
 
 def main():
