@@ -83,4 +83,4 @@ class TestDA9062:
                     'min_volatge'] <= curr_voltage, f"The voltage of ldo({ldo['ldo_id']}) is below the minimum allowed value."
 
     def name(self):
-        return f"DA9062({self.bus}, {self.address})"
+        return f"DA9062({self.bus}, {hex(self.address)})"

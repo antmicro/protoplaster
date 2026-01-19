@@ -23,4 +23,4 @@ class TestTCA9548A:
         assert mux.is_alive(), "TCA9548A does not respond correctly"
 
     def name(self):
-        return f"TCA9548A({self.i2c_bus}, {self.i2c_address})"
+        return f"TCA9548A({self.i2c_bus}, {hex(self.i2c_address)})"

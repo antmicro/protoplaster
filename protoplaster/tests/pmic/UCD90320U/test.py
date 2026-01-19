@@ -24,4 +24,4 @@ class TestUCD90320U:
         assert pmic.is_alive(), "UCD90320U does not respond correctly"
 
     def name(self):
-        return f"UCD90320U({self.bus}, {self.address})"
+        return f"UCD90320U({self.bus}, {hex(self.address)})"

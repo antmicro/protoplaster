@@ -23,4 +23,4 @@ class TestTMP431:
         assert thermometer.is_alive(), f"TMP431 does not respond correctly"
 
     def name(self):
-        return f"TMP431({self.bus}, {self.address})"
+        return f"TMP431({self.bus}, {hex(self.address)})"
