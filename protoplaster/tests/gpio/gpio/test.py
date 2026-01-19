@@ -24,7 +24,8 @@ class TestGPIO:
         with GPIO(self.number, Direction.OUT,
                   gpio_name=self.gpio_name) as gpio:
             gpio.write_value(self.value)
-            assert gpio.read_value() == self.value
+            val = gpio.read_value()
+            assert val == self.value, f"Read value mismatch. Expected: {self.value}, Actual: {val}"
 
     def name(self):
         return f"/sys/class/gpio/{self.number}"
