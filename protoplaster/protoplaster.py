@@ -11,11 +11,11 @@ from waitress import serve
 import protoplaster.api.v1
 import protoplaster.webui
 import protoplaster.webui.devices
-from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME
+from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME, SERVE_IP
 from protoplaster.runner.manager import RunManager
 from protoplaster.runner.runner import list_tests, list_test_suites, run_tests
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
-from protoplaster.tools.tools import error
+from protoplaster.tools.tools import error, info
 
 
 def create_docs_app() -> Flask:
@@ -136,7 +136,10 @@ def run_server(args):
     app.register_blueprint(protoplaster.api.v1.create_routes())
     app.register_blueprint(protoplaster.webui.webui_blueprint)
 
-    serve(app, host="0.0.0.0", port=int(args.port))
+    print(
+        info(f"Protoplaster server running on http://{SERVE_IP}:{args.port}"))
+
+    serve(app, host=SERVE_IP, port=int(args.port))
 
 
 def main():
