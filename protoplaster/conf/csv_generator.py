@@ -33,7 +33,8 @@ class CsvReportGenerator:
     def get_test_message(self, report):
         if hasattr(report.longrepr, "reprcrash") and hasattr(
                 report.longrepr.reprcrash, "message"):
-            return report.longrepr.reprcrash.message
+            msg = report.longrepr.reprcrash.message
+            return msg.split("\nassert")[0]
         else:
             return ""
 
