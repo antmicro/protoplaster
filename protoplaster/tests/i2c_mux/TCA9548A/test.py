@@ -20,7 +20,8 @@ class TestTCA9548A:
         """
         self.smbus_force = getattr(self, "smbus_force", False)
         mux = TCA9548A(self.i2c_bus, self.i2c_address, self.smbus_force)
-        assert mux.is_alive(), "TCA9548A does not respond correctly"
+        assert mux.is_alive(
+        ), f"TCA9548A does not respond correctly. Reason: {mux.fail_reason}"
 
     def name(self):
         return f"TCA9548A({self.i2c_bus}, {hex(self.i2c_address)})"
