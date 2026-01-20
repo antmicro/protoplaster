@@ -20,14 +20,24 @@ class TMP431:
                  smbus_force: bool = False):
         self.bus = SMBus(i2c_bus, force=smbus_force)
         self.address = i2c_address
+        self.fail_reason = None
 
     def is_alive(self):
+        self.fail_reason = None
         try:
-            if self.get_device_id() == self.DEVICE_ID and \
-                self.get_manufacturer_id == self.MANUFACTURER_ID:
-                return True
-        except:
-            pass
+            dev_id = self.get_device_id()
+            if dev_id != self.DEVICE_ID:
+                self.fail_reason = f"Device ID mismatch: expected {hex(self.DEVICE_ID)}, got {hex(dev_id)}"
+                return False
+
+            man_id = self.get_manufacturer_id()
+            if man_id != self.MANUFACTURER_ID:
+                self.fail_reason = f"Manufacturer ID mismatch: expected {hex(self.MANUFACTURER_ID)}, got {hex(man_id)}"
+                return False
+
+            return True
+        except Exception as e:
+            self.fail_reason = f"Error communicating with device: {e}"
         return False
 
     def _to_int8(self, val):

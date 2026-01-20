@@ -20,7 +20,8 @@ class TestTMP431:
         """
         self.smbus_force = getattr(self, "smbus_force", False)
         thermometer = TMP431(self.bus, self.address, self.smbus_force)
-        assert thermometer.is_alive(), f"TMP431 does not respond correctly"
+        assert thermometer.is_alive(
+        ), f"TMP431 does not respond correctly. Reason: {thermometer.fail_reason}"
 
     def name(self):
         return f"TMP431({self.bus}, {hex(self.address)})"
