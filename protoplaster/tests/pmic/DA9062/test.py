@@ -24,7 +24,8 @@ class TestDA9062:
           check if DA9062 responds correctly to simple requests
         {%- endmacro %}
         """
-        assert self.pmic.is_alive(), "DA9062 does not respond correctly"
+        assert self.pmic.is_alive(
+        ), f"DA9062 does not respond correctly. Reason: {self.pmic.fail_reason}"
 
     def test_variant_id(self):
         """

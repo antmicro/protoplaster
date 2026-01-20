@@ -83,13 +83,17 @@ class DA9062:
     def __init__(self, i2c_bus, i2c_address, smbus_force):
         self.bus = SMBus(i2c_bus, force=smbus_force)
         self.i2c_address = i2c_address
+        self.fail_reason = None
 
     def is_alive(self):
+        self.fail_reason = None
         try:
-            if self.get_device_id() == DA9062.DEVICE_ID:
+            val = self.get_device_id()
+            if val == DA9062.DEVICE_ID:
                 return True
-        except:
-            pass
+            self.fail_reason = f"Device ID mismatch: expected {hex(DA9062.DEVICE_ID)}, got {hex(val)}"
+        except Exception as e:
+            self.fail_reason = f"I2C communication error: {e}"
         return False
 
     def read_register(self, reg_addr):
