@@ -38,7 +38,7 @@ class TMP431:
 
     # returns DEVICE_ID
     def get_device_id(self):
-        id = self.read_byte_register()
+        id = self.read_byte_register(TMP431Regs.DEVICE_ID)
         return id
 
     # returns MANUFACTURER_ID
