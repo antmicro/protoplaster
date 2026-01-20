@@ -9,6 +9,7 @@ class LTC249_(ABC):
         self.address = address
         self.vref = vref
         self.config_word = None
+        self.fail_reason = None
 
     @property
     @abstractmethod
@@ -16,12 +17,14 @@ class LTC249_(ABC):
         pass
 
     def is_alive(self):
-        # test if device responds at all
+        self.fail_reason = None
 
         try:
             self.start_conversion()
-        except:
+        except Exception as e:
+            self.fail_reason = f"Device did not respond to start_conversion: {e}"
             return False
+
         # at most 2 bytes can be written, 3th is never acked
         acknowledged3thbyte = True
         try:
@@ -30,6 +33,7 @@ class LTC249_(ABC):
         except:
             acknowledged3thbyte = False
         if acknowledged3thbyte:
+            self.fail_reason = "Device acknowledged 3rd byte during write"
             return False
 
         # at most 4 bytes can be read, 5th is never acked
@@ -40,6 +44,7 @@ class LTC249_(ABC):
         except:
             acked_read_cmd = False
         if acked_read_cmd:
+            self.fail_reason = "Device acknowledged 5th byte during read"
             return False
         return True
 

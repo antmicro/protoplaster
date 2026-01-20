@@ -22,7 +22,8 @@ class TestLTC2493:
           check if responds correctly to simple requests
         {%- endmacro %}
         """
-        assert self.adc.is_alive(), "LTC2493 does not respond correctly"
+        assert self.adc.is_alive(
+        ), f"LTC2493 does not respond correctly. Reason: {self.adc.fail_reason}"
 
     def name(self):
         return f"LTC2493({self.bus}, {self.address}, {self.vref})"
