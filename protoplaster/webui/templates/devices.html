@@ -27,6 +27,7 @@
     <tr>
       <th>Name</th>
       <th>API URL</th>
+      <th style="width: 10%">Status</th>
       <th style="width: 20%">Actions</th>
     </tr>
   </thead>
@@ -35,6 +36,13 @@
     <tr>
       <td>{{ device.name }}</td>
       <td>{{ device.url }}</td>
+      <td>
+        {% if device.online %}
+        <span class="badge bg-success">Online</span>
+        {% else %}
+        <span class="badge bg-secondary">Offline</span>
+        {% endif %}
+      </td>
       <td>
         {% if device.name != 'Local device' %}
         <form method="post" action="{{ url_for('webui.remove_device_route', device_name=device.name) }}" style="display:inline;">
@@ -48,7 +56,7 @@
       </td>
     </tr>
     {% else %}
-    <tr><td colspan="3" class="text-center text-muted">No devices found</td></tr>
+    <tr><td colspan="4" class="text-center text-muted">No devices found</td></tr>
     {% endfor %}
   </tbody>
 </table>

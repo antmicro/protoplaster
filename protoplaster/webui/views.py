@@ -15,6 +15,13 @@ def index():
 def devices():
     """List all known devices."""
     devices = get_all_devices()
+    for d in devices:
+        try:
+            requests.get(f"{d['url']}/api/v1/test-runs", timeout=0.5)
+            d['online'] = True
+        except requests.exceptions.RequestException:
+            d['online'] = False
+
     return render_template("devices.html", devices=devices, active="devices")
 
 
