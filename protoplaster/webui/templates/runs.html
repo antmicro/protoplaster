@@ -2,51 +2,64 @@
 {% block content %}
 <h2>Test runs</h2>
 
-<div class="d-flex justify-content-between mb-3">
-  <form method="get" class="d-flex align-items-center">
-    <label for="deviceSelect" class="me-2 fw-semibold">Device:</label>
-    <select id="deviceSelect" name="device" class="form-select" style="width: 200px;" onchange="this.form.submit()">
-      {% for device in devices %}
-      <option value="{{ device.name }}" {% if device.name == selected_device.name %}selected{% endif %}>
-      {{ device.name }}
-      </option>
-      {% endfor %}
-    </select>
-  </form>
+<div class="d-flex justify-content-end mb-3">
   <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#triggerTestRunModal">
     <i class="bi bi-play-fill"></i> Trigger test run
   </button>
 </div>
 
-<table class="table table-bordered device-table">
-  <thead class="table-light">
-    <tr>
-      <th>ID</th>
-      <th>Config</th>
-      <th>Status</th>
-      <th>Started</th>
-      <th>Finished</th>
-      <th style="width: 20%">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for run in runs %}
-    <tr data-run-id="{{ run.id }}">
-      <td>{{ run.id }}</td>
-      <td>{{ run.config_name }}</td>
-      <td class="status-cell"></td>
-      <td class="start-cell"></td>
-      <td class="end-cell"></td>
-      <td>
-        <button class="btn btn-sm btn-outline-primary btn-details" data-run-id="{{ run.id }}">Details</button>
-        <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="{{ run.id }}" {% if run.status not in ['pending'] %}disabled{% endif %}>Abort</button>
-      </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="6" class="text-center text-muted">No test runs yet</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+{% for device in devices %}
+<div class="card mb-3 device-container" data-device-url="{{ device.url }}">
+
+  <!-- Header (name + badge)  -->
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      <button class="btn btn-link text-decoration-none text-dark fw-bold p-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}">
+        <i class="bi bi-chevron-down me-2"></i> {{ device.name }}
+      </button>
+      {% if device.runs is none %}
+      <span class="badge bg-secondary ms-2">Offline</span>
+      {% endif %}
+    </h5>
+  </div>
+
+  <!-- Device tests -->
+  <div id="collapse-{{ loop.index }}" class="collapse show">
+  <table class="table table-bordered device-table mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Config</th>
+        <th>Status</th>
+        <th>Started</th>
+        <th>Finished</th>
+        <th style="width: 20%">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if device.runs %}
+      {% for run in device.runs %}
+      <tr data-run-id="{{ run.id }}">
+        <td>{{ run.id }}</td>
+        <td>{{ run.config_name }}</td>
+        <td class="status-cell" data-status="{{ run.status }}"></td>
+        <td class="start-cell">{{ run.started_at or '-' }}</td>
+        <td class="end-cell">{{ run.finished_at or '-' }}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary btn-details" data-run-id="{{ run.id }}">Details</button>
+          <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="{{ run.id }}" {% if run.status != 'pending' %}disabled{% endif %}>Abort</button>
+        </td>
+      </tr>
+      {% endfor %}
+      {% else %}
+      <tr><td colspan="6" class="text-center text-muted">No test runs</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+  </div>
+
+</div>
+{% endfor %}
 
 <!-- Trigger Test Run Modal -->
 <div class="modal fade" id="triggerTestRunModal" tabindex="-1" aria-labelledby="triggerTestRunModalLabel" aria-hidden="true">
@@ -144,24 +157,30 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   document.querySelectorAll('tr[data-run-id]').forEach(row => {
-      const id = row.dataset.runId;
-      const initialData = {{runs|tojson}}.find(r => r.id == id);
-      if (initialData) updateRow(row, initialData);
+      const status = row.querySelector('.status-cell').dataset.status;
+      if (status) updateRow(row, {
+        status: status, 
+        started_at: row.querySelector('.start-cell').textContent,
+        finished_at: row.querySelector('.end-cell').textContent
+      });
   });
 
   const poll = async () => {
-    try {
-      const resp = await fetch(`{{ selected_device.url }}/api/v1/test-runs`);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    document.querySelectorAll('.device-container').forEach(async container => {
+      const deviceUrl = container.dataset.deviceUrl;
+      try {
+        const resp = await fetch(`${deviceUrl}/api/v1/test-runs`);
+        if (!resp.ok) return;
 
-      const runs = await resp.json();
-      for (const run of runs) {
-        const row = document.querySelector(`tr[data-run-id="${run.id}"]`);
-        if (row) updateRow(row, run);
+        const runs = await resp.json();
+        for (const run of runs) {
+          const row = container.querySelector(`tr[data-run-id="${run.id}"]`);
+          if (row) updateRow(row, run);
+        }
+      } catch (err) {
+        console.error(`Failed to fetch test runs:`, err);
       }
-    } catch (err) {
-      console.error(`Failed to fetch test runs data:`, err);
-    }
+    });
   };
 
   setInterval(poll, {{polling_interval * 1000 }});
@@ -269,8 +288,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const btn = e.target.closest("button");
       const id = btn.dataset.runId;
+      const deviceUrl = btn.closest(".device-container").dataset.deviceUrl;
       try {
-        const resp = await fetch(`{{ selected_device.url }}/api/v1/test-runs/${id}`, { method: 'DELETE' });
+        const resp = await fetch(`${deviceUrl}/api/v1/test-runs/${id}`, { method: 'DELETE' });
         if (!resp.ok) {
           const data = await resp.json();
           alert(`Failed to abort: ${data.error || resp.statusText}`);
@@ -288,12 +308,15 @@ document.addEventListener("DOMContentLoaded", function () {
   // Details modal
   document.querySelectorAll('.btn-details').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const id = e.target.closest("button").dataset.runId;
-      const resp = await fetch(`{{ selected_device.url }}/api/v1/test-runs/${id}`);
+      const btn = e.target.closest("button");
+      const id = btn.dataset.runId;
+      const deviceUrl = btn.closest(".device-container").dataset.deviceUrl;
+      
+      const resp = await fetch(`${deviceUrl}/api/v1/test-runs/${id}`);
       if (!resp.ok) return alert('Failed to fetch run details');
       const data = await resp.json();
 
-      const resp_art = await fetch(`{{ selected_device.url }}/api/v1/test-runs/${id}/artifacts`);
+      const resp_art = await fetch(`${deviceUrl}/api/v1/test-runs/${id}/artifacts`);
       if (!resp_art.ok) return alert('Failed to fetch run artifacts');
       const data_art = await resp_art.json();
 
@@ -308,7 +331,7 @@ document.addEventListener("DOMContentLoaded", function () {
       artifactList.innerHTML = '';
       if (data_art && data_art.length > 0) {
         const contentTypes = await Promise.all(data_art.map(async (artifact) => {
-            const url =  `{{ selected_device.url }}/api/v1/test-runs/${id}/artifacts/${encodeURIComponent(artifact.name)}`;
+            const url =  `${deviceUrl}/api/v1/test-runs/${id}/artifacts/${encodeURIComponent(artifact.name)}`;
             return [url, await fetch(url, { method: 'HEAD' })
                 .then(r => r.ok && r.headers.get('Content-Type'))
                 .catch(console.error)]
@@ -343,7 +366,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Fetch test results table
       const resultsContainer = document.getElementById('results-container');
       resultsContainer.innerHTML = '<div class="text-center text-muted p-3">Loading...</div>';
-      const resp_report = await fetch(`{{ selected_device.url }}/api/v1/test-runs/${id}/report?format=html`);
+      const resp_report = await fetch(`${deviceUrl}/api/v1/test-runs/${id}/report?format=html`);
       if (resp_report.ok) {
         resultsContainer.innerHTML = await resp_report.text();
       } else {
@@ -352,20 +375,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Report link
       const reportLink = document.getElementById('report-link');
-      reportLink.href = `{{ selected_device.url }}/api/v1/test-runs/${id}/report`;
+      reportLink.href = `${deviceUrl}/api/v1/test-runs/${id}/report`;
 
       new bootstrap.Modal(document.getElementById('testDetailsModal')).show();
     });
-  });
-
-  runDeviceSelect.addEventListener('change', async function() {
-    const deviceUrl = runDeviceSelect.value;
-    updateConfigList();
-  });
-
-  document.getElementById('deviceSelect').addEventListener('change', function() {
-    window.location.href = `/configs?device=${encodeURIComponent(deviceId)}`;
-    const deviceId = this.value;
   });
 });
 </script>

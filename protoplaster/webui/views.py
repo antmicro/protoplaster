@@ -3,6 +3,7 @@ from . import webui_blueprint
 import requests
 from protoplaster.webui.devices import get_all_devices, get_device_by_name, add_device, remove_device
 from protoplaster.conf.consts import WEBUI_POLLING_INTERVAL
+from protoplaster.tools.tools import error
 
 
 @webui_blueprint.route("/")
@@ -53,14 +54,16 @@ def configs():
 
 @webui_blueprint.route("/runs")
 def test_runs():
-    device_name = request.args.get("device")
     devices = get_all_devices()
-    selected_device = get_device_by_name(device_name) or devices[0]
-    r = requests.get(f"{selected_device['url']}/api/v1/test-runs", timeout=2)
-    runs = r.json()
+    for d in devices:
+        try:
+            d['runs'] = requests.get(f"{d['url']}/api/v1/test-runs",
+                                     timeout=1).json()
+        except Exception as e:
+            print(error(f"Failed to fetch runs for {d['url']}: {e}"))
+            d['runs'] = None
+
     return render_template("runs.html",
-                           runs=runs,
                            devices=devices,
-                           selected_device=selected_device,
                            active="runs",
                            polling_interval=WEBUI_POLLING_INTERVAL)
