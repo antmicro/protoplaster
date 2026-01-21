@@ -8,43 +8,58 @@
     </div>
 </div>
 
-<div class="d-flex justify-content-between mb-3">
-  <form method="get" class="d-flex align-items-center">
-    <label for="deviceSelect" class="me-2 fw-semibold">Device:</label>
-    <select id="deviceSelect" name="device" class="form-select" style="width: 200px;" onchange="this.form.submit()">
-      {% for device in devices %}
-      <option value="{{ device.name }}" {% if device.name == selected_device.name %}selected{% endif %}>
-      {{ device.name }}
-      </option>
-      {% endfor %}
-    </select>
-  </form>
+<div class="d-flex justify-content-end mb-3">
   <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addConfigModal">
     <i class="bi bi-plus"></i> Add new config
   </button>
 </div>
 
-<table class="table table-bordered device-table">
-  <thead class="table-light">
-    <tr>
-      <th>Name</th>
-      <th style="width: 20%">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for cfg in configs %}
-    <tr>
-      <td>{{ cfg.name }}</td>
-      <td>
-        <button class="btn btn-remove btn-sm"><i class="bi bi-trash"></i> Remove</button>
-        <button class="btn btn-download btn-sm"><i class="bi bi-download"></i> Download</button>
-      </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="3" class="text-center text-muted">No configs found</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+{% for device in devices %}
+<div class="card mb-3 device-container" data-device-url="{{ device.url }}">
+
+  <!-- Header (name + badge)  -->
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      <button class="btn btn-link text-decoration-none text-dark fw-bold p-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}">
+        <i class="bi bi-chevron-down me-2"></i> {{ device.name }}
+      </button>
+      {% if device.configs is none %}
+      <span class="badge bg-secondary ms-2">Offline</span>
+      {% endif %}
+    </h5>
+  </div>
+
+  <!-- Device configs -->
+  <div id="collapse-{{ loop.index }}" class="collapse show">
+    <table class="table table-bordered device-table mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Name</th>
+          <th style="width: 20%">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if device.configs %}
+        {% for cfg in device.configs %}
+        <tr>
+          <td>{{ cfg.name }}</td>
+          <td>
+            <button class="btn btn-remove btn-sm"><i class="bi bi-trash"></i> Remove</button>
+            <button class="btn btn-download btn-sm"><i class="bi bi-download"></i> Download</button>
+          </td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr><td colspan="2" class="text-center text-muted">
+            {% if device.configs is none %}Device offline{% else %}No configs found{% endif %}
+        </td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endfor %}
 
 <div class="modal fade" id="addConfigModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
@@ -79,19 +94,26 @@
 </div>
 
 <script>
-const selectedDevice = {{ selected_device | tojson }}
-
 document.querySelectorAll(".btn-remove").forEach(btn => {
   btn.addEventListener("click", async e => {
     const row = e.target.closest("tr");
+    const container = e.target.closest(".device-container");
+    const deviceUrl = container.dataset.deviceUrl;
     const name = row.querySelector("td").textContent.trim();
+    
     if (!confirm(`Delete config "${name}"?`)) return;
-    const resp = await fetch(`${selectedDevice.url}/api/v1/configs/${name}`, { method: "DELETE" });
-    if (resp.ok) {
-      location.reload();
-    } else {
-      alert("Failed to delete config");
-    }
+    
+    try {
+        const resp = await fetch(`${deviceUrl}/api/v1/configs/${name}`, { method: "DELETE" });
+        if (resp.ok) {
+          location.reload();
+        } else {
+          alert("Failed to delete config");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error deleting config");
+      }
   });
 });
 
@@ -132,9 +154,11 @@ document.getElementById("uploadForm").addEventListener("submit", async e => {
 document.querySelectorAll(".btn-download").forEach(btn => {
   btn.addEventListener("click", async e => {
     const row = e.target.closest("tr");
+    const container = e.target.closest(".device-container");
+    const deviceUrl = container.dataset.deviceUrl;
     const name = row.querySelector("td").textContent.trim();
 
-    const resp = await fetch(`${selectedDevice.url}/api/v1/configs/${name}/file`);
+    const resp = await fetch(`${deviceUrl}/api/v1/configs/${name}/file`);
     if (!resp.ok) {
       alert("Failed to download config file");
       return;
@@ -150,11 +174,6 @@ document.querySelectorAll(".btn-download").forEach(btn => {
     a.remove();
     window.URL.revokeObjectURL(url);
   });
-});
-
-document.getElementById('deviceSelect').addEventListener('change', function() {
-  window.location.href = `/configs?device=${encodeURIComponent(deviceId)}`;
-  const deviceId = this.value;
 });
 </script>
 {% endblock %}

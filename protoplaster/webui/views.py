@@ -40,16 +40,16 @@ def remove_device_route(device_name):
 
 @webui_blueprint.route("/configs")
 def configs():
-    device_name = request.args.get("device")
     devices = get_all_devices()
-    selected_device = get_device_by_name(device_name) or devices[0]
-    r = requests.get(f"{selected_device['url']}/api/v1/configs", timeout=2)
-    configs = r.json()
-    return render_template("configs.html",
-                           configs=configs,
-                           devices=devices,
-                           selected_device=selected_device,
-                           active="configs")
+    for d in devices:
+        try:
+            r = requests.get(f"{d['url']}/api/v1/configs", timeout=2)
+            d['configs'] = r.json()
+        except Exception as e:
+            print(error(f"Failed to fetch configs for {d['url']}: {e}"))
+            d['configs'] = None
+
+    return render_template("configs.html", devices=devices, active="configs")
 
 
 @webui_blueprint.route("/runs")
