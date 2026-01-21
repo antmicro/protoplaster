@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function updateConfigList() {
     const configSelect = document.getElementById('configSelect');
-    const deviceSelect = document.getElementById('deviceSelect');
+    const runDeviceSelect = document.getElementById('runDeviceSelect');
     const selectedDevices = Array.from(runDeviceSelect.selectedOptions).map(opt => opt.value);
 
     configSelect.innerHTML = '<option disabled>Loading...</option>';
@@ -233,6 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const modal = document.getElementById('triggerTestRunModal');
   modal.addEventListener('show.bs.modal', updateConfigList);
+  document.getElementById('runDeviceSelect').addEventListener('change', updateConfigList);
 
   function canArtifactOpen(contentType) {
     return contentType === "application/json"
