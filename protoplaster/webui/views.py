@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, jsonify
 from . import webui_blueprint
 import requests
 from protoplaster.webui.devices import get_all_devices, get_device_by_name, add_device, remove_device
@@ -22,7 +22,25 @@ def devices():
         except requests.exceptions.RequestException:
             d['online'] = False
 
-    return render_template("devices.html", devices=devices, active="devices")
+    return render_template("devices.html",
+                           devices=devices,
+                           active="devices",
+                           polling_interval=WEBUI_POLLING_INTERVAL)
+
+
+@webui_blueprint.route("/devices/status")
+def devices_status():
+    """Return status of all devices."""
+    devices = get_all_devices()
+    status = {}
+    for d in devices:
+        try:
+            requests.get(f"{d['url']}/api/v1/test-runs", timeout=0.5)
+            is_online = True
+        except requests.exceptions.RequestException:
+            is_online = False
+        status[d['name']] = is_online
+    return jsonify(status)
 
 
 @webui_blueprint.route("/devices/add", methods=["POST"])
@@ -56,7 +74,10 @@ def configs():
             print(error(f"Failed to fetch configs for {d['url']}: {e}"))
             d['configs'] = None
 
-    return render_template("configs.html", devices=devices, active="configs")
+    return render_template("configs.html",
+                           devices=devices,
+                           active="configs",
+                           polling_interval=WEBUI_POLLING_INTERVAL)
 
 
 @webui_blueprint.route("/runs")

@@ -151,6 +151,31 @@
   <div class="container-main">
     {% block content %}{% endblock %}
   </div>
+
+  {% if polling_interval %}
+  <script>
+    setInterval(() => {
+      fetch("{{ url_for('webui.devices_status') }}")
+        .then(response => response.json())
+        .then(data => {
+          for (const [name, online] of Object.entries(data)) {
+            const badges = document.querySelectorAll(`[data-device-status="${name}"]`);
+            badges.forEach(badge => {
+              if (online) {
+                badge.classList.remove('bg-secondary');
+                badge.classList.add('bg-success');
+                badge.textContent = 'Online';
+              } else {
+                badge.classList.remove('bg-success');
+                badge.classList.add('bg-secondary');
+                badge.textContent = 'Offline';
+              }
+            });
+          }
+        })
+        .catch(err => console.error("Status poll failed", err));
+    }, {{ polling_interval * 1000 }});
+  </script>
+  {% endif %}
 </body>
 </html>
-

@@ -37,11 +37,9 @@
       <td>{{ device.name }}</td>
       <td>{{ device.url }}</td>
       <td>
-        {% if device.online %}
-        <span class="badge bg-success">Online</span>
-        {% else %}
-        <span class="badge bg-secondary">Offline</span>
-        {% endif %}
+        <span data-device-status="{{ device.name }}" class="badge bg-{{ 'success' if device.online else 'secondary' }}">
+          {{ 'Online' if device.online else 'Offline' }}
+        </span>
       </td>
       <td>
         {% if device.name != 'Local device' %}
@@ -87,5 +85,4 @@
     </form>
   </div>
 </div>
-
 {% endblock %}

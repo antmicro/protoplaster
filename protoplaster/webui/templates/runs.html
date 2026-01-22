@@ -17,9 +17,9 @@
       <button class="btn btn-link text-decoration-none text-dark fw-bold p-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}">
         <i class="bi bi-chevron-down me-2"></i> {{ device.name }}
       </button>
-      {% if device.runs is none %}
-      <span class="badge bg-secondary ms-2">Offline</span>
-      {% endif %}
+      <span data-device-status="{{ device.name }}" class="badge ms-2 bg-{{ 'secondary' if device.runs is none else 'success' }}">
+        {{ 'Offline' if device.runs is none else 'Online' }}
+      </span>
     </h5>
   </div>
 
