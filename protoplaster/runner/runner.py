@@ -28,7 +28,7 @@ TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
 def list_tests(args):
     test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
-    if (group := args.group) is not (None or ""):
+    if (group := args.group) not in (None, ""):
         test_file.filter_suite(group)
 
     for test in test_file.tests.keys():
@@ -37,7 +37,7 @@ def list_tests(args):
 
 def list_test_suites(args):
     test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
-    if (group := args.group) is not (None or ""):
+    if (group := args.group) not in (None, ""):
         test_file.filter_suite(group)
 
     for name, suite in test_file.test_suites.items():
@@ -233,7 +233,7 @@ def run_tests(args):
 
     # Proceed with local execution
     test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
-    if (group := args.group) is not (None or ""):
+    if (group := args.group) not in (None, ""):
         test_file.filter_suite(group)
 
     test_modules = test_file.list_test_modules()
