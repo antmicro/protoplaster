@@ -158,9 +158,19 @@
       fetch("{{ url_for('webui.devices_status') }}")
         .then(response => response.json())
         .then(data => {
+          let shouldReload = false;
           for (const [name, online] of Object.entries(data)) {
+
             const badges = document.querySelectorAll(`[data-device-status="${name}"]`);
             badges.forEach(badge => {
+
+              // Check if the current badge state differs from the backend status,
+              // and if a device changes state, mark the page for reload.
+              const nodeOnline = badge.classList.contains('bg-success');
+              if (nodeOnline !== online) {
+                shouldReload = true;
+              }
+
               if (online) {
                 badge.classList.remove('bg-secondary');
                 badge.classList.add('bg-success');
@@ -172,6 +182,12 @@
               }
             });
           }
+
+          {% if active in ['runs', 'configs'] %}
+          if (shouldReload) {
+            location.reload();
+          }
+          {% endif %}
         })
         .catch(err => console.error("Status poll failed", err));
     }, {{ polling_interval * 1000 }});
