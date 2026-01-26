@@ -25,7 +25,8 @@ def devices():
     return render_template("devices.html",
                            devices=devices,
                            active="devices",
-                           polling_interval=WEBUI_POLLING_INTERVAL)
+                           polling_interval=WEBUI_POLLING_INTERVAL,
+                           disable_nav=False)
 
 
 @webui_blueprint.route("/devices/status")
@@ -77,7 +78,8 @@ def configs():
     return render_template("configs.html",
                            devices=devices,
                            active="configs",
-                           polling_interval=WEBUI_POLLING_INTERVAL)
+                           polling_interval=WEBUI_POLLING_INTERVAL,
+                           disable_nav=False)
 
 
 @webui_blueprint.route("/runs")
@@ -94,4 +96,5 @@ def test_runs():
     return render_template("runs.html",
                            devices=devices,
                            active="runs",
-                           polling_interval=WEBUI_POLLING_INTERVAL)
+                           polling_interval=WEBUI_POLLING_INTERVAL,
+                           disable_nav=False)
