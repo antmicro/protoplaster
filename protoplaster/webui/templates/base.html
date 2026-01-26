@@ -141,11 +141,13 @@
     </defs>
 </svg>
     </a>
+    {% if not disable_nav %}
     <div class="ms-auto">
       <a href="{{ url_for('webui.index') }}" class="btn {% if active == 'devices' %}btn-primary{% else %}btn-outline-primary{% endif %}">Devices</a>
       <a href="{{ url_for('webui.configs') }}" class="btn {% if active == 'configs' %}btn-primary{% else %}btn-outline-primary{% endif %}">Configs</a>
       <a href="{{ url_for('webui.test_runs') }}" class="btn {% if active == 'runs' %}btn-primary{% else %}btn-outline-primary{% endif %}">Test runs</a>
     </div>
+    {% endif %}
   </nav>
 
   <div class="container-main">
