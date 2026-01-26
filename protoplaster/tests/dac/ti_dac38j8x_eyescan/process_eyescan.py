@@ -48,9 +48,19 @@ class EyeScan:
         with open(f"{os.path.dirname(__file__)}/eye_diagram.html") as file:
             return file.read()
 
+    def read_base_template(self) -> str:
+        with open(
+                f"{os.path.dirname(__file__)}/../../../webui/templates/base.html"
+        ) as file:
+            return file.read()
+
     def render_template(self, html_template: str, **kwargs) -> str:
-        environment = Environment(
-            loader=DictLoader({"template": html_template}))
+        base_template = self.read_base_template()
+
+        environment = Environment(loader=DictLoader({
+            "template": html_template,
+            "base.html": base_template
+        }))
         template = environment.get_template("template")
         return template.render(**kwargs)
 
@@ -60,7 +70,8 @@ class EyeScan:
         diagram_template = self.read_diagram_template()
         return self.render_template(diagram_template,
                                     samples=samples,
-                                    axis_multiplier=self.axis_multiplier)
+                                    axis_multiplier=self.axis_multiplier,
+                                    disable_nav=True)
 
     def get_eyescan_file_path(self) -> str:
         return self.eyescan_file.name
