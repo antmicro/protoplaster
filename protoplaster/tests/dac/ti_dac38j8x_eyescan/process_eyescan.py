@@ -21,6 +21,7 @@ class EyeScan:
     def __init__(self, ftdi_dev: int, bit: int) -> None:
         self.eyescan_file = tempfile.NamedTemporaryFile()
         self.axis_multiplier = {"x": 1, "y": 10}
+        self.bit = bit
 
         # Check if the eyescan library is available
         assert TI_DAC38J8X_EYESCAN_LIBRARY, "TI DAC38J8X eyescan library is not available."
@@ -71,7 +72,8 @@ class EyeScan:
         return self.render_template(diagram_template,
                                     samples=samples,
                                     axis_multiplier=self.axis_multiplier,
-                                    disable_nav=True)
+                                    disable_nav=True,
+                                    num_bits=self.bit)
 
     def get_eyescan_file_path(self) -> str:
         return self.eyescan_file.name

@@ -45,12 +45,12 @@ canvas {
 
 <script>
 const chartData = {{ samples|tojson }};
+const numBits = {{ num_bits }};
 
 const ctx = document.getElementById("eye_diagram").getContext("2d");
 
 // Configuration
 const nLanes = 8;
-const nBits = 20;
 const avgAmplitude = 2048;
 const axisPadding = { left: 55, right: 90, top: 10, bottom: 35 };
 const gridSize = { x: 32, y: 64 };
@@ -210,9 +210,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
   const selectBits = document.getElementById("bits");
-  for (var i = 0; i < nBits; i++) {
-    const option = document.createElement("option");
-    option.text = i;
+  for (var i = 0; i < numBits; i++) {
     selectBits.add(new Option(i));
   }
 
