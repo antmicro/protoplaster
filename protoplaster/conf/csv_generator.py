@@ -35,8 +35,9 @@ class CsvReportGenerator:
                 report.longrepr.reprcrash, "message"):
             msg = report.longrepr.reprcrash.message
             return msg.split("\nassert")[0]
-        else:
-            return ""
+        elif report.skipped and isinstance(report.longrepr, tuple):
+            return report.longrepr[2]
+        return ""
 
     @pytest.mark.hookwrapper
     def pytest_runtest_makereport(self, item, call):
