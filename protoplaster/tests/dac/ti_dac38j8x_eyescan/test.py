@@ -25,9 +25,6 @@ class TestTiDac38j8xEyescan:
         assert hasattr(
             self,
             "eyescan_diagram"), "`eyescan_diagram` test attribute is required"
-        assert hasattr(
-            self,
-            "eyescan_output"), "`eyescan_output` test attribute is required"
 
         self.eyescan = EyeScan(self.ftdi_dev, self.bit)
 
