@@ -1,0 +1,9 @@
+Protoplaster tests report
+==================
+|device name|test name|module|duration|message|status|artifacts|
+|---|---|---|---|---|---|---|
+|/dev/video0|frame|test.py::TestCamera::test_frame|232ms 521us||<span style='color:green'>passed|uname|
+|/dev/video0|device_name|test.py::TestCamera::test_device_name|229ms 942us||<span style='color:green'>passed|uname|
+|/dev/video0|driver_name|test.py::TestCamera::test_driver_name|204ms 386us||<span style='color:green'>passed|uname|
+|/dev/i2c-0|addresses|test.py::TestI2C::test_addresses|15ms 14us|AssertionError: No device found at address: 60|<span style='color:red'>failed|uname|
+|/sys/class/gpio/20|read_write|test.py::TestGPIO::test_read_write|12ms 727us||<span style='color:green'>passed|uname|
