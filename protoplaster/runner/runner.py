@@ -2,8 +2,11 @@ import ast
 import os
 import sys
 import zipfile
+import requests
+from urllib.parse import urljoin
 from collections import OrderedDict
 from pathlib import Path
+from typing import Optional, Set
 
 import pytest
 from jinja2 import Environment, DictLoader, select_autoescape
@@ -15,8 +18,10 @@ from protoplaster.conf.csv_generator import CsvReportGenerator
 from protoplaster.conf.log_generator import LogGenerator
 from protoplaster.conf.parser import TestFile, load_yaml
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
-from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, SubReportResult, run_command
+from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, run_command
 from protoplaster.tools.tools import error, warning
+from protoplaster.webui.devices import get_all_devices
+from protoplaster.conf.consts import REMOTE_RUN_TRIGGER_TIMEOUT
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
 
@@ -150,7 +155,83 @@ def generate_metadata(args, metadata_cmds):
     return cmd_results
 
 
+def _trigger_remote_run(machine, base_url, args):
+    print(f"Triggering run on {machine} ({base_url})")
+
+    config_name = os.path.basename(args.test_file)
+    payload = {
+        "config_name": config_name,
+        "test_suite_name": args.group,
+        "force_local": True
+    }
+
+    try:
+        response = requests.post(urljoin(base_url, "/api/v1/test-runs"),
+                                 json=payload,
+                                 timeout=REMOTE_RUN_TRIGGER_TIMEOUT)
+        response.raise_for_status()
+        run_data = response.json()
+        print(
+            f"[{machine}] Remote run triggered successfully. ID: {run_data.get('id')}"
+        )
+        return None
+    except Exception as e:
+        err_msg = f"[{machine}] Failed to trigger run: {e}"
+        print(error(err_msg))
+        return err_msg
+
+
+def _run_remote_dispatch(target_machines, args):
+    devices = {d['name']: d['url'] for d in get_all_devices()}
+
+    errors = []
+    for machine in target_machines:
+        if machine not in devices:
+            msg = f"Machine '{machine}' not defined in devices list"
+            print(error(msg))
+            errors.append(msg)
+            continue
+        err = _trigger_remote_run(machine, devices[machine], args)
+        if err:
+            errors.append(err)
+
+    if errors:
+        return 1, errors
+
+    # Return 0 to indicate successful dispatch (not necessarily successful tests)
+    return 0, []
+
+
+def get_target_machines(args) -> Optional[Set]:
+    """
+    Returns a set of required remote machine names, or None if local execution is forced.
+    """
+    if getattr(args, "force_local", False):
+        return None
+
+    test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
+    if (group := args.group) is not (None or ""):
+        test_file.filter_suite(group)
+
+    target_machines = set()
+    for test in test_file.tests.values():
+        for body in test.body:
+            for param in body.params:
+                if isinstance(param, dict) and "machines" in param:
+                    machines = param["machines"]
+                    if not isinstance(machines, list):
+                        machines = [machines]
+                    target_machines.update(machines)
+
+    return target_machines
+
+
 def run_tests(args):
+    # Early return for the remote trigger
+    if target_machines := get_target_machines(args):
+        return _run_remote_dispatch(target_machines, args)
+
+    # Proceed with local execution
     test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
     if (group := args.group) is not (None or ""):
         test_file.filter_suite(group)

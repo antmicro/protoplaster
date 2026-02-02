@@ -77,12 +77,14 @@ def fetch_test_runs():
 def trigger_test_run():
     """Trigger a test run
 
-
-    :status 200: no error, test run was triggered
+    :status 200: test run was triggered successfully
+                 (returns run object for local/tracked runs, or empty object for remote dispatch)
     :status 404: config file was not found
+    :status 500: failed to dispatch remote run
 
     :<json string config_name: name of config for this test run
-    :<json string test_suite_name: name of the test suite for this test run
+    :<json string test_suite_name: (optional) name of the test suite for this test run
+    :<json boolean force_local: (optional) force execution on the local device, ignoring remote targets
 
     **Example Request**
 
@@ -94,10 +96,11 @@ def trigger_test_run():
 
         {
           "config_name": "config1.yaml",
-          "test_suite_name": "simple-test"
+          "test_suite_name": "simple-test",
+          "force_local": false
         }
 
-    **Example Response**
+    **Example Response (Tracked (local) Run)**
 
     .. sourcecode:: http
 
@@ -114,10 +117,31 @@ def trigger_test_run():
           "finished_at": "",
           "metadata": {}
         }
+
+    **Example Response (Remote Dispatch Success)**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+
+        {}
+
+    **Example Response (Remote Dispatch Failure)**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 500 Internal Server Error
+        Content-Type: application/json
+
+        {
+            "error": "Machine 'node1' not defined in devices list"
+        }
     """  # noqa: E501
     data = request.get_json()
     config_name = data["config_name"]
     test_suite_name = data.get("test_suite_name", None)
+    force_local = data.get("force_local", False)
 
     config_dir = current_app.config["ARGS"].test_dir
     config_path = os.path.join(config_dir, config_name)
@@ -127,7 +151,20 @@ def trigger_test_run():
 
     manager = current_app.config["RUN_MANAGER"]
     args = current_app.config["ARGS"]
-    run = manager.create_run(config_name, test_suite_name, args)
+
+    run = manager.handle_run_request(config_name,
+                                     test_suite_name,
+                                     args,
+                                     force_local=force_local)
+
+    if run is None:
+        # Remote run triggered successfully, no local tracking.
+        return jsonify({})
+
+    # Check if run contains an error (from remote dispatch failure)
+    if "error" in run:
+        return jsonify(run), 500
+
     return jsonify(run)
 
 

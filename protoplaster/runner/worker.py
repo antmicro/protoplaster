@@ -26,6 +26,7 @@ def run_test(run, base_args):
     args.group = run["test_suite_name"]
     args.csv = run["id"] + ".csv"
     args.artifacts_dir = os.path.join(args.artifacts_dir, run["id"])
+    args.force_local = run.get("force_local", False)
 
     os.makedirs(args.artifacts_dir, exist_ok=True)
 
