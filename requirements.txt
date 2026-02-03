@@ -2,6 +2,7 @@ myst_parser==4.0.1
 pytest==7.4.3
 pyyaml==5.3.1
 smbus2==0.3.0
+spidev==3.8
 colorama==0.3.9
 Jinja2==3.1.2
 MarkupSafe==2.1.1
