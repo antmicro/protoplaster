@@ -135,8 +135,8 @@ def parse_args():
     if args.csv_columns and not args.csv and not args.report_output:
         parser.error("--csv-columns requires --csv or --report-output")
 
-    if args.external_devices and not args.server:
-        parser.error("--external-devices requires --server")
+    if args.external_devices and args.dut:
+        parser.error("--external-devices is not allowed in DUT mode")
 
     return args
 
@@ -236,6 +236,7 @@ def main():
     if args.server or args.dut:
         run_server(args)
     else:
+        load_external_devices(args)
         run_tests(args)
 
 
