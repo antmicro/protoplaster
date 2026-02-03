@@ -72,15 +72,7 @@
         </div>
         <div class="modal-body">
 
-          <!-- Device selection -->
-          <div class="mb-3">
-            <label for="runDeviceSelect" class="form-label">Device</label>
-            <select class="form-select" id="runDeviceSelect" name="device" multiple required>
-              {% for device in devices %}
-              <option value="{{ device.url }}" {% if device.name == 'Local device' %}selected{% endif %}>{{ device.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
+          <p class="text-muted">Triggers execution on the Controller. Target devices are determined by the test suite configuration.</p>
 
           <!-- Config selection -->
           <div class="mb-3">
@@ -202,74 +194,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
   setInterval(poll, {{polling_interval * 1000 }});
 
-  async function fetchConfigs(deviceUrl) {
-    try {
-      const resp = await fetch(`${deviceUrl}/api/v1/configs`);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const configs = await resp.json();
-      return configs.map(cfg => cfg.name);
-    } catch (err) {
-      console.error(`Failed to fetch configs from ${deviceUrl}:`, err);
-      return [];
-    }
-  }
-
-  function getIntersectMap(arr, map) {
-    const returnMap = new Map()
-    for (let i = 0; i < arr.length; i++) {
-      if (!map.size) {
-        returnMap.set(arr[i], i)
-      } else {
-        if (map.has(arr[i]) && !returnMap.has(arr[i])) {
-          returnMap.set(arr[i], i)
-        }
-      }
-    }
-    return returnMap
-  }
-
-  function getIntersection(arrays) {
-    const initialMap = new Map()
-    const resultMap = arrays?.reduce(function _(acc, currentVal) {
-      return getIntersectMap(currentVal, acc)
-    }, initialMap)
-
-    return Array.from(resultMap.keys())
-  }
-
   async function updateConfigList() {
     const configSelect = document.getElementById('configSelect');
-    const runDeviceSelect = document.getElementById('runDeviceSelect');
-    const selectedDevices = Array.from(runDeviceSelect.selectedOptions).map(opt => opt.value);
-
     configSelect.innerHTML = '<option disabled>Loading...</option>';
 
-    if (selectedDevices.length === 0) {
-      configSelect.innerHTML = '<option disabled>Select at least one device</option>';
-      return;
-    }
+    try {
+        // Fetch configs from the local controller
+        const resp = await fetch('/api/v1/configs');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const configs = await resp.json();
 
-    // Fetch config lists in parallel
-    const allConfigs = await Promise.all(selectedDevices.map(fetchConfigs));
-    commonConfigs = getIntersection(allConfigs);
-
-    // Populate dropdown
-    configSelect.innerHTML = '';
-    if (commonConfigs.length === 0) {
-      configSelect.innerHTML = '<option disabled>No common configs found!</option>';
-    } else {
-      commonConfigs.forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        configSelect.appendChild(opt);
-      });
+        configSelect.innerHTML = '';
+        if (configs.length === 0) {
+            configSelect.innerHTML = '<option disabled>No configs found</option>';
+        } else {
+            configs.forEach(cfg => {
+                const opt = document.createElement('option');
+                opt.value = cfg.name;
+                opt.textContent = cfg.name;
+                configSelect.appendChild(opt);
+            });
+        }
+    } catch (err) {
+        console.error("Failed to fetch configs:", err);
+        configSelect.innerHTML = '<option disabled>Error loading configs</option>';
     }
   }
 
   const modal = document.getElementById('triggerTestRunModal');
   modal.addEventListener('show.bs.modal', updateConfigList);
-  document.getElementById('runDeviceSelect').addEventListener('change', updateConfigList);
 
   function canArtifactOpen(contentType) {
     return contentType === "application/json"
@@ -282,45 +235,35 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
     const config = document.getElementById('configSelect').value;
     const testSuite = document.getElementById('testSuiteName').value;
-    const runDeviceSelect = document.getElementById('runDeviceSelect');
-    const selectedDevices = Array.from(runDeviceSelect.selectedOptions).map(opt => opt.value);
-    let errors = [];
 
-    for (const deviceUrl of selectedDevices) {
-      try {
-        const resp = await fetch(`${deviceUrl}/api/v1/test-runs`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ config_name: config, test_suite_name: testSuite}),
+    try {
+        // Post only to the controller
+        const resp = await fetch(`/api/v1/test-runs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ config_name: config, test_suite_name: testSuite}),
         });
         if (!resp.ok) {
            const errData = await resp.json();
-           errors.push(`<b>${deviceUrl}</b>: ${errData.error || resp.statusText}`);
+           throw new Error(errData.error || resp.statusText);
         }
-      } catch (err) {
-        console.error(`Error triggering on ${deviceUrl}:`, err);
-        errors.push(`<b>${deviceUrl}</b>: Connection failed (${err.message})`);
-      }
-    }
 
-    if (errors.length > 0) {
-        // Hide trigger modal
+        // Success
+        location.reload();
+
+    } catch (err) {
+        console.error("Error triggering run:", err);
         const triggerModal = bootstrap.Modal.getInstance(document.getElementById('triggerTestRunModal'));
         if (triggerModal) triggerModal.hide();
 
-        // Show error modal
-        document.getElementById('errorModalBody').innerHTML = errors.join('<br>');
+        document.getElementById('errorModalBody').innerHTML = `<b>Controller</b>: ${err.message}`;
         const errorModalEl = document.getElementById('errorModal');
         const errorModal = new bootstrap.Modal(errorModalEl);
 
-        // Reload page only after user closes the error modal
         errorModalEl.addEventListener('hidden.bs.modal', function () {
             location.reload();
         }, { once: true });
         errorModal.show();
-    } else {
-        // No errors, reload immediately
-        location.reload();
     }
   });
 
