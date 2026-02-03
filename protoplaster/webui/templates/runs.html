@@ -104,6 +104,23 @@
   </div>
 </div>
 
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Action Failed</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-danger" id="errorModalBody">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Test Details Modal -->
 <div class="modal fade" id="testDetailsModal" tabindex="-1" aria-labelledby="testDetailsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl">
@@ -265,7 +282,9 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
     const config = document.getElementById('configSelect').value;
     const testSuite = document.getElementById('testSuiteName').value;
+    const runDeviceSelect = document.getElementById('runDeviceSelect');
     const selectedDevices = Array.from(runDeviceSelect.selectedOptions).map(opt => opt.value);
+    let errors = [];
 
     for (const deviceUrl of selectedDevices) {
       try {
@@ -274,11 +293,35 @@ document.addEventListener("DOMContentLoaded", function () {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ config_name: config, test_suite_name: testSuite}),
         });
+        if (!resp.ok) {
+           const errData = await resp.json();
+           errors.push(`<b>${deviceUrl}</b>: ${errData.error || resp.statusText}`);
+        }
       } catch (err) {
         console.error(`Error triggering on ${deviceUrl}:`, err);
+        errors.push(`<b>${deviceUrl}</b>: Connection failed (${err.message})`);
       }
     }
-    location.reload();
+
+    if (errors.length > 0) {
+        // Hide trigger modal
+        const triggerModal = bootstrap.Modal.getInstance(document.getElementById('triggerTestRunModal'));
+        if (triggerModal) triggerModal.hide();
+
+        // Show error modal
+        document.getElementById('errorModalBody').innerHTML = errors.join('<br>');
+        const errorModalEl = document.getElementById('errorModal');
+        const errorModal = new bootstrap.Modal(errorModalEl);
+
+        // Reload page only after user closes the error modal
+        errorModalEl.addEventListener('hidden.bs.modal', function () {
+            location.reload();
+        }, { once: true });
+        errorModal.show();
+    } else {
+        // No errors, reload immediately
+        location.reload();
+    }
   });
 
   // Abort button
