@@ -1,3 +1,37 @@
+# multi-node, controller orchestrated protoplaster test example
+#
+# SETUP:
+# ------------------------
+# 1. START DUT NODES:
+#    You need to have Protoplaster running in server mode on the remote machines
+#    that will act as 'node1' and 'node2'.
+#    Example command on node1's machine:
+#      protoplaster --dut --port 5001
+#    Example command on node2's machine:
+#      protoplaster --dut --port 5002
+#
+# 2. REGISTER DEVICES ON CONTROLLER:
+#    The controller machine needs to know the addresses of these nodes.
+#    You can do this in two ways:
+#
+#    Option A: Using an external devices YAML file (CLI)
+#      Create a file (e.g., devices.yml) with the following syntax:
+#        node1: <IP_OF_NODE1>:5001
+#        node2: <IP_OF_NODE2>:5002
+#
+#      Then run the controller with:
+#        protoplaster --server --external-devices devices.yml --test-file http_echo.yml
+#
+#    Option B: Using the Web UI
+#      Run the controller in server mode:
+#        protoplaster --server --test-file this_file.yml
+#      Open the Web UI (usually http://localhost:5000), go to the "Devices" tab,
+#      and manually add "node1" and "node2" with their respective URLs.
+#
+# 3. RUN THE TEST:
+#    Once devices are registered, you can execute this test suite from the
+#    controller's Web UI or via the command line.
+
 tests:
   simple_test:
     http_echo:
