@@ -113,9 +113,15 @@ def parse_args():
         help="Path to the system report yaml config file",
         default=f"{os.path.dirname(system_report_file)}/default_commands.yml")
     parser.add_argument("--sudo", action='store_true', help="Run as sudo")
-    parser.add_argument("--server",
-                        action='store_true',
-                        help="Run in server mode")
+
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument("--server",
+                            action='store_true',
+                            help="Run in server mode")
+    mode_group.add_argument("--dut",
+                            action='store_true',
+                            help="Run in DUT mode")
+
     parser.add_argument("--port",
                         type=str,
                         default="5000",
@@ -161,9 +167,10 @@ def load_external_devices(args):
 
 
 def run_server(args):
-    protoplaster.webui.devices.add_device(LOCAL_DEVICE_NAME,
-                                          f"http://127.0.0.1:{args.port}")
-    load_external_devices(args)
+    if not args.dut:
+        protoplaster.webui.devices.add_device(LOCAL_DEVICE_NAME,
+                                              f"http://127.0.0.1:{args.port}")
+        load_external_devices(args)
 
     app = Flask(__name__)
     CORS(app)
@@ -171,10 +178,13 @@ def run_server(args):
     app.config["ARGS"] = args
     app.config["RUN_MANAGER"] = RunManager()
     app.register_blueprint(protoplaster.api.v1.create_routes())
-    app.register_blueprint(protoplaster.webui.webui_blueprint)
+    if not args.dut:
+        app.register_blueprint(protoplaster.webui.webui_blueprint)
 
     print(
-        info(f"Protoplaster server running on http://{SERVE_IP}:{args.port}"))
+        info(
+            f"Protoplaster {'server' if args.server else 'DUT' if args.dut else ''} running on http://{SERVE_IP}:{args.port}"
+        ))
 
     serve(app, host=SERVE_IP, port=int(args.port))
 
@@ -209,8 +219,8 @@ def main():
                 error(f"Artifacts dir ({args.artifacts_dir}) does not exist!"))
             exit(1)
 
-    if not os.path.exists(
-            f"{args.test_dir}/{args.test_file}") and not args.server:
+    if not os.path.exists(f"{args.test_dir}/{args.test_file}") and not (
+            args.server or args.dut):
         print(
             error(
                 f"Test file {args.test_dir}/{args.test_file} does not exist or you don't have sufficient permissions"
@@ -223,7 +233,7 @@ def main():
         list_test_suites(args)
         sys.exit()
 
-    if args.server:
+    if args.server or args.dut:
         run_server(args)
     else:
         run_tests(args)
