@@ -28,6 +28,10 @@ def report_device_name(f):
     return wrapper
 
 
+class BaseTest:
+    machines = None
+
+
 class ModuleName(object):
 
     def __init__(self, name):
