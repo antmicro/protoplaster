@@ -58,6 +58,12 @@ def trigger_on_remote(target: str,
         return None
 
     url = device["url"]
+
+    try:
+        requests.get(url, timeout=5)
+    except requests.exceptions.RequestException:
+        raise Exception(f"Device {target} is offline")
+
     payload = {
         "module": method.__module__,
         "function": method.__name__,
