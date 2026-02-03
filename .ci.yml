@@ -20,7 +20,7 @@ installation-test:
   script:
     - PATH="/root/.local/bin:$PATH"
     - apt -y update
-    - apt -y install python3 python3-venv git
+    - apt -y install python3 python3-venv python3-dev build-essential git
     - python3 -m venv ./venv
     - source ./venv/bin/activate
     - pip install .
@@ -63,7 +63,7 @@ api-test:
   script:
     - PATH="/root/.local/bin:$PATH"
     - apt -y update
-    - apt -y install python3 python3-venv git curl jq
+    - apt -y install python3 python3-venv python3-dev build-essential git curl jq
     - python3 -m venv ./venv
     - source ./venv/bin/activate
     - pip install .
