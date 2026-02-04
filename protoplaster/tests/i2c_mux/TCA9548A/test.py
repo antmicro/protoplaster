@@ -25,7 +25,7 @@ class TestTCA9548A:
 
     def test_is_alive(self):
         """
-        {% macro test_sysfs_interface(device) -%}
+        {% macro test_is_alive(device) -%}
         check if TCA9548A responds correctly to simple requests
         {%- endmacro %}
         """
