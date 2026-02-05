@@ -17,30 +17,27 @@ def pytest_addoption(parser):
 def setup_tests(yaml_file, request):
     arg_name = request.cls.module_name()
     if arg_name in yaml_file:
-        thing = next(yaml_file[arg_name])
-        for key in thing:
-            setattr(request.cls, key, thing[key])
+        conf = yaml_file[arg_name].pop(0)
+        for key in conf:
+            setattr(request.cls, key, conf[key])
 
 
 @pytest.fixture(scope='session')
 def yaml_file(request):
     with open(request.config.getoption("--yaml_file")) as file:
         content = yaml.safe_load(file)
-    content = {
-        mod_key: content[group_key][mod_key]
-        for group_key in content
-        for mod_key in content[group_key]
-    }
-    for c in content:
-        if '__path__' in content[c]:
-            content[c] = content[c]['tests']
-        if not isinstance(content[c], list):
-            content[c] = [content[c]]
-    content = {
-        c: content[c] if isinstance(content[c], list) else [content[c]]
-        for c in content
-    }
-    return {k: iter(content[k]) for k in content}
+    res = {}
+    for group_key in content:
+        for mod in content[group_key]:
+            # convert {"key": {...}} to tuple ("key", {...})
+            mod_name, mod_conf = next(iter(mod.items()))
+            res.setdefault(mod_name, [])
+            res[mod_name].append(mod_conf)
+    for mod in res:
+        for i in range(len(res[mod])):
+            if "__path__" in res[mod][i]:
+                res[mod][i] = res[mod][i]["tests"]
+    return res
 
 
 @pytest.fixture

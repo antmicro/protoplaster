@@ -131,7 +131,7 @@ def generate_docs(tests_full_path, yaml_content):
 
 
 def prepare_pytest_args(tests, args):
-    pytest_args = f" -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} "
+    pytest_args = f" --keep-duplicates -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} "
     if args.output:
         pytest_args += f"--junitxml={args.output} "
     if args.artifacts_dir:

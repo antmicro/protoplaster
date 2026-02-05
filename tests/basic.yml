@@ -1,17 +1,17 @@
 tests:
   simple_test:
-    i2c:
-    - bus: 0
+  - i2c:
+      bus: 0
       devices:
       - name: "Sensor name"
         address: 0x1C
-    gpio:
-    - number: 20
+  - gpio:
+      number: 20
       value: 1
 
   camera_test:
-    camera:
-    - device: "/dev/video0"
+  - camera:
+      device: "/dev/video0"
       camera_name: "vivid"
       driver_name: "vivid"
 

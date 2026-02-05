@@ -60,10 +60,6 @@ def to_path(p: StrPath) -> Path:
     return p if isinstance(p, Path) else Path(p)
 
 
-def wrap_list(o) -> list:
-    return o if isinstance(o, list) else [o]
-
-
 def load_yaml(yaml_file: StrPath):
     with open(yaml_file) as file:
         content = yaml.safe_load(file)
@@ -108,7 +104,7 @@ class ConfigObj:
 class TestBody:
     name: str
     module: Path
-    params: list[Any]
+    params: list[dict[Any]]
 
 
 @dataclass
@@ -123,23 +119,20 @@ class Test(ConfigObj):
 
         custom_path = to_path(custom_path)
 
-        for module_name, params in content.items():
-            if module_name in test_modules_paths:
-                params = wrap_list(params)
-            elif (module_path :=
-                  to_path(test_dir) / module_name).exists() and load_module(
-                      module_path, module_name):
-                params = wrap_list(params)
-            elif custom_path.exists() and load_module(custom_path,
-                                                      module_name):
-                params = wrap_list(params)
-            else:
-                pr_warn(f'{self.origin.name}: unknown module "{module_name}"')
-                continue
+        for entry in content:
+            for module_name, params in entry.items():
+                if not ((module_name in test_modules_paths) or (
+                    (module_path := to_path(test_dir) / module_name).exists()
+                        and load_module(module_path, module_name)) or
+                        (custom_path.exists()
+                         and load_module(custom_path, module_name))):
+                    pr_warn(
+                        f'{self.origin.name}: unknown module "{module_name}"')
+                    continue
 
-            self.body.append(
-                TestBody(module_name, to_path(test_modules_paths[module_name]),
-                         params))
+                self.body.append(
+                    TestBody(module_name,
+                             to_path(test_modules_paths[module_name]), params))
 
 
 @dataclass
@@ -320,12 +313,12 @@ class TestFile:
         self.test_suites = {suite: target_suite}
 
     def list_test_modules(self) -> list[str]:
-        modules = set()
+        modules = []
 
         for test in self.tests.values():
-            modules.update(str(body.module.resolve()) for body in test.body)
+            modules += [str(body.module.resolve()) for body in test.body]
 
-        return list(modules)
+        return modules
 
     def list_metadata_commands(self) -> dict[str, Any]:
         return {value.name: value.body for value in self.metadata.values()}
@@ -334,10 +327,9 @@ class TestFile:
         test_runner_fmt = dict()
 
         for test in self.tests.values():
-            test_runner_fmt[test.name] = {
+            test_runner_fmt[test.name] = [{
                 value.name: value.params
-                for value in test.body
-            }
+            } for value in test.body]
 
         test_file = tempfile.NamedTemporaryFile("w",
                                                 suffix=".yml",

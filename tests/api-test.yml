@@ -1,4 +1,4 @@
 tests:
   base:
-    simple:
-    - device: "simple"
+  - simple:
+      device: "simple"

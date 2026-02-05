@@ -3,11 +3,11 @@ includes:
 
 tests:
   network_test:
-    network:
-    - interface: "eth0"
+  - network:
+      interface: "eth0"
   memory_test:
-    memtester:
-    - memory: "10M"
+  - memtester:
+      memory: "10M"
       iterations: 2
 
 test-suites:

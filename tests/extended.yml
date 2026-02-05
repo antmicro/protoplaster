@@ -1,60 +1,61 @@
-extended:
-  adc:
-  - sysfs_path: "/sys/bus/iio/devices/iio:device0"
-    channel: "0_vcc"
-    device_name: "xadc"
-    max_voltage: 3
-    min_voltage: 2
-  dac:
-  - sysfs_path: "/sys/bus/iio/device/iio:device1"
-  LTC2499:
-  - _name: "LTC2499(1, 0x70)"
-    bus: 1
-    address: 0x70
-    vref: 5
-  LTC2493:
-  - _name: "LTC2493(1, 0x71)"
-    bus: 1
-    address: 0x71
-    vref: 5
-  LTC2655:
-  - _name: "LTC2655(1, 0x72)"
-    bus: 1
-    address: 0x72
-    vref: 5
-    N: 16
-  LTC2657:
-  - _name: "LTC2657(1, 0x73)"
-    bus: 1
-    address: 0x73
-    vref: 5
-    N: 16
-  PI4IO:
-  - _name: "PI4IO(1, 0x30)"
-    bus: 1
-    address: 0x30
-  TMP431:
-  - _name: "TMP431(1, 0x31)"
-    bus: 1
-    address: 0x31
-  DA9062:
-  - _name: "DA9062(1, 0x21)"
-    bus: 1
-    address: 0x21
-    variant_id: 0x10
-    customer_id: 0x20
-    config_id: 0x30
-    current_selections:
-    - ldo_id: 1
-      ldo_selection: "A"
-    current_voltages:
-    - ldo_id: 2
-      max_voltage: 10
-      min_volatge: 9.3
-    - ldo_id: 4
-      max_voltage: 1
-      min_volatge: 5
-  UCD90320U:
-  - _name: "UCD90320U(1, 0x25)"
-    bus: 1
-    address: 0x25
+tests:
+  extended:
+  - adc:
+      sysfs_path: "/sys/bus/iio/devices/iio:device0"
+      channel: "0_vcc"
+      device_name: "xadc"
+      max_voltage: 3
+      min_voltage: 2
+  - dac:
+      sysfs_path: "/sys/bus/iio/device/iio:device1"
+  - LTC2499:
+      _name: "LTC2499(1, 0x70)"
+      bus: 1
+      address: 0x70
+      vref: 5
+  - LTC2493:
+      _name: "LTC2493(1, 0x71)"
+      bus: 1
+      address: 0x71
+      vref: 5
+  - LTC2655:
+      _name: "LTC2655(1, 0x72)"
+      bus: 1
+      address: 0x72
+      vref: 5
+      N: 16
+  - LTC2657:
+      _name: "LTC2657(1, 0x73)"
+      bus: 1
+      address: 0x73
+      vref: 5
+      N: 16
+  - PI4IO:
+      _name: "PI4IO(1, 0x30)"
+      bus: 1
+      address: 0x30
+  - TMP431:
+      _name: "TMP431(1, 0x31)"
+      bus: 1
+      address: 0x31
+  - DA9062:
+      _name: "DA9062(1, 0x21)"
+      bus: 1
+      address: 0x21
+      variant_id: 0x10
+      customer_id: 0x20
+      config_id: 0x30
+      current_selections:
+      - ldo_id: 1
+        ldo_selection: "A"
+      current_voltages:
+      - ldo_id: 2
+        max_voltage: 10
+        min_volatge: 9.3
+      - ldo_id: 4
+        max_voltage: 1
+        min_volatge: 5
+  - UCD90320U:
+      _name: "UCD90320U(1, 0x25)"
+      bus: 1
+      address: 0x25
