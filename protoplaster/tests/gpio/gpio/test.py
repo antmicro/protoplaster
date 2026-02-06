@@ -14,13 +14,15 @@ class TestGPIO:
     {%- endmacro %}
     """
 
+    def setup_class(self):
+        self.gpio_name = self.gpio_name if hasattr(self, "gpio_name") else None
+
     def test_read_write(self):
         """
         {% macro test_read_write(device) -%}
           write `{{ device['value'] }}` and read back to confirm
         {%- endmacro %}
         """
-        self.gpio_name = self.gpio_name if hasattr(self, "gpio_name") else None
         with GPIO(self.number, Direction.OUT,
                   gpio_name=self.gpio_name) as gpio:
             gpio.write_value(self.value)
