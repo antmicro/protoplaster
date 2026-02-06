@@ -149,11 +149,12 @@ Required parameters:
 Required parameters:
 
 * `number` - GPIO pin number
-* `value` - value written to that pin
+* `value` - value written to, or expected to be read from that pin
 
 Optional parameters:
 
 * `gpio_name` - name of the sysfs GPIO interface after exporting
+* `write` - whether to configure the pin as an output and assert that the written value is preserved, otherwise perform a read and assert that the read value matches the specified value (default: false)
 
 ### Cameras
 Required parameters:
