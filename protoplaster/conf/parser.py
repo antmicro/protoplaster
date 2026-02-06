@@ -24,6 +24,7 @@ from protoplaster.tests.pmic.DA9062.test import __file__ as DA9062_test
 from protoplaster.tests.pmic.UCD90320U.test import __file__ as UCD90320U_test
 from protoplaster.tests.thermometer.TMP431.test import __file__ as TMP431_test
 from protoplaster.tests.i2c_mux.TCA9548A.test import __file__ as TCA9548A_test
+from protoplaster.tests.usb.test import __file__ as usb_test
 from protoplaster.tests.simple.test import __file__ as simple_test
 from protoplaster.tests.http_echo.test import __file__ as http_echo_test
 from protoplaster.tools.tools import pr_err, pr_info, pr_warn
@@ -51,6 +52,7 @@ test_modules_paths = {
     "simple": simple_test,
     "ti_dac38j8x_eyescan": ti_dac38j8x_eyescan_test,
     "http_echo": http_echo_test,
+    "usb": usb_test,
 }
 
 
