@@ -166,7 +166,7 @@ def load_external_devices(args):
         print(error(f"Failed to load external devices: {e}"))
 
 
-def run_server(args):
+def run_http_server(args):
     if not args.dut:
         protoplaster.webui.devices.add_device(LOCAL_DEVICE_NAME,
                                               f"http://127.0.0.1:{args.port}")
@@ -234,7 +234,7 @@ def main():
         sys.exit()
 
     if args.server or args.dut:
-        run_server(args)
+        run_http_server(args)
     else:
         load_external_devices(args)
         run_tests(args)
