@@ -34,8 +34,8 @@
 
 tests:
   simple_test:
-    http_echo:
-      - dev1: "node1"
+    - http_echo:
+        dev1: "node1"
         dev2: "node2"
         test_string: "Hello World!"
         port: 2136
