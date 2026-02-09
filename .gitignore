@@ -6,3 +6,4 @@ venv
 protoplaster/docs/test_*.rst
 protoplaster.md
 .venv
+test_output/
