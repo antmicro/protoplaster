@@ -165,7 +165,7 @@ def _trigger_remote_run(machine, base_url, args):
     payload = {
         "config_name": config_name,
         "test_suite_name": args.group,
-        "force_local": True
+        "machine_target": machine
     }
 
     try:
@@ -184,60 +184,38 @@ def _trigger_remote_run(machine, base_url, args):
         return err_msg
 
 
-def _run_remote_dispatch(target_machines, args):
-    devices = {d['name']: d['url'] for d in get_all_devices()}
-
-    errors = []
-    for machine in target_machines:
-        if machine not in devices:
-            msg = f"Machine '{machine}' not defined in devices list"
-            print(error(msg))
-            errors.append(msg)
-            continue
-        err = _trigger_remote_run(machine, devices[machine], args)
-        if err:
-            errors.append(err)
-
-    if errors:
-        return 1, errors
-
-    # Return 0 to indicate successful dispatch (not necessarily successful tests)
-    return 0, []
+def get_target_machines(args) -> Set:
+    test_file = create_test_file(args)
+    return test_file.get_all_machines()
 
 
-def get_target_machines(args) -> Optional[Set]:
-    """
-    Returns a set of required remote machine names, or None if local execution is forced.
-    """
-    if getattr(args, "force_local", False):
-        return None
-
-    test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
-    if (group := args.group) is not (None or ""):
-        test_file.filter_suite(group)
-
-    target_machines = set()
-    for test in test_file.tests.values():
-        for body in test.body:
-            for param in body.params:
-                if isinstance(param, dict) and "machines" in param:
-                    machines = param["machines"]
-                    if not isinstance(machines, list):
-                        machines = [machines]
-                    target_machines.update(machines)
-
-    return target_machines
+def has_local_tests(args) -> bool:
+    test_file = create_test_file(args)
+    test_file.filter_runnable_tests(None)
+    return len(test_file.tests) > 0
 
 
 def run_tests(args):
-    # Early return for the remote trigger
-    if target_machines := get_target_machines(args):
-        return _run_remote_dispatch(target_machines, args)
+    dispatched_remote_tests = False
 
-    # Proceed with local execution
-    test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
-    if (group := args.group) not in (None, ""):
-        test_file.filter_suite(group)
+    # Check execution context:
+    # - <string>: Triggered by a `_trigger_remote_run` call from the orchestrator.
+    #             Act as a DUT node, running ONLY the tests assigned to this specific node.
+    # - None:     Act as the orchestrator, dispatching remote tests and running local ones.
+    machine_target = getattr(args, "machine_target", None)
+    if not machine_target:
+        devices = {d['name']: d['url'] for d in get_all_devices()}
+        for machine in get_target_machines(args):
+            if machine in devices:
+                _trigger_remote_run(machine, devices[machine], args)
+                dispatched_remote_tests = True
+            else:
+                print(
+                    error(f"Machine '{machine}' not defined in devices list"))
+
+    # Filter tests for execution on "local" node
+    test_file = create_test_file(args)
+    test_file.filter_runnable_tests(machine_target)
 
     test_modules = test_file.list_test_modules()
     metadata_cmds = test_file.list_metadata_commands()
@@ -251,7 +229,15 @@ def run_tests(args):
         metadata = []
 
     if test_modules == []:
-        print(warning("No tests to run!"))
+        # If we dispatched remotes but have no local tests, that's fine.
+        # If we have neither, it's a warning.
+        if machine_target is None and dispatched_remote_tests:
+            # No warning - we have dispatched tests
+            pass
+        else:
+            print(warning("No tests to run on this device!"))
+
+        return 0, []
 
     with test_file.merged_test_file() as tf:
         args.test_file = tf.name

@@ -312,6 +312,34 @@ class TestFile:
         self.metadata = target_suite.metadata
         self.test_suites = {suite: target_suite}
 
+    def filter_runnable_tests(self, target: str | None):
+        """
+        Keeps tests with NO 'machines' defined if the `target` is None, otherwise keep tests where 'machines' includes the target
+        """
+        for name, test in list(self.tests.items()):
+            test.body = [b for b in test.body if self._should_run(b, target)]
+            if not test.body:
+                del self.tests[name]
+
+    def _should_run(self, body: TestBody, target: str | None) -> bool:
+        machines = body.params.get("machines")
+        if not machines:
+            return target is None
+
+        if isinstance(machines, str):
+            machines = [machines]
+
+        return target in machines if target else False
+
+    def get_all_machines(self) -> set[str]:
+        machines = set()
+        for test in self.tests.values():
+            for body in test.body:
+                ms = body.params.get("machines")
+                if ms:
+                    machines.update([ms] if isinstance(ms, str) else ms)
+        return machines
+
     def list_test_modules(self) -> list[str]:
         modules = []
 

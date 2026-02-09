@@ -84,7 +84,7 @@ def trigger_test_run():
 
     :<json string config_name: name of config for this test run
     :<json string test_suite_name: (optional) name of the test suite for this test run
-    :<json boolean force_local: (optional) force execution on the local device, ignoring remote targets
+    :<json string machine_target: (optional) name of the node this test is meant to be run on
 
     **Example Request**
 
@@ -96,8 +96,7 @@ def trigger_test_run():
 
         {
           "config_name": "config1.yaml",
-          "test_suite_name": "simple-test",
-          "force_local": false
+          "test_suite_name": "simple-test"
         }
 
     **Example Response (Tracked (local) Run)**
@@ -141,7 +140,7 @@ def trigger_test_run():
     data = request.get_json()
     config_name = data["config_name"]
     test_suite_name = data.get("test_suite_name", None)
-    force_local = data.get("force_local", False)
+    machine_target = data.get("machine_target", None)
 
     config_dir = current_app.config["ARGS"].test_dir
     config_path = os.path.join(config_dir, config_name)
@@ -155,7 +154,7 @@ def trigger_test_run():
     run = manager.handle_run_request(config_name,
                                      test_suite_name,
                                      args,
-                                     force_local=force_local)
+                                     machine_target=machine_target)
 
     if run is None:
         # Remote run triggered successfully, no local tracking.
