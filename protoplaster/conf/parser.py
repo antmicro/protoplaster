@@ -125,8 +125,21 @@ class Test(ConfigObj):
 
         custom_path = to_path(custom_path)
 
-        for entry in content:
+        is_group = isinstance(content, dict)
+        tests = content.get("tests", []) if is_group else content
+        group_machines = content.get("machines") if is_group else None
+
+        for entry in tests:
             for module_name, params in entry.items():
+                params = (params or {}).copy()
+
+                if group_machines:
+                    if "machines" in params:
+                        msg = f'{self.origin.name}: "machines" defined in both group "{name}" and test "{module_name}"'
+                        pr_err(msg)
+                        raise ValueError(msg)
+                    params["machines"] = group_machines
+
                 if not ((module_name in test_modules_paths) or (
                     (module_path := to_path(test_dir) / module_name).exists()
                         and load_module(module_path, module_name)) or
