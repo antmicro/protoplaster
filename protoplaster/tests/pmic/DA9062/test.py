@@ -1,3 +1,4 @@
+import pytest
 from protoplaster.conf.module import ModuleName
 from protoplaster.tests.pmic.DA9062.DA9062 import DA9062, ldo_selection
 
@@ -61,6 +62,9 @@ class TestDA9062:
             LDO{{ ldo['ldo_id'] }}, {% endfor -%}
         {%- endmacro %}
         """
+        if not self.current_selections:
+            pytest.skip("current_selections parameter not set")
+
         for ldo in self.current_selections:
             val = self.pmic.get_ldo_curr_selection(ldo['ldo_id'])
             exp = ldo_selection[ldo['ldo_selection']]
@@ -72,6 +76,8 @@ class TestDA9062:
         verify voltage of: {% for ldo in device['current_voltages'] -%}LDO{{ ldo['ldo_id'] }}({{ ldo['min_voltage'] or '-inf'}}, {{ ldo['max_voltage'] or '+inf'}}), {% endfor -%}
         {%- endmacro %}
         """
+        if not self.current_voltages:
+            pytest.skip("current_voltages parameter not set")
 
         for ldo in self.current_voltages:
             curr_voltage = self.pmic.get_ldo_curr_voltage(ldo['ldo_id'])
