@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<html>
+<body>
+  <h2>Eye diagram</h2>
+
+  <div>
+    <canvas height="570px" width="680px" id="eye_diagram"></canvas>
+  </div>
+  <div class="stats">
+    <div>Eye width:</div> <span id="width">0</span>
+    <div>Eye height:</div>  <span id="height">0</span>
+  </div>
+</body>
+
+<style>
+canvas {
+  margin-top: 15px;
+}
+
+.stats {
+  display: grid;
+  width: 15em;
+  grid-template-columns: 1fr 1fr;
+  margin-left: 3em
+}
+</style>
+
+<script>
+const chartData = {{ samples|tojson }};
+
+const ctx = document.getElementById("eye_diagram").getContext("2d");
+
+// Configuration
+const xValues = [...new Set(chartData.map(({ x }) => x))].sort((a, b) => a - b);
+const yValues = [...new Set(chartData.map(({ y }) => y))].sort((a, b) => a - b);
+const stepSize = {
+  x: xValues[1] - xValues[0],
+  y: yValues[1] - yValues[0],
+};
+
+const avgAmplitude = 0.27;
+const axisPadding = { left: 55, right: 120, top: 10, bottom: 35 };
+const gridSize = { x: xValues.length, y: yValues.length };
+const translateOrigin = { x: gridSize.x / 2, y: gridSize.y / 2 };
+const ticksCommon = {
+  length: 9,
+  padding: { grid: 1, text: 2 },
+  step: 2,
+};
+const ticks = { x: { ...ticksCommon }, y: { ...ticksCommon } };
+
+const cell = {
+  width: Math.floor((ctx.canvas.width - axisPadding.left - axisPadding.right) / gridSize.x),
+  height: Math.floor((ctx.canvas.height - axisPadding.top - axisPadding.bottom) / gridSize.y),
+};
+
+// Styles
+ctx.strokeStyle = "black";
+ctx.font = "12px Arial";
+
+// Y Axis label
+ctx.textBaseline = "top";
+ctx.rotate(-Math.PI / 2);
+ctx.fillText("Voltage", -ctx.canvas.height / 2, 10);
+ctx.rotate(Math.PI / 2);
+
+// X Axis label
+ctx.textAlign = "center";
+ctx.textBaseline = "bottom";
+ctx.fillText("Unit Interval", axisPadding.left + cell.width * gridSize.x / 2, ctx.canvas.height - 10);
+
+// Legend
+{
+  const label = "Amplitude";
+  const width = 30;
+  const height = 120;
+  const padding = {
+    grid: 10,
+    label: 10,
+  };
+
+  const x = axisPadding.left + (gridSize.x + 1) * cell.width + padding.grid;
+  const y = axisPadding.top;
+
+  // Border
+  const borderWidth = 1;
+  ctx.fillStyle = "black";
+  ctx.fillRect(x - borderWidth, y - borderWidth, width + borderWidth * 2, height + borderWidth * 2);
+
+  // Gradient
+  const gradient = ctx.createLinearGradient(0, y, 0, y + height);
+  gradient.addColorStop(0, "black");
+  gradient.addColorStop(0.5, "red");
+  gradient.addColorStop(1, "blue");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x, y, width, height);
+
+  // Ticks
+  const font = ctx.font; // save font
+  ctx.font = "10px Arial";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "black";
+  const ticksLength = 6;
+  const maxValue = chartData
+    .flat(1)
+    .flatMap((pixel) => pixel.amp)
+    .reduce((a, b) => Math.max(a, b), -Infinity); // Math.max(...values) causes stack overflow
+  const ticksValues = [0, avgAmplitude, maxValue];
+  ticksValues.forEach((value) => {
+    const xPos = x + width + borderWidth
+    const yPos = y + height - value / maxValue * height;
+    ctx.moveTo(xPos + 1, yPos);
+    ctx.lineTo(xPos + 1 + ticksLength, yPos);
+    ctx.fillText(value, xPos + ticksLength + 3, yPos + ctx.lineWidth / 4);
+  });
+  const maxTicksWidth = Math.max(...ticksValues.map((value) => ctx.measureText(value).width));
+  ctx.font = font; // restore font
+
+  // Label
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.rotate(Math.PI / 2);
+  ctx.fillText(label, axisPadding.top + height / 2, - (x + width + padding.label + maxTicksWidth));
+  ctx.rotate(-Math.PI / 2);
+}
+
+function updateEyeDiagram() {
+  // Calculate eye width and height
+  const minValue = Math.min(...chartData.map(({ amp }) => amp));
+  const eyePixels = chartData.filter(({ amp }) => amp === minValue);
+  const width = (Math.max(...eyePixels.map(({ x }) => x)) - Math.min(...eyePixels.map(({ x }) => x)));
+  const height = (Math.max(...eyePixels.map(({ y }) => y)) - Math.min(...eyePixels.map(({ y }) => y)));
+  document.getElementById("width").innerText = width;
+  document.getElementById("height").innerText = height;
+
+  // Fill grid
+  for (const pixel of chartData) {
+    const xIndex = pixel.x / stepSize.x;
+    const yIndex = pixel.y / stepSize.y;
+    const xPos = (translateOrigin.x + xIndex) * cell.width + axisPadding.left;
+    const yPos = (translateOrigin.y - yIndex - 1) * cell.height + axisPadding.top;
+
+    const fillStyle = pixel.amp >= 0 && pixel.amp <= avgAmplitude
+      ? `rgb(${(pixel.amp / avgAmplitude) * 255}, 0, ${(1 - pixel.amp / avgAmplitude) * 255})`
+      : `rgb(${(1 - ((pixel.amp - avgAmplitude) / avgAmplitude)) * 255}, 0, 0)`;
+
+    ctx.fillStyle = fillStyle;
+    ctx.fillRect(xPos, yPos, cell.width, cell.height);
+  }
+
+  // X Axis ticks
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  const xTicksBase = axisPadding.left - ticks.y.padding.grid - ticks.y.length;
+  for (let i = 0; i <= gridSize.y; i += ticks.y.step) {
+    const y = axisPadding.top + i * cell.height;
+    ctx.moveTo(xTicksBase, y);
+    ctx.lineTo(xTicksBase + ticks.y.length, y);
+    ctx.stroke();
+
+    const text = ((translateOrigin.y - i) * stepSize.y).toString();
+    ctx.fillText(text, xTicksBase - ticks.y.padding.text, y + ctx.lineWidth / 4);
+  }
+
+  // Y Axis ticks
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  const yTicksBase = axisPadding.top + gridSize.y * cell.height + ticks.x.padding.grid + ticks.x.length;
+  for (let i = 0; i <= gridSize.x; i = i += ticks.x.step) {
+    const x = axisPadding.left + i * cell.width;
+    ctx.moveTo(x, yTicksBase - ticks.x.length);
+    ctx.lineTo(x, yTicksBase);
+    ctx.stroke();
+    const text = ((i - translateOrigin.x) * stepSize.x).toString();
+    ctx.fillText(text, x, yTicksBase + ticks.x.padding.text);
+  }
+}
+
+window.addEventListener("DOMContentLoaded", updateEyeDiagram);
+
+</script>
+
+</html>
+{% endblock %}
