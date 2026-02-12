@@ -10,10 +10,10 @@ class TCA9548A(I2CMux):
                  i2c_bus: int,
                  i2c_address: int,
                  smbus_force: bool = False,
-                 reset_gpio_number: int = None):
+                 reset_gpio: int = None):
         self.bus = SMBus(i2c_bus, force=smbus_force)
         self.address = i2c_address
-        self.rst_gpio = reset_gpio_number
+        self.reset_gpio = reset_gpio
         self.fail_reason = None
 
     def is_alive(self):
@@ -30,15 +30,15 @@ class TCA9548A(I2CMux):
         return False
 
     def reset(self):
-        if self.rst_gpio is None:
+        if self.reset_gpio is None:
             return False
         try:
-            with GPIO(self.rst_gpio, Direction.OUT) as rst_gpio:
-                rst_gpio.write_value(0)
+            with GPIO(self.reset_gpio, Direction.OUT) as reset_gpio:
+                reset_gpio.write_value(0)
                 time.sleep(1)  # at least 6 ns
-                rst_gpio.write_value(1)
+                reset_gpio.write_value(1)
         except Exception as e:
-            self.fail_reason = f"Error accessing rst_gpio {self.rst_gpio}: {e}"
+            self.fail_reason = f"Error accessing rst_gpio {self.reset_gpio}: {e}"
             return False
         return True
 
