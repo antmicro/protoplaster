@@ -15,16 +15,20 @@ class TestTiDac38j8xSpi:
     def setup_class(self):
         self.dac = DAC38J8x(self.bus, self.device)
 
-    def test_default_values(self):
+    def test_config127_value(self):
         """
-        {% macro test_default_values(device) -%}
-          check if read-only DAC38J8x registers have their default reset value
+        {% macro test_config127_value(device) -%}
+          verify the default value of the read-only CONFIG127 register
         {%- endmacro %}
         """
+        register_addr = 0x7F
+        expected_value = 0x09
 
-        actual = self.dac.read_register(0x7f)
-        assert actual == 0x7f, (f"config127 register (= {actual:#x}) "
-                                f"does not have reset value {value:#x}")
+        read_value = self.dac.read_register(register_addr)
+
+        assert read_value == expected_value, (
+            f"Register 0x{register_addr:02X} has value 0x{read_value:02X}, "
+            f"expected reset value 0x{expected_value:02X}")
 
     def name(self):
         return f"DAC38J8x({self.bus}, {self.device})"
