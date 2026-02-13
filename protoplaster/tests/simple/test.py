@@ -1,3 +1,4 @@
+import pytest
 from protoplaster.conf.module import ModuleName
 from protoplaster.tests.simple.simple import Simple
 import os
@@ -29,6 +30,16 @@ class TestSimple:
         {%- endmacro %}
         """
         assert False
+
+    def test_conditional_skip(self):
+        """
+        {% macro test_conditional_skip(device) -%}
+           This test is skipped if the device name is "skip"
+        {%- endmacro %}
+        """
+        if getattr(self, "device", None) == "skip":
+            pytest.skip()
+        assert True
 
     def test_record_artifact(self, artifacts_dir, record_artifact):
         """
