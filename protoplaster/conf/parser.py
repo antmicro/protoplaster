@@ -314,7 +314,7 @@ class TestFile:
                     machines.update([ms] if isinstance(ms, str) else ms)
         return machines
 
-    def list_test_modules(self) -> list[str]:
+    def list_paths_to_tests(self) -> list[str]:
         modules = []
 
         for test in self.tests.values():
