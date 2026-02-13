@@ -68,6 +68,7 @@ api-test:
     - source ./venv/bin/activate
     - pip install .
     - ./tests/test-api.sh
+    - ./tests/test-tests-extension.sh
   artifacts:
     paths:
       - /srv/protoplaster/*
