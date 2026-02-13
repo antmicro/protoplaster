@@ -6,60 +6,15 @@ from typing import Any
 
 import yaml
 
-from protoplaster.tests.i2c.test import __file__ as i2c_test
-from protoplaster.tests.gpio.gpio.test import __file__ as gpio_test
-from protoplaster.tests.camera.test import __file__ as camera_test
-from protoplaster.tests.fpga.test import __file__ as fpga_test
-from protoplaster.tests.network.test import __file__ as network_test
-from protoplaster.tests.adc.adc.test import __file__ as adc_test
-from protoplaster.tests.adc.LTC2493.test import __file__ as LTC2493_test
-from protoplaster.tests.adc.LTC2499.test import __file__ as LTC2499_test
-from protoplaster.tests.adc.ADC12DJ3200.test import __file__ as ADC12DJ3200_test
-from protoplaster.tests.dac.dac.test import __file__ as dac_test
-from protoplaster.tests.dac.ti_dac38j8x_eyescan.test import __file__ as ti_dac38j8x_eyescan_test
-from protoplaster.tests.dac.ti_dac38j8x_spi.test import __file__ as ti_dac38j8x_spi_test
-from protoplaster.tests.memtester.test import __file__ as mem_test
-from protoplaster.tests.dac.LTC2655.test import __file__ as LTC2655_test
-from protoplaster.tests.dac.LTC2657.test import __file__ as LTC2657_test
-from protoplaster.tests.gpio.PI4IO.test import __file__ as PI4IO_test
-from protoplaster.tests.pmic.DA9062.test import __file__ as DA9062_test
-from protoplaster.tests.pmic.UCD90320U.test import __file__ as UCD90320U_test
-from protoplaster.tests.clock_controller.LMK04828.test import __file__ as LMK04828_test
-from protoplaster.tests.thermometer.TMP431.test import __file__ as TMP431_test
-from protoplaster.tests.i2c_mux.TCA9548A.test import __file__ as TCA9548A_test
-from protoplaster.tests.usb.test import __file__ as usb_test
-from protoplaster.tests.simple.test import __file__ as simple_test
-from protoplaster.tests.http_echo.test import __file__ as http_echo_test
+import protoplaster.tests
 from protoplaster.tools.tools import pr_err, pr_info, pr_warn
 
 StrPath = str | Path
 
-test_modules_paths = {
-    "i2c": i2c_test,
-    "gpio": gpio_test,
-    "camera": camera_test,
-    "fpga": fpga_test,
-    "network": network_test,
-    "adc": adc_test,
-    "LTC2493": LTC2493_test,
-    "LTC2499": LTC2499_test,
-    "ADC12DJ3200": ADC12DJ3200_test,
-    "dac": dac_test,
-    "LTC2655": LTC2655_test,
-    "LTC2657": LTC2657_test,
-    "PI4IO": PI4IO_test,
-    "memtester": mem_test,
-    "TMP431": TMP431_test,
-    "DA9062": DA9062_test,
-    "UCD90320U": UCD90320U_test,
-    "LMK04828": LMK04828_test,
-    "TCA9548A": TCA9548A_test,
-    "simple": simple_test,
-    "ti_dac38j8x_eyescan": ti_dac38j8x_eyescan_test,
-    "ti_dac38j8x_spi": ti_dac38j8x_spi_test,
-    "http_echo": http_echo_test,
-    "usb": usb_test,
-}
+test_modules_paths = {}
+tests_root = protoplaster.tests.__path__[0]
+for test_path in Path(tests_root).parent.rglob("test.py"):
+    test_modules_paths[test_path.parent.name] = str(test_path.absolute())
 
 
 def to_path(p: StrPath) -> Path:
