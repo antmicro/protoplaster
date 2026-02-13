@@ -44,4 +44,5 @@ class TestSimple:
         assert True
 
     def name(self):
-        return "simple"
+        return "simple" + (f"({self.device})"
+                           if hasattr(self, "device") else "")
