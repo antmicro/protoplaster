@@ -2,8 +2,8 @@
 
 set -e
 
-mkdir -p /srv/protoplaster/{tests,reports,artifacts}
-protoplaster --test-dir /srv/protoplaster/tests --reports-dir /srv/protoplaster/reports --artifacts-dir /srv/protoplaster/artifacts --server &
+mkdir -p srv/protoplaster/{tests,reports,artifacts}
+protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts --server &
 PROTOPLASTER_PID=$!
 
 # Wait for protoplaster server to start

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-mkdir -p /srv/protoplaster/{tests,reports,artifacts}
+mkdir -p srv/protoplaster/{tests,reports,artifacts}
 
-cat <<EOF > /srv/protoplaster/tests/test-extended.yml
+cat <<EOF > srv/protoplaster/tests/test-extended.yml
 tests:
   test:
   # check if ordinary test still works as it should
@@ -25,7 +25,7 @@ test-suites:
 EOF
 
 
-protoplaster --test-dir /srv/protoplaster/tests --reports-dir /srv/protoplaster/reports --artifacts-dir /srv/protoplaster/artifacts -t test-extended.yml --csv report.csv > /dev/null
+protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts -t test-extended.yml --csv report.csv > /dev/null
 
 cat << EOF > /tmp/check-report-regex
 ^simple\(simple\),success,[^,]+,[^,]+,,passed,
@@ -41,7 +41,7 @@ echo "report check:"
 while read -r r;do
     echo "- '$r\':"
     echo -n "-> "
-    if grep -Eq "$r" /srv/protoplaster/reports/report.csv;
+    if grep -Eq "$r" srv/protoplaster/reports/report.csv;
     then
         echo found
     else

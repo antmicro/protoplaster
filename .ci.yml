@@ -71,4 +71,4 @@ api-test:
     - ./tests/test-tests-extension.sh
   artifacts:
     paths:
-      - /srv/protoplaster/*
+      - srv/protoplaster/*
