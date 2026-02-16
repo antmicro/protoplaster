@@ -38,10 +38,25 @@ class ModuleName(object):
         self.module_name = name
 
     def __call__(self, *param_arg):
-        for name, member in inspect.getmembers(param_arg[0]):
+        # Build the members dict manually using reversed MRO and __dict__.
+        # We avoid inspect.getmembers() because it sorts alphabetically,
+        # and we want to preserve the exact order the tests were defined in the file.
+        # First, all test_metods of the derived class are executed, and then the methods of the base class
+        members = {}
+        for base_class in param_arg[0].__mro__:
+            for name in base_class.__dict__:
+                members.setdefault(name, getattr(param_arg[0], name))
+
+        for name, member in members.items():
             if (name.startswith("test") and
                 (inspect.ismethod(member) or inspect.isfunction(member))):
-                setattr(param_arg[0], name, report_device_name(member))
+                # setting attribute does not change order in __dict __ if it is already set
+                # to achive correct order we first have to delete it, and then set it again
+                try:
+                    delattr(param_arg[0], name)
+                except AttributeError:
+                    pass
+                setattr(param_arg[0], name, member)
 
         name_method = getattr(param_arg[0], "name", None)
         if not callable(name_method):
