@@ -10,8 +10,7 @@ class CsvReportGenerator:
         self.columns = columns
         self.report = []
         self.retrieve_field = {
-            "device name": (lambda item, report: dict(item.user_properties).
-                            get("device", "unknown device")),
+            "device name": (lambda item, report: item.cls.name(item.instance)),
             "test name":
             (lambda item, report: item.name.removeprefix("test_")),
             "module":

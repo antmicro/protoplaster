@@ -12,8 +12,7 @@ class LogGenerator:
     def __init__(self, log_path):
         self.report = []
         self.retrieve_field = {
-            "device_name": (lambda item, report: dict(item.user_properties).
-                            get("device", "unknown")),
+            "device_name": (lambda item, report: item.cls.name(item.instance)),
             "test_name":
             (lambda item, report: item.name.removeprefix("test_")),
             "module":
@@ -22,10 +21,7 @@ class LogGenerator:
             "duration": (lambda item, report: round(report.duration, 4)),
             "message": (lambda item, report: self.get_test_message(report)),
             "status": (lambda item, report: report.outcome),
-            "user_properties": (lambda item, report: {
-                prop[0]: prop[1]
-                for prop in report.user_properties[1:]
-            }),
+            "user_properties": (lambda item, report: report.user_properties),
         }
 
         self.keys = self.retrieve_field.keys()
