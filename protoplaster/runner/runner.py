@@ -187,6 +187,10 @@ def prepare_pytest_args(test_paths, args):
         pytest_args += f"--junitxml={args.output} "
     if args.artifacts_dir:
         pytest_args += f"--artifacts-dir={args.artifacts_dir} "
+
+    if getattr(args, 'machine_target', None):
+        pytest_args += f"--machine-target={args.machine_target} "
+
     links_to_tests = create_links_to_tests(test_paths)
 
     test_to_run = ""

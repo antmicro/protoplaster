@@ -11,10 +11,19 @@ def pytest_addoption(parser):
                      action="store",
                      type=str,
                      help="Directory where tests can store artifacts")
+    parser.addoption(
+        "--machine-target",
+        action="store",
+        type=str,
+        default=None,
+        help=
+        "Target node name assigned when triggered remotely by the orchestrator. Internal parameter used by protoplaster; do not set manually."
+    )
 
 
 @pytest.fixture(scope='class', autouse=True)
 def setup_tests(yaml_file, request):
+    request.cls.machine_target = request.config.getoption("--machine-target")
     arg_name = request.cls.module_name()
     if arg_name in yaml_file:
         conf = yaml_file[arg_name].pop(0)
