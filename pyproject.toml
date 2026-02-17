@@ -19,4 +19,4 @@ protoplaster-mgmt = 'manager.protoplaster_mgmt:main'
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.package-data]
-"*" = ["*.md", "*.css", "*.html", "*.yml", "*.svg", "*.png"]
+"*" = ["*.md", "*.css", "*.html", "*.yml", "*.svg", "*.png", "*.tcl"]

@@ -10,12 +10,13 @@ from jinja2 import DictLoader, Environment
 class EyeScan:
 
     def __init__(self, vivado_cmd: str, hw_server: str, serial_number: str,
-                 channel_path: str, prbs_bits: int) -> None:
+                 channel_path: str, prbs_bits: int, loopback: bool) -> None:
         self.eyescan_file = tempfile.NamedTemporaryFile()
         self.hw_server = hw_server
         self.serial_number = serial_number
         self.channel_path = channel_path
         self.prbs_bits = prbs_bits
+        self.loopback = loopback
 
         # Check if Vivado is available
         if shutil.which(vivado_cmd) is None:
@@ -38,6 +39,7 @@ class EyeScan:
             self.serial_number,
             self.channel_path,
             str(self.prbs_bits),
+            int(self.loopback),
         ]
         res = subprocess.run(vivado_argv,
                              cwd=os.path.dirname(__file__),

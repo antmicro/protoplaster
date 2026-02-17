@@ -1,4 +1,4 @@
-proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits } {
+proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits loopback } {
 	# Connect to the emulator
 	open_hw_manager
 	connect_hw_server -url "$hwServer"
@@ -12,9 +12,11 @@ proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits } 
 	lappend xil_newLinks $xil_newLink
 	set xil_newLinkGroup [create_hw_sio_linkgroup -description {Link Group 0} [get_hw_sio_links $xil_newLinks]]
 	unset xil_newLinks
-	# Set link to use PCS Loopback, and write to hardware
-	set_property LOOPBACK {Far-End PCS} [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
-	commit_hw_sio -non_blocking [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
+	if { $loopback } {
+		# Set link to use PCS Loopback, and write to hardware
+		set_property LOOPBACK {Far-End PCS} [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
+		commit_hw_sio -non_blocking [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
+	}
 	set_property RX_PATTERN "PRBS $prbsBits-bit" [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
 	commit_hw_sio -non_blocking [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
 	set_property TX_PATTERN "PRBS $prbsBits-bit" [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
@@ -26,7 +28,7 @@ proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits } 
 	write_hw_sio_scan $outputPath $xil_newScan
 }
 
-set requiredArgs 5
+set requiredArgs 6
 if { $argc != $requiredArgs } {
 	puts "Incorrect argument count, got $argc, expected $requiredArgs"
 	exit 1
@@ -37,5 +39,6 @@ set hwServer [lindex $argv 1]
 set serialNumber [lindex $argv 2]
 set channelPath [lindex $argv 3]
 set prbsBits [lindex $argv 4]
+set loopback [lindex $argv 5]
 
-perform_eye_scan $outputPath $serialNumber $channelPath $prbsBits
+perform_eye_scan $outputPath $hwServer $serialNumber $channelPath $prbsBits $loopback

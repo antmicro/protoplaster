@@ -33,12 +33,14 @@ class TestIbertEyescan:
 
         vivado_cmd = getattr(self, "vivado_cmd", "vivado")
         hw_server = getattr(self, "hw_server", "localhost:3121")
+        loopback = getattr(self, "loopback", True)
         if not hasattr(self, "test_name"):
             self.test_name = (
                 f"vivado_ibert eyescan: {self.prbs_bits}-bit PRBS "
-                f"on {hw_server}/{self.serial_number}/{self.channel_path}")
+                f"on {hw_server}/{self.serial_number}/{self.channel_path}, "
+                f"{'' if loopback else 'no '} loopback")
         self.eyescan = EyeScan(vivado_cmd, hw_server, self.serial_number,
-                               self.channel_path, self.prbs_bits)
+                               self.channel_path, self.prbs_bits, loopback)
 
     def test_create_diagram(self, record_artifact, artifacts_dir):
         """
