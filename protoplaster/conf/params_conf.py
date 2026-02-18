@@ -38,6 +38,16 @@ def _load_yaml_config(yaml_path):
     return res
 
 
+def pytest_configure(config):
+    """
+    Pytest hook that runs exactly once per session.
+    We load the YAML here and store it on the config object so all tests share it.
+    """
+    yaml_path = config.getoption("--yaml_file")
+    if yaml_path:
+        config._protoplaster_yaml_config = _load_yaml_config(yaml_path)
+
+
 def pytest_generate_tests(metafunc):
     """
     Pytest hook called during the test collection phase.
@@ -46,14 +56,12 @@ def pytest_generate_tests(metafunc):
     and generates multiple variations of the base function before execution.
     """
     if metafunc.cls is not None:
-        yaml_path = metafunc.config.getoption("--yaml_file")
-        if not yaml_path:
+        yaml_config = getattr(metafunc.config, "_protoplaster_yaml_config",
+                              None)
+        if not yaml_config:
             return
 
-        yaml_config = _load_yaml_config(yaml_path)
-
         # Determine the module name for the current class
-        # Assuming module_name is a @classmethod or static method on the test class
         try:
             module_name = metafunc.cls.module_name()
         except AttributeError:
@@ -61,8 +69,6 @@ def pytest_generate_tests(metafunc):
 
         if module_name in yaml_config:
             configs = yaml_config[module_name]
-            # 'scope="class"' ensures pytest treats each config as a separate class instance
-            # which forces class-scoped fixtures (like setup_tests) to re-run.
             metafunc.parametrize("test_config", configs, scope="class")
 
 
