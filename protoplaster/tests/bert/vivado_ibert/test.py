@@ -90,10 +90,9 @@ class TestIbertEyescan:
         assert min_width <= max_width, f"Invalid range: [{min_width}, {max_width}]"
         assert min_height <= max_height, f"Invalid range: [{min_height}, {max_height}]"
 
-        for sample in samples:
-            width, height = self.eyescan.get_eye_size(sample)
-            assert min_width <= width <= max_width, f"Eye width {width} is not in accepted range: [{min_width}, {max_width}]"
-            assert min_height <= height <= max_height, f"Eye height {height} is not in accepted range: [{min_height}, {max_height}]"
+        width, height = self.eyescan.get_eye_size(samples)
+        assert min_width <= width <= max_width, f"Eye width {width} is not in accepted range: [{min_width}, {max_width}]"
+        assert min_height <= height <= max_height, f"Eye height {height} is not in accepted range: [{min_height}, {max_height}]"
 
     def name(self):
         return self.test_name

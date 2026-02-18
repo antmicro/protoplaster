@@ -15,17 +15,15 @@ proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits lo
 	if { $loopback } {
 		# Set link to use PCS Loopback, and write to hardware
 		set_property LOOPBACK {Far-End PCS} [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
-		commit_hw_sio -non_blocking [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
 	}
 	set_property RX_PATTERN "PRBS $prbsBits-bit" [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
-	commit_hw_sio -non_blocking [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
 	set_property TX_PATTERN "PRBS $prbsBits-bit" [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
-	commit_hw_sio -non_blocking [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
+	commit_hw_sio [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
 	# Create, run, and save scan
-	set xil_newScan [create_hw_sio_scan -description {Scan 2} 2d_full_eye  [lindex [get_hw_sio_links $fullPath/TX->$fullPath/RX] 0 ]]
+	set xil_newScan [create_hw_sio_scan -description {Scan 0} 2d_full_eye  [lindex [get_hw_sio_links $fullPath/TX->$fullPath/RX] 0 ]]
 	run_hw_sio_scan [get_hw_sio_scans $xil_newScan]
-	wait_on_hw_sio_scan $xil_newScan
-	write_hw_sio_scan $outputPath $xil_newScan
+	wait_on_hw_sio_scan [get_hw_sio_scans $xil_newScan]
+	write_hw_sio_scan -force $outputPath [get_hw_sio_scans $xil_newScan]
 }
 
 set requiredArgs 6
