@@ -79,6 +79,7 @@ class Test(ConfigObj):
         self.body = list()
 
         custom_folder = to_path(custom_folder)
+        test_dir = to_path(test_dir)
 
         is_group = isinstance(content, dict)
         tests = content.get("tests", []) if is_group else content
@@ -95,12 +96,22 @@ class Test(ConfigObj):
                         raise ValueError(msg)
                     params["machines"] = group_machines
 
-                if not ((module_name in test_modules_paths) or (
-                    (module_path := to_path(test_dir) / module_name).exists()
-                        and load_module(module_path, module_name)) or
-                        (custom_path :=
-                         to_path(custom_folder) / module_name).exists()
-                        and load_module(custom_path, module_name)):
+                module_path = test_dir / module_name
+                custom_path = custom_folder / module_name
+
+                if module_name in test_modules_paths:
+                    # Already loaded/known
+                    pass
+                elif module_path.exists() and load_module(
+                        module_path, module_name):
+                    # Found in standard test directory and loaded
+                    pass
+                elif custom_path.exists() and load_module(
+                        custom_path, module_name):
+                    # Found in custom folder and loaded
+                    pass
+                else:
+                    # Not found anywhere
                     pr_warn(
                         f'{self.origin.name}: unknown module "{module_name}"')
                     continue
