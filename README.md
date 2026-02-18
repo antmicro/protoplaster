@@ -173,18 +173,25 @@ Required parameters:
 * `bitstream_path` - path to a test bitstream that is going to be flashed
 
 ## Writing additional modules
-Apart from base modules available in Protoplaster, you can provide your own extended modules. 
-The module should contain a `test.py` file in the root path. 
-This file should contain a test class that is decorated with `ModuleName("")` from the `protoplaster.conf.module` package.
-This decorator tells Protoplaster what the name of the module is. 
-With this information, Protoplaster can correctly initialize the test parameters. 
-The test class should contain a `name()` method. Its return value is used for the `device_name` field in CSV output.
+Apart from the base modules available in Protoplaster, you can provide your own additional modules.
 
-The description of the external module should be added to the YAML file as for other tests. 
-By default, external modules are expected in the `/etc/protoplaster` directory. 
-If you want to store them in a different path, use the `--custom-tests` argument to set your own path. 
-Individual tests run by Protoplaster should be present in the main class in the `test.py` file. 
-The class's name should start with `Test`, and every test's name in this class should also start with `test`. 
+Each custom module should follow this structure:
+```
+{module_name}/
+|- __init__.py
+|- test.py
+|- <optional helper files>
+```
+Here, `module_name` must match the name of the test module. For example, in the sample below, it would be `additional_camera`.
+
+By default, external modules are expected in the `--TEST_DIR` directory. If you want to store them elsewhere, you can use the `--custom-tests` argument to specify a custom path.
+
+The `test.py` file must define a test class decorated with `ModuleName(test_module)` from the `protoplaster.conf.module` package. This decorator specifies the name of the module, allowing Protoplaster to correctly initialize the test parameters.
+
+The test class must also implement a `name()` method, whose return value is used for the `device_name` field in the CSV output.
+
+All individual tests should be implemented within the main class in `test.py`. The class name must start with `Test`, and every test method within it must start with `test`.
+
 An example of an extended module test:
 
 ```python

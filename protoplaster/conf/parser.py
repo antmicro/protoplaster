@@ -73,12 +73,12 @@ class Test(ConfigObj):
     body: list[TestBody]
 
     def __init__(self, origin: Path, name: str, content: dict[str, Any],
-                 test_dir: StrPath, custom_path: StrPath) -> None:
+                 test_dir: StrPath, custom_folder: StrPath) -> None:
         self.name = name
         self.origin = origin
         self.body = list()
 
-        custom_path = to_path(custom_path)
+        custom_folder = to_path(custom_folder)
 
         is_group = isinstance(content, dict)
         tests = content.get("tests", []) if is_group else content
@@ -98,8 +98,9 @@ class Test(ConfigObj):
                 if not ((module_name in test_modules_paths) or (
                     (module_path := to_path(test_dir) / module_name).exists()
                         and load_module(module_path, module_name)) or
-                        (custom_path.exists()
-                         and load_module(custom_path, module_name))):
+                        (custom_path :=
+                         to_path(custom_folder) / module_name).exists()
+                        and load_module(custom_path, module_name)):
                     pr_warn(
                         f'{self.origin.name}: unknown module "{module_name}"')
                     continue
