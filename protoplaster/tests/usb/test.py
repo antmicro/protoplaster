@@ -5,7 +5,7 @@ import os
 @ModuleName("usb")
 class TestUsb:
 
-    def setup_class(self):
+    def configure(self):
         assert hasattr(self, "device"), "'device' is an obligatory argument"
         self.sysfs_path = f"/sys/bus/usb/devices/{self.device}"
 

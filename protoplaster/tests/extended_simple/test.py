@@ -9,7 +9,7 @@ class TestExtendedSimple(TestSimple):
     skipped_devices = []
     device = None
 
-    def setup_class(self):
+    def configure(self):
         assert self.device is not None, "'device' is an obligatory argument"
 
     def test_conditional_skip(self):

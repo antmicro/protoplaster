@@ -12,7 +12,7 @@ class TestLTC2493:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         self.vref = self.vref if hasattr(self, "vref") else 5
         self.adc = LTC2493(self.bus, self.address, self.vref)
 

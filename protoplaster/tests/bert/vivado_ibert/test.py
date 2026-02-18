@@ -15,7 +15,7 @@ class TestIbertEyescan:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         assert hasattr(
             self,
             "serial_number"), "`serial_number` test attribute is required"

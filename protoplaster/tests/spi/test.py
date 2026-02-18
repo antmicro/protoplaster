@@ -13,7 +13,7 @@ class TestSPI:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         self.spi = SPI(self.bus, self.device)
 
     def test_loopback(self):

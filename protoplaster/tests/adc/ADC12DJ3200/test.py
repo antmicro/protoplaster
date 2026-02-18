@@ -12,7 +12,7 @@ class TestAdc12Dj3200:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         self.adc = ADC12DJ3200(self.bus, self.device)
 
     def test_default_values(self):

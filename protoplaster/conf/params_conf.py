@@ -1,4 +1,5 @@
 import pytest
+import inspect
 import yaml
 
 
@@ -86,6 +87,14 @@ def setup_tests(request, test_config):
     conf = test_config
     for key in conf:
         setattr(request.cls, key, conf[key])
+
+    if hasattr(request.cls, "configure"):
+        func = getattr(request.cls, "configure")
+
+        if inspect.ismethod(func):
+            func()
+        else:
+            func(request.cls)
 
 
 @pytest.fixture

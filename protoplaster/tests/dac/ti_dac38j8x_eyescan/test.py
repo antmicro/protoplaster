@@ -15,7 +15,7 @@ class TestTiDac38j8xEyescan:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         assert hasattr(self,
                        "ftdi_dev"), "`ftdi_dev` test attribute is required"
         assert hasattr(self, "bit"), "`bit` test attribute is required"

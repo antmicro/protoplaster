@@ -13,7 +13,7 @@ class TestDA9062:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         self.current_selections = getattr(self, "current_selections", [])
         self.current_voltages = getattr(self, "current_voltages", [])
         self.smbus_force = getattr(self, "smbus_force", False)

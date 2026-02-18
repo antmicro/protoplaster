@@ -12,7 +12,7 @@ class TestDMA:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         if not hasattr(self, "device"):
             self.device = None
         if not hasattr(self, "physaddr"):

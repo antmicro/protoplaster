@@ -14,7 +14,7 @@ class TestGPIO:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         self.gpio_name = self.gpio_name if hasattr(self, "gpio_name") else None
 
     def test_read_write(self):

@@ -12,7 +12,7 @@ class TestTiDac38j8xSpi:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         self.dac = DAC38J8x(self.bus, self.device)
 
     def test_config127_value(self):

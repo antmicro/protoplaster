@@ -13,7 +13,7 @@ class TestLTC2657:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         self.vref = self.vref if hasattr(self, "vref") else 5
         self.N = self.N if hasattr(self, "N") else 16
         self.adc = LTC2657(self.bus, self.address, self.vref, self.N)

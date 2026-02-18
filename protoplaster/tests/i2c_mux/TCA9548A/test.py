@@ -15,7 +15,7 @@ class TestTCA9548A:
 
     mask_after_reset = 0x0
 
-    def setup_class(self):
+    def configure(self):
         self.smbus_force = getattr(self, "smbus_force", False)
         self.reset_gpio = getattr(self, "reset_gpio", None)
         self.mux = TCA9548A(self.i2c_bus,

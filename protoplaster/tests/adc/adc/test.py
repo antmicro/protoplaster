@@ -12,7 +12,7 @@ class TestADC:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         self.adc = ADC(self.sysfs_path)
 
     def test_is_alive(self):

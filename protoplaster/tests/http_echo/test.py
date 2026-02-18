@@ -45,7 +45,7 @@ def start_server(port=8000):
 @ModuleName("http_echo")
 class TestEcho(BaseTest):
 
-    def setup_class(self):
+    def configure(self):
         assert hasattr(self, "dev1"), "dev1 parameter required in yaml"
         assert hasattr(self, "dev2"), "dev2 parameter required in yaml"
         self.test_string = getattr(self, "test_string", "Hello World!")

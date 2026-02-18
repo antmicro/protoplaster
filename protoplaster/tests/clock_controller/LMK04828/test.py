@@ -12,7 +12,7 @@ class TestLmk04828:
     {%- endmacro %}
     """
 
-    def setup_class(self):
+    def configure(self):
         self.clk = LMK04828(self.bus, self.device)
 
     def test_default_values(self):
