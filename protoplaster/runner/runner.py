@@ -134,44 +134,6 @@ def generate_docs(tests_full_path, yaml_content):
     generate_rst_doc(tests_doc_list, templates)
 
 
-def create_links_to_tests(paths_to_tests):
-    """
-    Creates symlinks for the given test files under 'symlinks/{test_index}'.
-
-    This is a workaround to force pytest to collect the same test class
-    multiple times. Pytest normally executes `setup_class` only once when
-    the same class is selected multiple times using identical node IDs,
-    for example:
-
-        pytest protoplaster/test.py::TestClassA \
-               protoplaster/test.py::TestClassA
-
-    By creating symlinks, each test file gets a different path, which
-    results in different node IDs, for example:
-
-        pytest protoplaster/symlinks/1/test.py::TestClassA \
-               protoplaster/symlinks/2/test.py::TestClassA
-
-    This forces pytest to treat them as separate test classes and execute
-    `setup_class` for each instance.
-
-    The directory structure relative to the project root is preserved.
-    """
-    protoplaster_dir = Path(protoplaster_root).parent
-    symlinks_dir = protoplaster_dir / "symlinks"
-    symlinks_dir.mkdir(exist_ok=True)
-
-    links_to_test = []
-    for i, path_to_test in enumerate(paths_to_tests):
-        relative_path = Path(path_to_test).relative_to(protoplaster_dir)
-        link_path = (symlinks_dir / str(i))
-        if not link_path.exists():
-            link_path.symlink_to(protoplaster_dir, target_is_directory=True)
-        link_to_test = link_path / relative_path
-        links_to_test.append(link_to_test)
-    return links_to_test
-
-
 def extract_class_names(path):
     with open(path, "r", encoding="utf-8") as f:
         tree = ast.parse(f.read())
@@ -191,10 +153,10 @@ def prepare_pytest_args(test_paths, args):
     if getattr(args, 'machine_target', None):
         pytest_args += f"--machine-target={args.machine_target} "
 
-    links_to_tests = create_links_to_tests(test_paths)
-
+    unique_tests = set()
     test_to_run = ""
-    for test_path, link_to_test in zip(test_paths, links_to_tests):
+
+    for test_path in test_paths:
         classes = extract_class_names(test_path)
         if len(classes) == 0:
             pr_warn(f"'{test_path}' has not class to test")
@@ -204,7 +166,13 @@ def prepare_pytest_args(test_paths, args):
             pr_warn(
                 f"'{test_path}' has more that one class to test. Choosing first one: '{test_class}'"
             )
-        test_to_run += f" {link_to_test}::{test_class}"
+
+        # Deduplicate based on the specific class in the file
+        key = f"{test_path}::{test_class}"
+        if key not in unique_tests:
+            unique_tests.add(key)
+            test_to_run += f" {key}"
+
     pytest_args = test_to_run + pytest_args
     return pytest_args.strip().split(" ")
 

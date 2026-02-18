@@ -21,19 +21,8 @@ def pytest_addoption(parser):
     )
 
 
-@pytest.fixture(scope='class', autouse=True)
-def setup_tests(yaml_file, request):
-    request.cls.machine_target = request.config.getoption("--machine-target")
-    arg_name = request.cls.module_name()
-    if arg_name in yaml_file:
-        conf = yaml_file[arg_name].pop(0)
-        for key in conf:
-            setattr(request.cls, key, conf[key])
-
-
-@pytest.fixture(scope='session')
-def yaml_file(request):
-    with open(request.config.getoption("--yaml_file")) as file:
+def _load_yaml_config(yaml_path):
+    with open(yaml_path) as file:
         content = yaml.safe_load(file)
     res = {}
     for group_key in content:
@@ -47,6 +36,50 @@ def yaml_file(request):
             if "__path__" in res[mod][i]:
                 res[mod][i] = res[mod][i]["tests"]
     return res
+
+
+def pytest_generate_tests(metafunc):
+    """
+    Pytest hook called during the test collection phase.
+
+    Pytest calls this hook once for every test function/method it collects,
+    and generates multiple variations of the base function before execution.
+    """
+    if metafunc.cls is not None:
+        yaml_path = metafunc.config.getoption("--yaml_file")
+        if not yaml_path:
+            return
+
+        yaml_config = _load_yaml_config(yaml_path)
+
+        # Determine the module name for the current class
+        # Assuming module_name is a @classmethod or static method on the test class
+        try:
+            module_name = metafunc.cls.module_name()
+        except AttributeError:
+            return
+
+        if module_name in yaml_config:
+            configs = yaml_config[module_name]
+            # 'scope="class"' ensures pytest treats each config as a separate class instance
+            # which forces class-scoped fixtures (like setup_tests) to re-run.
+            metafunc.parametrize("test_config", configs, scope="class")
+
+
+@pytest.fixture(scope='class', autouse=True)
+def setup_tests(request, test_config):
+    """
+    Setup the test class with the specific configuration for this run.
+    The 'test_config' argument is injected by pytest_generate_tests.
+
+    This includes logic to clear the modified class/function state (self)
+    during teardown. This is a workaround for the Pytest class singleton.
+    """
+    request.cls.machine_target = request.config.getoption("--machine-target")
+
+    conf = test_config
+    for key in conf:
+        setattr(request.cls, key, conf[key])
 
 
 @pytest.fixture
