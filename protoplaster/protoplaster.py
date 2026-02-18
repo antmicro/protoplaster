@@ -167,6 +167,10 @@ def load_external_devices(args):
 
 
 def run_http_server(args):
+    if args.custom_tests and os.path.isdir(args.custom_tests):
+        sys.path.append(os.path.abspath(args.custom_tests))
+        print(info(f"Added custom tests dir to path: {args.custom_tests}"))
+
     if not args.dut:
         protoplaster.webui.devices.add_device(LOCAL_DEVICE_NAME,
                                               f"http://127.0.0.1:{args.port}")
