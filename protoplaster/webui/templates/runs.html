@@ -116,12 +116,12 @@
 <!-- Test Details Modal -->
 <div class="modal fade" id="testDetailsModal" tabindex="-1" aria-labelledby="testDetailsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl">
-    <div class="modal-content">
+    <div class="modal-content d-flex flex-column" style="max-height:95vh; max-width:90vw;">
       <div class="modal-header">
         <h5 class="modal-title" id="testDetailsModalLabel">Test Run Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body d-flex flex-column flex-grow-1" style="overflow:hidden;">
         <dl class="row">
           <dt class="col-sm-3">Run ID</dt><dd class="col-sm-9" id="detail-id">-</dd>
           <dt class="col-sm-3">Config</dt><dd class="col-sm-9" id="detail-config">-</dd>
@@ -134,7 +134,7 @@
           <li class="list-group-item text-muted">No artifacts</li>
         </ul>
         <h6>Test Results</h6>
-        <div class="table-responsive border rounded mb-3">
+        <div class="flex-grow-1 overflow-auto border rounded mb-3">
           <div id="results-container"></div>
         </div>
         <div class="text-end">
