@@ -28,12 +28,12 @@ EOF
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts -t test-extended.yml --csv report.csv > /dev/null
 
 cat << EOF > /tmp/check-report-regex
-^simple\(simple\),success,[^,]+,[^,]+,,passed,
-^simple\(simple\),failure,[^,]+,[^,]+,[^,]+,failed,
-^simple\(simple\),conditional_skip,[^,]+,[^,]+,,passed,
-^simple\(simple\),record_artifact,[^,]+,[^,]+,,passed,
-^extended_simple\(skip\),conditional_skip,[^,]+,[^,]+,Skipped,skipped,
-^extended_simple\(extended\),conditional_skip,[^,]+,[^,]+,Skipped: [^,]+,skipped,
+^simple\(simple\),success\[[^]]+\],[^,]+,[^,]+,,passed,
+^simple\(simple\),failure\[[^]]+\],[^,]+,[^,]+,[^,]+,failed,
+^simple\(simple\),conditional_skip\[[^]]+\],[^,]+,[^,]+,,passed,
+^simple\(simple\),record_artifact\[[^]]+\],[^,]+,[^,]+,,passed,
+^extended_simple\(skip\),conditional_skip\[[^]]+\],[^,]+,[^,]+,Skipped,skipped,
+^extended_simple\(extended\),conditional_skip\[[^]]+\],[^,]+,[^,]+,Skipped: [^,]+,skipped,
 EOF
 
 exit_code=0
