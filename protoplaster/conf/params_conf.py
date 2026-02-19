@@ -74,6 +74,36 @@ def pytest_generate_tests(metafunc):
             metafunc.parametrize("test_config", configs, scope="class")
 
 
+def save_class_state(cls):
+    """Save the original state of the class."""
+    original_state = {}
+    for k, v in cls.__dict__.items():
+        if k not in ('__dict__', '__weakref__'):
+            try:
+                original_state[k] = copy.deepcopy(v)
+            except TypeError:
+                # fallback if the object cannot be deepcopied (i.e: staticmethods)
+                original_state[k] = v
+    return original_state
+
+
+def restore_class_state(cls, original_state):
+    """Restore the class to its original state."""
+    for key in list(cls.__dict__.keys()):
+        if key not in original_state and key not in ('__dict__',
+                                                     '__weakref__'):
+            try:
+                delattr(cls, key)
+            except AttributeError:
+                pass
+
+    for key, value in original_state.items():
+        try:
+            setattr(cls, key, value)
+        except AttributeError:
+            pass
+
+
 @pytest.fixture(scope='class', autouse=True)
 def setup_tests(request, test_config):
     """
@@ -84,14 +114,7 @@ def setup_tests(request, test_config):
     during teardown. This is a workaround for the Pytest class singleton.
     """
     # save the original class state before modifying it
-    original_state = {}
-    for k, v in request.cls.__dict__.items():
-        if k not in ('__dict__', '__weakref__'):
-            try:
-                original_state[k] = copy.deepcopy(v)
-            except TypeError:
-                # fallback if the object cannot be deepcopied (i.e: staticmethods)
-                original_state[k] = v
+    original_state = save_class_state(request.cls)
 
     request.cls.machine_target = request.config.getoption("--machine-target")
     conf = test_config
@@ -110,19 +133,7 @@ def setup_tests(request, test_config):
     yield
 
     # restore original state
-    for key in list(request.cls.__dict__.keys()):
-        if key not in original_state and key not in ('__dict__',
-                                                     '__weakref__'):
-            try:
-                delattr(request.cls, key)
-            except AttributeError:
-                pass
-
-    for key, value in original_state.items():
-        try:
-            setattr(request.cls, key, value)
-        except AttributeError:
-            pass
+    restore_class_state(request.cls, original_state)
 
 
 @pytest.fixture
