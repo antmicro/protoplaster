@@ -32,9 +32,15 @@ class ModuleName(object):
                     pass
                 setattr(test_class, name, member)
 
+        if hasattr(test_class, "setup_class"):
+            raise TypeError(
+                f"Class '{test_class.__name__}' must not use setup_class(). Use configure() instead."
+            )
+
         name_method = getattr(test_class, "name", None)
         if not callable(name_method):
-            raise TypeError("Class is missing name() method")
+            raise TypeError(
+                f"Class '{test_class.__name__}' is missing name() method")
 
         @staticmethod
         def module_name():
