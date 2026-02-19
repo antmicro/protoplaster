@@ -20,8 +20,11 @@ class TestGPIO:
     def test_read_write(self):
         """
         {% macro test_read_write(device) -%}
-          - write `{{ device['value'] }}` and read back to confirm (if `write` is enabled, default: no)
-          - otherwise, read the input value and confirm it is `{{ device['value'] }}`
+          {%- if device['write'] -%}
+          write `{{ device['value'] }}` and read back to confirm
+          {% else -%}
+          read the input value and confirm it is `{{ device['value'] }}`
+          {%- endif %}
         {%- endmacro %}
         """
         if getattr(self, "write", False):

@@ -19,7 +19,7 @@ class TestCamera:
         """
         {% macro test_frame(device) -%}
           try to capture frame
-          {%- if device['save_file'] is defined -%}
+          {%- if device['save_file'] is defined %}
             and store it to `{{ device['save_file'] }}` file
           {%- endif %}
         {%- endmacro %}
