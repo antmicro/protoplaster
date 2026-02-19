@@ -1,6 +1,7 @@
 import pytest
 import inspect
 import yaml
+import copy
 
 
 def pytest_addoption(parser):
@@ -82,8 +83,17 @@ def setup_tests(request, test_config):
     This includes logic to clear the modified class/function state (self)
     during teardown. This is a workaround for the Pytest class singleton.
     """
-    request.cls.machine_target = request.config.getoption("--machine-target")
+    # save the original class state before modifying it
+    original_state = {}
+    for k, v in request.cls.__dict__.items():
+        if k not in ('__dict__', '__weakref__'):
+            try:
+                original_state[k] = copy.deepcopy(v)
+            except TypeError:
+                # fallback if the object cannot be deepcopied (i.e: staticmethods)
+                original_state[k] = v
 
+    request.cls.machine_target = request.config.getoption("--machine-target")
     conf = test_config
     for key in conf:
         setattr(request.cls, key, conf[key])
@@ -95,6 +105,24 @@ def setup_tests(request, test_config):
             func()
         else:
             func(request.cls)
+
+    # execute tests
+    yield
+
+    # restore original state
+    for key in list(request.cls.__dict__.keys()):
+        if key not in original_state and key not in ('__dict__',
+                                                     '__weakref__'):
+            try:
+                delattr(request.cls, key)
+            except AttributeError:
+                pass
+
+    for key, value in original_state.items():
+        try:
+            setattr(request.cls, key, value)
+        except AttributeError:
+            pass
 
 
 @pytest.fixture
