@@ -11,6 +11,7 @@ class TestExtendedSimple(TestSimple):
 
     def configure(self):
         assert self.device is not None, "'device' is an obligatory argument"
+        super().configure(self)
 
     def test_conditional_skip(self):
         """

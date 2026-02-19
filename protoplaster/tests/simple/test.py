@@ -14,6 +14,10 @@ class TestSimple:
     This module provides simple dummy tests:
     {%- endmacro %}
     """
+    counter = 0
+
+    def configure(self):
+        self.counter += 1
 
     def test_success(self):
         """
@@ -53,6 +57,15 @@ class TestSimple:
         record_artifact(filename)
 
         assert True
+
+    def test_configure_runs_once(self):
+        """
+        Test that asserts `configure` has been executed and the class state
+        is correctly initialized for the current test run.
+        """
+        assert type(
+            self
+        ).counter == 1, f"configure was run {type(self).counter} times!"
 
     def name(self):
         return "simple" + (f"({self.device})"
