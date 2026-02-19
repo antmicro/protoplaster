@@ -72,3 +72,4 @@ api-test:
   artifacts:
     paths:
       - srv/protoplaster/*
+    when: always
