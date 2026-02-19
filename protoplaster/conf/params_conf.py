@@ -61,7 +61,8 @@ def pytest_generate_tests(metafunc):
         yaml_config = getattr(metafunc.config, "_protoplaster_yaml_config",
                               None)
         if not yaml_config:
-            return
+            raise AttributeError(
+                f"{yaml_config=}, is _protoplaster_yaml_config set?")
 
         # Determine the module name for the current class
         try:
