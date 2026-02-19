@@ -73,15 +73,14 @@ def generate_rst_doc(tests_doc_list, docs_dict):
 def generate_docs(tests_full_path, yaml_content):
     tests_doc_list = []
     templates = {}
+    mod_testcls = {}
+    method_macros = {}
 
     with open(f"{os.path.dirname(docs_path)}/{TOP_LEVEL_TEMPLATE_PATH}",
               "r") as jinja2_doc:
         templates[TOP_LEVEL_TEMPLATE_PATH] = jinja2_doc.read()
 
     for test_path in tests_full_path:
-        module_details = []
-        method_macros = []
-
         # collect docstrings from tests
         py_file = Path(test_path)
         raw_tree = py_file.read_text()
@@ -111,28 +110,29 @@ def generate_docs(tests_full_path, yaml_content):
                 function_doc = ast.get_docstring(func)
                 if function_doc is None:
                     print(
-                        error(f'Docstring for the "{func.name}" function ' +
-                              'is not defined - Exiting!'))
+                        error(
+                            f'Docstring for the "{func.name}" function ' +
+                            f'in class {tests_class.name} is not defined - Exiting!'
+                        ))
                     sys.exit(4)
                 elif func.name not in function_doc:
                     print(
                         error(
                             f'Macro in the docstring for the "{func.name}" ' +
-                            'function should have the same name as function ' +
-                            '- Exiting!'))
+                            f'function in class "{tests_class.name}" should ' +
+                            'have the same name as function - Exiting!'))
                     sys.exit(5)
                 templates[tests_class.name] += function_doc
-                method_macros.append(func.name)
-            # collect data from yaml file
-            for test_group in yaml_content:
-                for test_module in yaml_content[test_group]:
-                    module = test_path.split("/")
-                    if module[-2] == test_module:
-                        module_details.append(
-                            yaml_content[test_group][test_module])
-
-            test_doc = TestDocs(tests_class.name, module_details,
-                                method_macros)
+                method_macros.setdefault(tests_class.name,
+                                         []).append(func.name)
+            # map module names to test class names
+            mod_testcls[test_path.split("/")[-2]] = tests_class.name
+    # collect data from yaml file
+    for test_group in yaml_content:
+        for test_module in yaml_content[test_group]:
+            mod_name, mod_conf = next(iter(test_module.items()))
+            cls_name = mod_testcls[mod_name]
+            test_doc = TestDocs(cls_name, mod_conf, method_macros[cls_name])
             tests_doc_list.append(test_doc)
     generate_rst_doc(tests_doc_list, templates)
 
