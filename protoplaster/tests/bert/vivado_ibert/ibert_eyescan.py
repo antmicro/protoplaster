@@ -17,6 +17,7 @@ class EyeScan:
         self.channel_path = channel_path
         self.prbs_bits = prbs_bits
         self.loopback = loopback
+        self.report_file = tempfile.NamedTemporaryFile(suffix=".report")
 
         # Check if Vivado is available
         if shutil.which(vivado_cmd) is None:
@@ -40,6 +41,7 @@ class EyeScan:
             self.channel_path,
             str(self.prbs_bits),
             str(self.loopback),
+            self.report_file.name,
         ]
         res = subprocess.run(vivado_argv,
                              cwd=os.path.dirname(__file__),
@@ -103,6 +105,13 @@ class EyeScan:
     def get_eyescan_file_path(self) -> str:
         return self.eyescan_file.name
 
+    def get_report_file_path(self) -> str:
+        return self.report_file.name
+
+    def read_report_file(self) -> str:
+        with open(self.report_file.name) as report_file:
+            return report_file.read()
+
     def get_eye_size(self, sample: list[dict]) -> tuple[int, int]:
         min_value = min(pixel["amp"] for pixel in sample)
         eye_pixels = [pixel for pixel in sample if pixel["amp"] != min_value]
@@ -117,3 +126,18 @@ class EyeScan:
         else:
             height = 0
         return (width, height)
+
+    def get_entry_from_report(self, entry) -> str | None:
+        with open(self.report_file.name, "r") as report_file:
+            for report_line in report_file:
+                found_line_splitted = report_line.strip().split(f"{entry}=")
+                if len(found_line_splitted) == 2:
+                    _, entry_value = found_line_splitted
+                    return entry_value
+        return None
+
+    def get_transceiver_status(self) -> str | None:
+        return self.get_entry_from_report("TRANSCEIVER_STATUS")
+
+    def get_line_rate(self) -> str | None:
+        return self.get_entry_from_report("LINE_RATE")

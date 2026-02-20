@@ -1,5 +1,6 @@
 import os
 import shutil
+import pytest
 
 from protoplaster.conf.module import ModuleName
 from .ibert_eyescan import EyeScan
@@ -42,6 +43,37 @@ class TestIbertEyescan:
         self.eyescan = EyeScan(vivado_cmd, hw_server, self.serial_number,
                                self.channel_path, self.prbs_bits, loopback)
 
+    def test_transceiver_status(self):
+        """
+        {% macro test_transceiver_status(device) -%}
+            check if the transceiver link is correctly established via verifying STATUS property
+        {%- endmacro %}
+        """
+        status = self.eyescan.get_transceiver_status()
+        if status is None:
+            pytest.fail("Cannot retrieve transmitter status")
+
+        assert status != "NO LINK", \
+              "Transceiver link is not established."
+
+    def test_line_rate(self):
+        """
+        {% macro test_line_rate(device) -%}
+          {%- if device['line_rate'] is defined %}
+            assert line_rate is equal to `{{ device['line_rate'] }}`
+          {%- endif -%}
+        {%- endmacro %}
+        """
+        expected_line_rate = getattr(self, "line_rate", None)
+        if expected_line_rate is None:
+            pytest.skip("`line_rate` test property is not set")
+
+        line_rate = self.eyescan.get_line_rate()
+        if line_rate is None:
+            pytest.fail(f"`LINE_RATE` entry cannot be find in a report file.")
+
+        assert line_rate == expected_line_rate, f"Expected `rate_line`: {expected_line_rate}, Actual: {line_rate}"
+
     def test_create_diagram(self, record_artifact, artifacts_dir):
         """
         {% macro test_create_diagram(device) -%}
@@ -64,6 +96,11 @@ class TestIbertEyescan:
             file.write(diagram)
 
         record_artifact(self.eyescan_diagram)
+
+        eyescan_report_file = self.eyescan_diagram + ".report"
+        eyescan_report_path = os.path.join(artifacts_dir, eyescan_report_file)
+        with open(eyescan_report_path, "w") as file:
+            file.write(self.eyescan.read_report_file())
 
     def test_eye_size(self):
         """

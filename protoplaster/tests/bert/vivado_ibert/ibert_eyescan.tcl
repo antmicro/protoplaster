@@ -1,4 +1,4 @@
-proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits loopback } {
+proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits loopback reportFile } {
 	# Connect to the emulator
 	open_hw_manager
 	connect_hw_server -url "$hwServer"
@@ -19,6 +19,16 @@ proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits lo
 	set_property RX_PATTERN "PRBS $prbsBits-bit" [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
 	set_property TX_PATTERN "PRBS $prbsBits-bit" [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
 	commit_hw_sio [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
+
+	set link_obj [lindex [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]] 0]
+	set line_rate [get_property LINE_RATE $link_obj]
+	set status [get_property STATUS $link_obj]
+
+	set fid [open $reportFile "w"]
+	puts $fid "LINE_RATE=$line_rate"
+	puts $fid "TRANSCEIVER_STATUS=$status"
+	close $fid
+
 	# Create, run, and save scan
 	set xil_newScan [create_hw_sio_scan -description {Scan 0} 2d_full_eye  [lindex [get_hw_sio_links $fullPath/TX->$fullPath/RX] 0 ]]
 	run_hw_sio_scan [get_hw_sio_scans $xil_newScan]
@@ -26,7 +36,7 @@ proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits lo
 	write_hw_sio_scan -force $outputPath [get_hw_sio_scans $xil_newScan]
 }
 
-set requiredArgs 6
+set requiredArgs 7
 if { $argc != $requiredArgs } {
 	puts "Incorrect argument count, got $argc, expected $requiredArgs"
 	exit 1
@@ -38,5 +48,6 @@ set serialNumber [lindex $argv 2]
 set channelPath [lindex $argv 3]
 set prbsBits [lindex $argv 4]
 set loopback [lindex $argv 5]
+set reportFile [lindex $argv 6]
 
-perform_eye_scan $outputPath $hwServer $serialNumber $channelPath $prbsBits $loopback
+perform_eye_scan $outputPath $hwServer $serialNumber $channelPath $prbsBits $loopback $reportFile
