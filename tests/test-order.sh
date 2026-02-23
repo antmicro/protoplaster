@@ -4,7 +4,7 @@ mkdir -p srv/protoplaster/{tests,reports,artifacts}
 
 cat <<EOF > srv/protoplaster/tests/test-execution-order.yml
 tests:
-  test:
+  bbb:
   - simple:
       device: "foo"
   - network:
@@ -13,10 +13,18 @@ tests:
       device: "bar"
   - network:
       interface: "eth1"
+  aaa:
+  - network:
+      interface: "eth222"
+  - simple:
+      device: "buz"
+  - network:
+      interface: "eth333"
 test-suites:
   local:
     tests:
-    - test
+    - foo
+    - baz
 EOF
 
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts -t test-execution-order.yml --csv report.csv > /dev/null
@@ -28,6 +36,9 @@ simple(foo)
 eth0
 simple(bar)
 eth1
+eth222
+simple(buz)
+eth333
 EOF
 
 exit_code=0

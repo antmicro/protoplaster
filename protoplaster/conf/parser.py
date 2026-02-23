@@ -348,6 +348,6 @@ class TestFile:
         test_file = tempfile.NamedTemporaryFile("w",
                                                 suffix=".yml",
                                                 prefix="protoplaster-")
-        yaml.safe_dump(test_runner_fmt, test_file)
+        yaml.safe_dump(test_runner_fmt, test_file, sort_keys=False)
 
         return test_file
