@@ -27,16 +27,22 @@ def _load_yaml_config(yaml_path):
     with open(yaml_path) as file:
         content = yaml.safe_load(file)
     res = {}
+    execution_order = 0
     for group_key in content:
         for mod in content[group_key]:
             # convert {"key": {...}} to tuple ("key", {...})
             mod_name, mod_conf = next(iter(mod.items()))
             res.setdefault(mod_name, [])
+            # store the intended execution order
+            mod_conf["_execution_order"] = execution_order
+            execution_order += 1
             res[mod_name].append(mod_conf)
     for mod in res:
         for i in range(len(res[mod])):
             if "__path__" in res[mod][i]:
+                order = res[mod][i].get("_execution_order")
                 res[mod][i] = res[mod][i]["tests"]
+                res[mod][i]["_execution_order"] = order
     return res
 
 
@@ -135,6 +141,21 @@ def setup_tests(request, test_config):
 
     # restore original state
     restore_class_state(request.cls, original_state)
+
+
+def pytest_collection_modifyitems(items):
+    """
+    Pytest hook to sort the collected tests so they execute
+    in the exact order specified in the YAML file.
+    """
+
+    def get_execution_order(item):
+        if hasattr(item, "callspec") and "test_config" in item.callspec.params:
+            conf = item.callspec.params["test_config"]
+            return conf.get("_execution_order", float('inf'))
+        return float('inf')
+
+    items.sort(key=get_execution_order)
 
 
 @pytest.fixture
