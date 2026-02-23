@@ -69,6 +69,7 @@ api-test:
     - pip install .
     - ./tests/test-api.sh
     - ./tests/test-tests-extension.sh
+    - ./tests/test-order.sh
   artifacts:
     paths:
       - srv/protoplaster/*
