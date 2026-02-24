@@ -3,6 +3,7 @@ import shutil
 
 from protoplaster.conf.module import ModuleName
 from .process_eyescan import EyeScan
+from eyescan.instructions import TestPattern
 
 
 @ModuleName("ti_dac38j8x_eyescan")
@@ -16,8 +17,6 @@ class TestTiDac38j8xEyescan:
     """
 
     def configure(self):
-        assert hasattr(self,
-                       "ftdi_dev"), "`ftdi_dev` test attribute is required"
         assert hasattr(self, "bit"), "`bit` test attribute is required"
         assert hasattr(
             self,
@@ -26,7 +25,43 @@ class TestTiDac38j8xEyescan:
             self,
             "eyescan_diagram"), "`eyescan_diagram` test attribute is required"
 
-        self.eyescan = EyeScan(self.ftdi_dev, self.bit)
+        def parse_test_pattern(pattern):
+            try:
+                return TestPattern[pattern]
+            except KeyError:
+                raise ValueError(
+                    f"{pattern} is not a valid test pattern ({[str(i) for i in TestPattern]})"
+                )
+
+        if not hasattr(self, "ftdi_jtag_frequency"):
+            setattr(self, "ftdi_jtag_frequency", 1E5)
+        if not hasattr(self, "ftdi_direction"):
+            setattr(self, "ftdi_direction", 0x308B)
+        if not hasattr(self, "ftdi_initial_value"):
+            setattr(self, "ftdi_initial_value", 0x2088)
+        if not hasattr(self, "ftdi_reset_bit"):
+            setattr(self, "ftdi_reset_bit", 0x2000)
+        if not hasattr(self, "daisy_chain_count"):
+            setattr(self, "daisy_chain_count", 1)
+        if not hasattr(self, "daisy_chain_number"):
+            setattr(self, "daisy_chain_number", 1)
+        if not hasattr(self, "pyftdi_url"):
+            setattr(self, "pyftdi_url", "ftdi:///1")
+        if not hasattr(self, "test_pattern"):
+            setattr(self, "test_pattern", TestPattern.PRBS_7_BIT)
+        else:
+            self.test_pattern = parse_test_pattern(self.test_pattern)
+
+        self.eyescan = EyeScan(
+            pyftdi_url=self.pyftdi_url,
+            ftdi_jtag_frequency=self.ftdi_jtag_frequency,
+            ftdi_direction=self.ftdi_direction,
+            ftdi_initial_value=self.ftdi_initial_value,
+            ftdi_reset_bit=self.ftdi_reset_bit,
+            daisy_chain_device_number=self.daisy_chain_number,
+            daisy_chain_device_count=self.daisy_chain_count,
+            bit=self.bit,
+            test_pattern=self.test_pattern)
 
     def test_create_diagram(self, record_artifact, artifacts_dir):
         """

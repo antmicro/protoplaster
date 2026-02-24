@@ -9,6 +9,7 @@ from jinja2 import Environment, DictLoader
 TI_DAC38J8X_EYESCAN_LIBRARY = False
 try:
     from eyescan.eyescan import perform_eyescan
+    from eyescan.instructions import TestPattern
     TI_DAC38J8X_EYESCAN_LIBRARY = True
 except OSError:
     print(
@@ -18,7 +19,11 @@ except OSError:
 
 class EyeScan:
 
-    def __init__(self, ftdi_dev: int, bit: int) -> None:
+    def __init__(self, pyftdi_url: str, ftdi_jtag_frequency: float,
+                 ftdi_direction: int, ftdi_initial_value: int,
+                 ftdi_reset_bit: int, daisy_chain_device_number: int,
+                 daisy_chain_device_count: int, bit: int,
+                 test_pattern: TestPattern) -> None:
         self.eyescan_file = tempfile.NamedTemporaryFile()
         self.axis_multiplier = {"x": 1, "y": 10}
         self.bit = bit
@@ -26,7 +31,16 @@ class EyeScan:
         # Check if the eyescan library is available
         assert TI_DAC38J8X_EYESCAN_LIBRARY, "TI DAC38J8X eyescan library is not available."
 
-        perform_eyescan(ftdi_dev, self.eyescan_file.name, bit)
+        perform_eyescan(pyftdi_url=pyftdi_url,
+                        ftdi_jtag_frequency=ftdi_jtag_frequency,
+                        ftdi_direction=ftdi_direction,
+                        ftdi_initial_value=ftdi_initial_value,
+                        ftdi_reset_bit=ftdi_reset_bit,
+                        daisy_chain_device_number=daisy_chain_device_number,
+                        daisy_chain_device_count=daisy_chain_device_count,
+                        output_path=self.eyescan_file.name,
+                        bit_number=bit,
+                        test_pattern=test_pattern)
 
     def parse_file(self) -> list[dict]:
         samples_by_lane = defaultdict(lambda: defaultdict(list))
