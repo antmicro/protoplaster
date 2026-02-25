@@ -119,4 +119,4 @@ class TestTiDac38j8xEyescan:
             assert min_height <= height <= max_height, f"Eye height {height} is not in accepted range: [{min_height}, {max_height}]"
 
     def name(self):
-        return "eyescan"
+        return "eyescan-" + str(self.daisy_chain_number)
