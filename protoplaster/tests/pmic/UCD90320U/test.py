@@ -13,15 +13,17 @@ class TestUCD90320U:
     {%- endmacro %}
     """
 
+    def configure(self):
+        self.smbus_force = getattr(self, "smbus_force", False)
+        self.pmic = UCD90320U(self.bus, self.address, self.smbus_force)
+
     def test_is_alive(self):
         """
         {% macro test_is_alive(device) -%}
           check if UCD90320U responds correctly to simple requests
         {%- endmacro %}
         """
-        self.smbus_force = getattr(self, "smbus_force", False)
-        pmic = UCD90320U(self.bus, self.address, self.smbus_force)
-        assert pmic.is_alive(), "UCD90320U does not respond correctly"
+        assert self.pmic.is_alive(), "UCD90320U does not respond correctly"
 
     def name(self):
         return f"UCD90320U({self.bus}, {hex(self.address)})"
