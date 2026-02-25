@@ -41,6 +41,8 @@ build-docs:
     - tuttest README.md example > example.yml
     - protoplaster --test-dir . --reports-dir . --artifacts-dir . --test-file example.yml --generate-docs
     - protoplaster --test-dir . --reports-dir . --artifacts-dir . --test-file example.yml --csv report.csv
+    # Merge all generated report_*.csv files into report.csv, keep only the first header
+    - awk 'FNR==1 && NR!=1{next;}{print}' report_*.csv > report.csv
     - protoplaster-test-report report.csv -t md
     - cp -r .github/docs-template docs/
     - cp README.md docs/source/readme.md

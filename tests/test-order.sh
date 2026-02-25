@@ -1,5 +1,6 @@
 #!/bin/bash
 
+rm -f srv/protoplaster/reports/*.csv
 mkdir -p srv/protoplaster/{tests,reports,artifacts}
 
 cat <<EOF > srv/protoplaster/tests/test-execution-order.yml
@@ -29,7 +30,7 @@ EOF
 
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts -t test-execution-order.yml --csv report.csv > /dev/null
 
-awk -F',' 'NR>1 {print $1}' srv/protoplaster/reports/report.csv | uniq > /tmp/actual-order
+awk -F',' 'FNR>1 && $1 != "" {print $1}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-order
 
 cat << EOF > /tmp/expected-order
 simple(foo)

@@ -19,17 +19,19 @@ if [ "$TEST_UPLOAD_NAME" != "api-test.yml" ] ; then
 fi
 
 # Trigger test run
-RUN_ID=$(curl -s -X POST http://localhost:5000/api/v1/test-runs -H "Content-Type: application/json" -d '{"config_name": "api-test.yml"}' | jq -r '.id')
+curl -s -X POST http://localhost:5000/api/v1/test-runs -H "Content-Type: application/json" -d '{"config_name": "api-test.yml"}' > /dev/null
+sleep 2
 
-# Wait for test run to finish
-STATUS=""
-while [ "$STATUS" != "finished" ] && [ "$STATUS" != "failed" ]; do
-  STATUS=$(curl -s http://localhost:5000/api/v1/test-runs/$RUN_ID | jq -r '.status')
-  sleep 1
+# Wait for test runs to finish and collect reports
+touch report.csv
+for RUN_ID in $(curl -s http://localhost:5000/api/v1/test-runs | jq -r '.[].id'); do
+  STATUS=""
+  while [ "$STATUS" != "finished" ] && [ "$STATUS" != "failed" ]; do
+    STATUS=$(curl -s http://localhost:5000/api/v1/test-runs/$RUN_ID | jq -r '.status')
+    sleep 1
+  done
+  curl -s http://localhost:5000/api/v1/test-runs/$RUN_ID/report >> report.csv
 done
-
-# Collect test report
-curl -s http://localhost:5000/api/v1/test-runs/$RUN_ID/report > report.csv
 
 TEST_STATUS=$(grep 'test.py::TestSimple::test_success' report.csv | cut -d ',' -f6)
 if [ "$TEST_STATUS" != "passed" ] ; then
@@ -55,8 +57,11 @@ if ! echo "$TEST_ARTIFACTS" | grep -q "file.txt"; then
   exit 1
 fi
 
-curl -s http://localhost:5000/api/v1/test-runs/$RUN_ID/artifacts/file.txt > file.txt
-if [ $(cat file.txt) != "test" ] ; then
+for RUN_ID in $(curl -s http://localhost:5000/api/v1/test-runs | jq -r '.[].id'); do
+  curl -s -f http://localhost:5000/api/v1/test-runs/$RUN_ID/artifacts/file.txt > file.txt || true
+done
+
+if [ "$(cat file.txt 2>/dev/null)" != "test" ] ; then
   echo "file.txt contents does not match!"
   exit 1
 fi

@@ -41,7 +41,7 @@ echo "report check:"
 while read -r r;do
     echo "- '$r\':"
     echo -n "-> "
-    if grep -Eq "$r" srv/protoplaster/reports/report.csv;
+    if grep -Eq "$r" srv/protoplaster/reports/*.csv;
     then
         echo found
     else

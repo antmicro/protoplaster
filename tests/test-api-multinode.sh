@@ -85,11 +85,11 @@ done
 
 # Trigger test run on Main Node
 echo "Triggering run on Main Node..."
-MAIN_RUN_ID=$(curl -s -X POST http://localhost:5000/api/v1/test-runs \
+curl -s -X POST http://localhost:5000/api/v1/test-runs \
          -H "Content-Type: application/json" \
-         -d "{\"config_name\": \"$CONFIG_FILE\"}" | jq -r '.id')
+         -d "{\"config_name\": \"$CONFIG_FILE\"}" > /dev/null
 
-echo "Main Run ID: $MAIN_RUN_ID"
+sleep 2
 
 verify_node_execution() {
     local port=$1
