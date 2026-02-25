@@ -289,14 +289,16 @@ class TestFile:
                 )
 
     def filter_suite(self, suite: str):
-        if suite not in self.test_suites.keys():
-            pr_err(f'Unknown test suite "{suite}"')
-            return
-
-        target_suite = self.test_suites[suite]
-        self.tests = target_suite.tests
-        self.metadata = target_suite.metadata
-        self.test_suites = {suite: target_suite}
+        if suite in self.test_suites:
+            target_suite = self.test_suites[suite]
+            self.tests = target_suite.tests
+            self.metadata = target_suite.metadata
+            self.test_suites = {suite: target_suite}
+        elif suite in self.tests:
+            self.tests = {suite: self.tests[suite]}
+            self.test_suites = {}
+        else:
+            pr_err(f'Unknown test suite or test group "{suite}"')
 
     def filter_runnable_tests(self, target: str | None):
         """
