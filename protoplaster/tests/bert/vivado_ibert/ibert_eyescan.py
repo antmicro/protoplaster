@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 import subprocess
+from typing import Literal, Optional
 
 from jinja2 import DictLoader, Environment
 
@@ -10,7 +11,9 @@ from jinja2 import DictLoader, Environment
 class EyeScan:
 
     def __init__(self, vivado_cmd: str, hw_server: str, serial_number: str,
-                 channel_path: str, prbs_bits: int, loopback: bool) -> None:
+                 channel_path: str, prbs_bits: int, loopback: bool,
+                 dwell_mode: Optional[Literal["BER", "TIME"]],
+                 dwell_value: Optional[float]):
         self.eyescan_file = tempfile.NamedTemporaryFile(suffix=".csv")
         self.hw_server = hw_server
         self.serial_number = serial_number
@@ -18,6 +21,8 @@ class EyeScan:
         self.prbs_bits = prbs_bits
         self.loopback = loopback
         self.report_file = tempfile.NamedTemporaryFile(suffix=".report")
+        self.dwell_mode = dwell_mode
+        self.dwell_value = dwell_value
 
         # Check if Vivado is available
         if shutil.which(vivado_cmd) is None:
@@ -42,6 +47,8 @@ class EyeScan:
             str(self.prbs_bits),
             str(self.loopback),
             self.report_file.name,
+            self.dwell_mode or "",
+            str(self.dwell_value) if self.dwell_value is not None else "",
         ]
         res = subprocess.run(vivado_argv,
                              cwd=os.path.dirname(__file__),

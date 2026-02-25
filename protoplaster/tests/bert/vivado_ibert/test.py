@@ -35,13 +35,30 @@ class TestIbertEyescan:
         vivado_cmd = getattr(self, "vivado_cmd", "vivado")
         hw_server = getattr(self, "hw_server", "localhost:3121")
         loopback = getattr(self, "loopback", True)
+        dwell_mode = getattr(self, "dwell_mode", None)
+        assert dwell_mode in ['BER', 'TIME', None], \
+            "`dwell_mode` test attribute must be either 'BER' or 'TIME' when provided"
+        try:
+            value = getattr(self, "dwell_value", None)
+            if value is not None:
+                dwell_value = float(value)
+        except (ValueError, TypeError):
+            raise AssertionError(
+                "`dwell_value` test attribute must be convertible to `float` when provided"
+            )
+
         if not hasattr(self, "test_name"):
+            if dwell_mode == None:
+                dwell_string = "DEFAULT DWELL"
+            else:
+                dwell_string = f"DWELL {dwell_mode}: {dwell_value}"
             self.test_name = (
                 f"vivado_ibert eyescan: {self.prbs_bits}-bit PRBS "
                 f"on {hw_server}/{self.serial_number}/{self.channel_path}, "
-                f"{'' if loopback else 'no '} loopback")
+                f"{'' if loopback else 'no '} loopback, {dwell_string}")
         self.eyescan = EyeScan(vivado_cmd, hw_server, self.serial_number,
-                               self.channel_path, self.prbs_bits, loopback)
+                               self.channel_path, self.prbs_bits, loopback,
+                               dwell_mode, dwell_value)
 
     def test_transceiver_status(self):
         """

@@ -1,4 +1,4 @@
-proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits loopback reportFile } {
+proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits loopback reportFile dwellMode dwellValue } {
 	# Connect to the emulator
 	open_hw_manager
 	connect_hw_server -url "$hwServer"
@@ -31,6 +31,18 @@ proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits lo
 
 	# Create, run, and save scan
 	set xil_newScan [create_hw_sio_scan -description {Scan 0} 2d_full_eye  [lindex [get_hw_sio_links $fullPath/TX->$fullPath/RX] 0 ]]
+
+	if { $dwellMode eq "BER" } {
+		if { $dwellValue ne "" } {
+			set_property DWELL_BER $dwellValue [get_hw_sio_scans $xil_newScan]
+		}
+	} elseif { $dwellMode eq "TIME" } {
+		set_property DWELL TIME [get_hw_sio_scans $xil_newScan]
+		if { $dwellValue ne "" } {
+			set_property DWELL_TIME $dwellValue [get_hw_sio_scans $xil_newScan]
+		}
+	}
+
 	run_hw_sio_scan [get_hw_sio_scans $xil_newScan]
 	wait_on_hw_sio_scan [get_hw_sio_scans $xil_newScan]
 	write_hw_sio_scan -force $outputPath [get_hw_sio_scans $xil_newScan]
@@ -49,5 +61,7 @@ set channelPath [lindex $argv 3]
 set prbsBits [lindex $argv 4]
 set loopback [lindex $argv 5]
 set reportFile [lindex $argv 6]
+set dwellMode [lindex $argv 7]
+set dwellValue [lindex $argv 8]
 
-perform_eye_scan $outputPath $hwServer $serialNumber $channelPath $prbsBits $loopback $reportFile
+perform_eye_scan $outputPath $hwServer $serialNumber $channelPath $prbsBits $loopback $reportFile $dwellMode $dwellValue
