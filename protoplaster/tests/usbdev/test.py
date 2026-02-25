@@ -2,7 +2,7 @@ from protoplaster.conf.module import ModuleName
 import os
 
 
-@ModuleName("usb")
+@ModuleName("usbdev")
 class TestUsb:
 
     def configure(self):
