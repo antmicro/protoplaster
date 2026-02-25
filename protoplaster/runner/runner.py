@@ -1,8 +1,10 @@
 import ast
 import os
 import sys
+import time
 import zipfile
 import requests
+import copy
 from urllib.parse import urljoin
 from collections import OrderedDict
 from pathlib import Path
@@ -21,10 +23,11 @@ from protoplaster.report_generators.test_report.protoplaster_test_report import 
 from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, run_command
 from protoplaster.tools.tools import error, pr_warn, warning
 from protoplaster.webui.devices import get_all_devices
-from protoplaster.conf.consts import REMOTE_RUN_TRIGGER_TIMEOUT
+from protoplaster.conf.consts import REMOTE_RUN_TRIGGER_TIMEOUT, SERVE_IP, WEBUI_POLLING_INTERVAL
 from protoplaster import __file__ as protoplaster_root
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
+REMOTE_TEST_POLL_INTERVAL = 1
 
 
 def create_test_file(args) -> TestFile:
@@ -217,6 +220,42 @@ def _trigger_remote_run(machine, base_url, args):
         return None
 
 
+def wait_for_remote_runs(remote_runs):
+    if not remote_runs:
+        return
+
+    print("Waiting for remote tests to finish...")
+    completed_runs = set()
+
+    while len(completed_runs) < len(remote_runs):
+        for run_info in remote_runs:
+            run_id = run_info["run_id"]
+            if run_id in completed_runs:
+                continue
+
+            machine = run_info["machine"]
+            base_url = run_info["base_url"]
+
+            try:
+                response = requests.get(urljoin(base_url,
+                                                f"/api/v1/test-runs/{run_id}"),
+                                        timeout=5)
+                response.raise_for_status()
+                status = response.json().get("status")
+
+                if status in ["finished", "failed", "aborted"]:
+                    print(
+                        f"[{machine}] Remote run {run_id} finished with status: {status}"
+                    )
+                    completed_runs.add(run_id)
+            except Exception as e:
+                print(error(f"[{machine}] Failed to get run status: {e}"))
+                completed_runs.add(run_id)
+
+        if len(completed_runs) < len(remote_runs):
+            time.sleep(REMOTE_TEST_POLL_INTERVAL)
+
+
 def get_target_machines(args) -> Set:
     test_file = create_test_file(args)
     return test_file.get_all_machines()
@@ -229,22 +268,82 @@ def has_local_tests(args) -> bool:
 
 
 def run_tests(args):
-    dispatched_remote_tests = False
-
     # Check execution context:
     # - <string>: Triggered by a `_trigger_remote_run` call from the orchestrator.
     #             Act as a DUT node, running ONLY the tests assigned to this specific node.
     # - None:     Act as the orchestrator, dispatching remote tests and running local ones.
     machine_target = getattr(args, "machine_target", None)
+
+    if args.generate_docs:
+        test_file = create_test_file(args)
+        paths_to_tests = test_file.list_paths_to_tests()
+        with test_file.merged_test_file() as tf:
+            generate_docs(
+                OrderedDict.fromkeys(paths_to_tests).keys(),
+                load_yaml(tf.name))
+            sys.exit()
+
     if not machine_target:
         devices = {d['name']: d['url'] for d in get_all_devices()}
-        for machine in get_target_machines(args):
-            if machine in devices:
-                _trigger_remote_run(machine, devices[machine], args)
-                dispatched_remote_tests = True
-            else:
-                print(
-                    error(f"Machine '{machine}' not defined in devices list"))
+        test_file = create_test_file(args)
+
+        for test_name, test_obj in test_file.tests.items():
+            print(f"Executing test group: {test_name}")
+            chunk_args = copy.copy(args)
+            chunk_args.group = test_name
+
+            machines = set()
+            has_local = False
+            for body in test_obj.body:
+                ms = body.params.get("machines")
+                if ms:
+                    machines.update([ms] if isinstance(ms, str) else ms)
+                else:
+                    has_local = True
+
+            remote_runs = []
+            for machine in machines:
+                if machine in devices:
+                    run_id = _trigger_remote_run(machine, devices[machine],
+                                                 chunk_args)
+                    if run_id:
+                        remote_runs.append({
+                            "machine": machine,
+                            "base_url": devices[machine],
+                            "run_id": run_id
+                        })
+                else:
+                    print(
+                        error(
+                            f"Machine '{machine}' not defined in devices list")
+                    )
+
+            if has_local:
+                if getattr(args, "server", False):
+                    # Web server mode: Dispatch to the local Flask server
+                    local_url = f"http://{SERVE_IP}:{args.port}"
+                    run_id = _trigger_remote_run("localhost", local_url,
+                                                 chunk_args)
+                    if run_id:
+                        remote_runs.append({
+                            "machine": "localhost",
+                            "base_url": local_url,
+                            "run_id": run_id
+                        })
+                else:
+                    # CLI mode: Execute local tests directly
+                    print("Executing local tests directly (CLI mode)")
+                    local_chunk_args = copy.copy(chunk_args)
+                    local_chunk_args.machine_target = "localhost"
+                    run_tests(local_chunk_args)
+
+            wait_for_remote_runs(remote_runs)
+
+        return 0, []
+
+    if machine_target == "localhost":
+        machine_target = None
+        args.machine_target = None
 
     # Filter tests for execution on "local" node
     test_file = create_test_file(args)
@@ -261,24 +360,11 @@ def run_tests(args):
     else:
         metadata = []
 
-    if paths_to_tests == []:
-        # If we dispatched remotes but have no local tests, that's fine.
-        # If we have neither, it's a warning.
-        if machine_target is None and dispatched_remote_tests:
-            # No warning - we have dispatched tests
-            pass
-        else:
-            print(warning("No tests to run on this device!"))
-
-        return 0, []
+    if not paths_to_tests:
+        return 0, metadata
 
     with test_file.merged_test_file() as tf:
         args.test_file = tf.name
-        if args.generate_docs:
-            generate_docs(
-                OrderedDict.fromkeys(paths_to_tests).keys(),
-                load_yaml(tf.name))
-            sys.exit()
 
         plugins = []
         csv_report_gen = CsvReportGenerator(args.csv_columns, metadata)

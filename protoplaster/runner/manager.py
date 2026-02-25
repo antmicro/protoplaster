@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from .metadata import new_run_metadata, RunStatus
 from .worker import run_test
-from .runner import run_tests, has_local_tests
+from .runner import run_tests
 from datetime import datetime, timezone
 from email.utils import format_datetime
 from copy import deepcopy
@@ -29,16 +29,13 @@ class RunManager:
         check_args.test_file = config_name
         check_args.group = test_suite_name
 
-        # Generate a "tracked" run when:
-        # - the test is going to be executed on the local node
-        # - this is a result of a remote dispatch
-        if machine_target or has_local_tests(check_args):
+        # Generate a "tracked" run when it is a result of a remote dispatch.
+        if machine_target:
             return self.create_run(config_name, test_suite_name, base_args,
                                    machine_target)
 
-        # No local tests, and not a remote dispatch, `run_tests` is only going to trigger
-        # a dispatched test. Do not track this run.
-        run_tests(check_args)
+        # Ochestrator node execution.
+        self.executor.submit(run_tests, check_args)
         return None
 
     def create_run(self,
