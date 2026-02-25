@@ -208,14 +208,13 @@ def _trigger_remote_run(machine, base_url, args):
                                  timeout=REMOTE_RUN_TRIGGER_TIMEOUT)
         response.raise_for_status()
         run_data = response.json()
-        print(
-            f"[{machine}] Remote run triggered successfully. ID: {run_data.get('id')}"
-        )
-        return None
+        run_id = run_data.get('id')
+        print(f"[{machine}] Remote run triggered successfully. ID: {run_id}")
+        return run_id
     except Exception as e:
         err_msg = f"[{machine}] Failed to trigger run: {e}"
         print(error(err_msg))
-        return err_msg
+        return None
 
 
 def get_target_machines(args) -> Set:
