@@ -335,6 +335,17 @@ def run_tests(args):
                     print("Executing local tests directly (CLI mode)")
                     local_chunk_args = copy.copy(chunk_args)
                     local_chunk_args.machine_target = "localhost"
+
+                    if getattr(local_chunk_args, "csv", None):
+                        csv_name, csv_ext = os.path.splitext(
+                            local_chunk_args.csv)
+                        modified_csv = f"{csv_name}_{test_name}{csv_ext}"
+                        local_chunk_args.csv = modified_csv
+                        print(
+                            warning(
+                                f"Multiple test runs detected in CLI mode. Report for group '{test_name}' will be saved to: {modified_csv}"
+                            ))
+
                     run_tests(local_chunk_args)
 
             wait_for_remote_runs(remote_runs)
