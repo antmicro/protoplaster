@@ -5,16 +5,8 @@ import tempfile
 from typing import Callable
 
 from jinja2 import Environment, DictLoader
-
-TI_DAC38J8X_EYESCAN_LIBRARY = False
-try:
-    from eyescan.eyescan import perform_eyescan
-    from eyescan.instructions import TestPattern
-    TI_DAC38J8X_EYESCAN_LIBRARY = True
-except OSError:
-    print(
-        "Warning: TI DAC38J8X eyescan library is not available. Disabling eyescan module tests."
-    )
+from eyescan.eyescan import perform_eyescan
+from eyescan.instructions import TestPattern
 
 
 class EyeScan:
@@ -27,9 +19,6 @@ class EyeScan:
         self.eyescan_file = tempfile.NamedTemporaryFile()
         self.axis_multiplier = {"x": 1, "y": 10}
         self.bit = bit
-
-        # Check if the eyescan library is available
-        assert TI_DAC38J8X_EYESCAN_LIBRARY, "TI DAC38J8X eyescan library is not available."
 
         perform_eyescan(pyftdi_url=pyftdi_url,
                         ftdi_jtag_frequency=ftdi_jtag_frequency,
