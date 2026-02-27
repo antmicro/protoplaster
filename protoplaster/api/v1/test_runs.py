@@ -141,6 +141,7 @@ def trigger_test_run():
     config_name = data["config_name"]
     test_suite_name = data.get("test_suite_name", None)
     machine_target = data.get("machine_target", None)
+    overrides = data.get("overrides", "").splitlines()
 
     config_dir = current_app.config["ARGS"].test_dir
     config_path = os.path.join(config_dir, config_name)
@@ -154,7 +155,8 @@ def trigger_test_run():
     run = manager.handle_run_request(config_name,
                                      test_suite_name,
                                      args,
-                                     machine_target=machine_target)
+                                     machine_target=machine_target,
+                                     overrides=overrides)
 
     if run is None:
         # Remote run triggered successfully, no local tracking.

@@ -20,7 +20,8 @@ class RunManager:
                            config_name,
                            test_suite_name,
                            base_args,
-                           machine_target=None):
+                           machine_target=None,
+                           overrides=[]):
         """
         Decides whether to create a tracked local run or bypass it for a remote dispatch.
         """
@@ -28,11 +29,12 @@ class RunManager:
         check_args = deepcopy(base_args)
         check_args.test_file = config_name
         check_args.group = test_suite_name
+        check_args.overrides = overrides
 
         # Generate a "tracked" run when it is a result of a remote dispatch.
         if machine_target:
             return self.create_run(config_name, test_suite_name, base_args,
-                                   machine_target)
+                                   machine_target, overrides)
 
         # Ochestrator node execution.
         self.executor.submit(run_tests, check_args)
@@ -42,7 +44,8 @@ class RunManager:
                    config_name: str,
                    test_suite_name: str | None,
                    base_args,
-                   machine_target=None):
+                   machine_target=None,
+                   overrides=[]):
 
         def on_done(f):
             try:
@@ -51,7 +54,7 @@ class RunManager:
             except Exception as e:
                 print(f"[{run['id']}] failed: {e}")
 
-        run = new_run_metadata(config_name, test_suite_name)
+        run = new_run_metadata(config_name, test_suite_name, overrides)
 
         with self.lock:
             self.runs[run["id"]] = run

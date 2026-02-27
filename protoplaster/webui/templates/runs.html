@@ -85,6 +85,11 @@
             <label for="testSuiteName" class="form-label">Test suite</label>
             <input type="text" name="name" class="form-control" id="testSuiteName">
           </div>
+
+          <div class="mb-3">
+            <label for="overrides" class="form-label">Config property overrides</label>
+            <textarea type="text" name="overrides" class="form-control" id="overrides"></textarea>
+          </div>
         </div>
 
         <div class="modal-footer">
@@ -235,13 +240,14 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
     const config = document.getElementById('configSelect').value;
     const testSuite = document.getElementById('testSuiteName').value;
+    const overrides = document.getElementById('overrides').value;
 
     try {
         // Post only to the controller
         const resp = await fetch(`/api/v1/test-runs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ config_name: config, test_suite_name: testSuite}),
+            body: JSON.stringify({ config_name: config, test_suite_name: testSuite, overrides: overrides }),
         });
         if (!resp.ok) {
            const errData = await resp.json();

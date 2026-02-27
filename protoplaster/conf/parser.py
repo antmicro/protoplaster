@@ -209,6 +209,7 @@ class TestFile:
         test_dir: StrPath,
         yaml_file: StrPath,
         custom_path: StrPath,
+        overrides: list[str],
         *,
         _visited: set[StrPath] | None = None,
     ) -> None:
@@ -225,6 +226,31 @@ class TestFile:
         visited.add(self.file.name)
 
         file_content = load_yaml(self.file)
+        if not (isinstance(file_content, dict)
+                or isinstance(file_content, list)):
+            pr_err("File has no proper content")
+            return
+        self.overrides = yaml.safe_load("\n".join(overrides)) or {}
+        self.__search_overrides(file_content)
+
+        for key, val in self.overrides.items():
+            node = file_content
+            path = key.split(".")
+            for name in path[:-1]:
+                if name in node:
+                    node = node[name]
+                elif (name.isdecimal()) and len(node) > int(name):
+                    node = node[int(name)]
+                else:
+                    pr_err(f"\"{key}\": Element \"{name}\" not found")
+                    break
+                if not (isinstance(node, dict) or isinstance(node, list)):
+                    pr_err(
+                        f"\"{key}\": Element \"{name}\" is neither a sequence nor a mapping"
+                    )
+                    break
+            else:
+                node[path[-1]] = val
 
         if (includes := file_content.get("includes")) is not None:
             for include in includes:
@@ -236,7 +262,7 @@ class TestFile:
 
                 include_file = TestFile(test_dir,
                                         include,
-                                        custom_path,
+                                        custom_path, [],
                                         _visited=visited)
                 self.tests.update(include_file.tests)
                 self.metadata.update(include_file.metadata)
@@ -287,6 +313,23 @@ class TestFile:
                     test_suites,
                     _resolved=self.test_suites,
                 )
+
+    def __search_overrides(self, node: Any, path: str = "") -> None:
+        """
+        Recursively traverse config in search of overrides
+        """
+        if isinstance(node, dict):
+            items = list(node.items())
+        elif isinstance(node, list):
+            items = list(enumerate(node))
+        else:
+            return  # base case: node is a scalar
+        for key, val in items:
+            full_path = ("{}.{}".format(path, key)) if path else str(key)
+            if (isinstance(key, str)) and ("." in key):
+                self.overrides[full_path] = val
+                del node[key]
+            self.__search_overrides(val, full_path)  # recurse
 
     def filter_suite(self, suite: str):
         if suite in self.test_suites:

@@ -31,7 +31,8 @@ REMOTE_TEST_POLL_INTERVAL = 1
 
 
 def create_test_file(args) -> TestFile:
-    test_file = TestFile(args.test_dir, args.test_file, args.custom_tests)
+    test_file = TestFile(args.test_dir, args.test_file, args.custom_tests,
+                         args.overrides)
     if (group := args.group) not in (None, ""):
         test_file.filter_suite(group)
 

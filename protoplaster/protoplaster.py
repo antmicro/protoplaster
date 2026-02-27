@@ -130,6 +130,12 @@ def parse_args():
         "--external-devices",
         type=str,
         help="Path to yaml config file with additional external devices")
+    parser.add_argument("--override",
+                        dest='overrides',
+                        type=str,
+                        action='append',
+                        default=[],
+                        help="Config property override")
     args = parser.parse_args()
 
     if args.csv_columns and not args.csv and not args.report_output:

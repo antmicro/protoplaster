@@ -20,13 +20,15 @@ pip install git+https://github.com/antmicro/protoplaster.git
 
 ```
 usage: protoplaster [-h] [-d TEST_DIR] [-r REPORTS_DIR] [-a ARTIFACTS_DIR]
-                    [-t TEST_FILE] [-g GROUP] [-s TEST_SUITE] [--list-groups]
-                    [--list-test-suites] [--list-tests] [-o OUTPUT]
-                    [--csv CSV] [--csv-columns CSV_COLUMNS] [--generate-docs]
-                    [-c CUSTOM_TESTS] [--report-output REPORT_OUTPUT]
+                    [-m] [-t TEST_FILE] [-g GROUP] [-s TEST_SUITE]
+                    [--list-groups] [--list-test-suites] [--list-tests]
+                    [-o OUTPUT] [--csv CSV] [--csv-columns CSV_COLUMNS]
+                    [--generate-docs] [-c CUSTOM_TESTS] [-l]
+                    [--report-output REPORT_OUTPUT]
                     [--system-report-config SYSTEM_REPORT_CONFIG] [--sudo]
-                    [--server] [--port PORT]
+                    [--server | --dut] [--port PORT]
                     [--external-devices EXTERNAL_DEVICES]
+                    [--override OVERRIDES]
 
 options:
   -h, --help            show this help message and exit
@@ -36,6 +38,8 @@ options:
                         Path to the reports directory
   -a, --artifacts-dir ARTIFACTS_DIR
                         Path to the test artifacts directory
+  -m, --mkdir           Try to create test/reports/artifacts directories if
+                        missing
   -t, --test-file TEST_FILE
                         Path to the yaml test description in the test
                         directory
@@ -60,10 +64,12 @@ options:
                         Path to the system report yaml config file
   --sudo                Run as sudo
   --server              Run in server mode
+  --dut                 Run in DUT mode
   --port PORT           Port to use when running in server mode
   --external-devices EXTERNAL_DEVICES
                         Path to yaml config file with additional external
                         devices
+  --override OVERRIDES  Config property override
 ```
 
 Protoplaster expects a yaml file describing tests as an input. The yaml file should have a structure specified as follows:
@@ -120,6 +126,19 @@ Protoplaster, when run without a defined test suite, will execute all tests defi
 When the test suite is specified with the parameter `-s` or `--test-suite`,
 only the tests in the specified suite are going to be run.
 You can also list existing groups in the YAML file, simply run `protoplaster --list-test-suites test.yaml`.
+
+### Config overrides
+It is possible to apply provisional changes to configuration without modifying the YAML file.
+Assume that in the example above, the path to the second video device has changed from
+`/dev/video2` to `/dev/video1`, and we would like to save the received frame to a file named
+`image.raw` instead of `frame.raw`. To account for this, you may run Protoplaster with the options:
+`--override "tests.base.2.camera.device: /dev/video1" --override "tests.base.2.camera.save_file: image.raw"`.
+
+Overrides may also be used directly in the config file – for example, in the `i2c` test,
+to rename the first device from `Sensor name` to `Some other name`, you might add an override:
+
+* at the beginning or end of the file: `tests.base.0.i2c.devices.0.name: Some other name`
+* within the `i2c` test definition, before or after `devices`: `devices.0.name: Some other name`.
 
 ### External Devices
 
