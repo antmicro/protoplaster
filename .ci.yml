@@ -6,10 +6,11 @@ stages:
 check-code-quality:
   stage: code-quality-checks
   image: debian:bookworm
-  script:
-    - PATH="/root/.local/bin:$PATH"
+  before_get_sources:
     - apt -y update
     - apt -y install python3 pipx git
+  script:
+    - PATH="/root/.local/bin:$PATH"
     - pipx install yapf==0.40.2
     - yapf -ipr protoplaster/ manager/
     - test $(git status --porcelain | wc -l) -eq 0 || { git diff; false; }
@@ -17,10 +18,11 @@ check-code-quality:
 installation-test:
   stage: tests
   image: debian:bookworm
-  script:
-    - PATH="/root/.local/bin:$PATH"
+  before_get_sources:
     - apt -y update
     - apt -y install python3 python3-venv python3-dev build-essential git
+  script:
+    - PATH="/root/.local/bin:$PATH"
     - python3 -m venv ./venv
     - source ./venv/bin/activate
     - pip install .
@@ -30,10 +32,11 @@ installation-test:
 build-docs:
   stage: build-docs
   image: btdi/latex
-  script:
-    - PATH="/root/.local/bin:$PATH"
+  before_get_sources:
     - apt -y update
     - apt -y install python3 python3-venv git make
+  script:
+    - PATH="/root/.local/bin:$PATH"
     - python3 -m venv ./venv
     - source ./venv/bin/activate
     - pip install .
@@ -62,10 +65,11 @@ build-docs:
 api-test:
   stage: tests
   image: debian:bookworm
-  script:
-    - PATH="/root/.local/bin:$PATH"
+  before_get_sources:
     - apt -y update
     - apt -y install python3 python3-venv python3-dev build-essential git curl jq
+  script:
+    - PATH="/root/.local/bin:$PATH"
     - python3 -m venv ./venv
     - source ./venv/bin/activate
     - pip install .
