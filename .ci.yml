@@ -76,6 +76,7 @@ api-test:
     - ./tests/test-api.sh
     - ./tests/test-tests-extension.sh
     - ./tests/test-order.sh
+    - ./tests/test-overrides.sh
   artifacts:
     paths:
       - srv/protoplaster/*
