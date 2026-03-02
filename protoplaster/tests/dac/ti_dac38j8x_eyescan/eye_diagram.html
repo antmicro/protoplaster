@@ -83,14 +83,18 @@ ctx.textAlign = "center";
 ctx.textBaseline = "bottom";
 ctx.fillText("Phase offset (1/32 UI)", axisPadding.left + cell.width * gridSize.x / 2, ctx.canvas.height - 10);
 
+function log2(number) {
+  return Math.log(number) / Math.log(2);
+}
+
 // Legend
 {
-  const label = "Amplitude";
+  const label = "BER";
   const width = 30;
-  const height = 120;
+  const height = gridSize.y * cell.height;
   const padding = {
     grid: 10,
-    label: 15,
+    label: 32,
   };
 
   const x = axisPadding.left + (gridSize.x + 1) * cell.width + padding.grid;
@@ -116,17 +120,14 @@ ctx.fillText("Phase offset (1/32 UI)", axisPadding.left + cell.width * gridSize.
   ctx.textBaseline = "middle";
   ctx.fillStyle = "black";
   const ticksLength = 6;
-  const maxValue = chartData
-    .flat(1)
-    .flatMap((pixel) => pixel.amp)
-    .reduce((a, b) => Math.max(a, b), -Infinity); // Math.max(...values) causes stack overflow
-  const ticksValues = [0, avgAmplitude, maxValue];
+  const maxValue = 12;
+  const ticksValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   ticksValues.forEach((value) => {
     const xPos = x + width + borderWidth
     const yPos = y + height - value / maxValue * height;
     ctx.moveTo(xPos + 1, yPos);
     ctx.lineTo(xPos + 1 + ticksLength, yPos);
-    ctx.fillText(value, xPos + ticksLength + 3, yPos + ctx.lineWidth / 4);
+    ctx.fillText((value == 12 ? ">" : "") + Number.parseFloat((value != 0 ? 2 ** value : 1) / {{ sample_number }}).toExponential(1), xPos + ticksLength + 3, yPos + ctx.lineWidth / 4);
   });
   const maxTicksWidth = Math.max(...ticksValues.map((value) => ctx.measureText(value).width));
   ctx.font = font; // restore font
@@ -166,8 +167,8 @@ function updateEyeDiagram() {
     const yPos = (translateOrigin.y - pixel.y - 1) * cell.height + axisPadding.top;
 
     const fillStyle = pixel.amp >= 0 && pixel.amp <= avgAmplitude
-      ? `rgb(${(pixel.amp / avgAmplitude) * 255}, 0, ${(1 - pixel.amp / avgAmplitude) * 255})`
-      : `rgb(${(1 - ((pixel.amp - avgAmplitude) / avgAmplitude)) * 255}, 0, 0)`;
+      ? `rgb(${(log2(pixel.amp + 1) / 11) * 255}, 0, ${(1 - (log2(pixel.amp + 1) / 11)) * 255})`
+      : `rgb(${(1 - ((log2(pixel.amp + 1) - 11))) * 255}, 0, 0)`;
 
     ctx.fillStyle = fillStyle;
     ctx.fillRect(xPos, yPos, cell.width, cell.height);

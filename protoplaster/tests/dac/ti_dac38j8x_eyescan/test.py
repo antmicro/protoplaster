@@ -24,6 +24,10 @@ class TestTiDac38j8xEyescan:
         assert hasattr(
             self,
             "eyescan_diagram"), "`eyescan_diagram` test attribute is required"
+        assert hasattr(
+            self, "sample_rate"), "`sample_rate` test attribute is required"
+        assert hasattr(self,
+                       "dwell_time"), "`dwell_time` test attribute is required"
 
         def parse_test_pattern(pattern):
             try:
@@ -61,7 +65,9 @@ class TestTiDac38j8xEyescan:
             daisy_chain_device_number=self.daisy_chain_number,
             daisy_chain_device_count=self.daisy_chain_count,
             bit=self.bit,
-            test_pattern=self.test_pattern)
+            test_pattern=self.test_pattern,
+            sample_rate=self.sample_rate,
+            dwell_time=self.dwell_time)
 
     def test_create_diagram(self, record_artifact, artifacts_dir):
         """

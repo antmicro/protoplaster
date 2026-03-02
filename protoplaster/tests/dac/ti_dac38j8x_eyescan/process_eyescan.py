@@ -15,10 +15,13 @@ class EyeScan:
                  ftdi_direction: int, ftdi_initial_value: int,
                  ftdi_reset_bit: int, daisy_chain_device_number: int,
                  daisy_chain_device_count: int, bit: int,
-                 test_pattern: TestPattern) -> None:
+                 test_pattern: TestPattern, sample_rate: int,
+                 dwell_time: float) -> None:
         self.eyescan_file = tempfile.NamedTemporaryFile()
         self.axis_multiplier = {"x": 1, "y": 10}
         self.bit = bit
+        self.sample_rate = sample_rate
+        self.dwell_time = dwell_time
 
         perform_eyescan(pyftdi_url=pyftdi_url,
                         ftdi_jtag_frequency=ftdi_jtag_frequency,
@@ -29,7 +32,8 @@ class EyeScan:
                         daisy_chain_device_count=daisy_chain_device_count,
                         output_path=self.eyescan_file.name,
                         bit_number=bit,
-                        test_pattern=test_pattern)
+                        test_pattern=test_pattern,
+                        dwell_time=dwell_time)
 
     def parse_file(self) -> list[dict]:
         samples_by_lane = defaultdict(lambda: defaultdict(list))
@@ -76,7 +80,9 @@ class EyeScan:
                                     samples=samples,
                                     axis_multiplier=self.axis_multiplier,
                                     disable_nav=True,
-                                    num_bits=self.bit)
+                                    num_bits=self.bit,
+                                    sample_number=self.dwell_time *
+                                    self.sample_rate)
 
     def get_eyescan_file_path(self) -> str:
         return self.eyescan_file.name
