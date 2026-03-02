@@ -85,14 +85,6 @@ def configs():
 @webui_blueprint.route("/runs")
 def test_runs():
     devices = get_all_devices()
-    for d in devices:
-        try:
-            d['runs'] = requests.get(f"{d['url']}/api/v1/test-runs",
-                                     timeout=1).json()
-        except Exception as e:
-            print(error(f"Failed to fetch runs for {d['url']}: {e}"))
-            d['runs'] = None
-
     return render_template("runs.html",
                            devices=devices,
                            active="runs",

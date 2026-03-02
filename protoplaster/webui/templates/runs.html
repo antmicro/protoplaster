@@ -17,8 +17,8 @@
       <button class="btn btn-link text-decoration-none text-dark fw-bold p-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}">
         <i class="bi bi-chevron-down me-2"></i> {{ device.name }}
       </button>
-      <span data-device-status="{{ device.name }}" class="badge ms-2 bg-{{ 'secondary' if device.runs is none else 'success' }}">
-        {{ 'Offline' if device.runs is none else 'Online' }}
+      <span data-device-status="{{ device.name }}" class="badge ms-2 bg-secondary">
+        Loading
       </span>
     </h5>
   </div>
@@ -37,23 +37,7 @@
       </tr>
     </thead>
     <tbody>
-      {% if device.runs %}
-      {% for run in device.runs %}
-      <tr data-run-id="{{ run.id }}">
-        <td>{{ run.id }}</td>
-        <td>{{ run.config_name }}</td>
-        <td class="status-cell" data-status="{{ run.status }}"></td>
-        <td class="start-cell">{{ run.started_at or '-' }}</td>
-        <td class="end-cell">{{ run.finished_at or '-' }}</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary btn-details" data-run-id="{{ run.id }}">Details</button>
-          <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="{{ run.id }}" {% if run.status != 'pending' %}disabled{% endif %}>Abort</button>
-        </td>
-      </tr>
-      {% endfor %}
-      {% else %}
-      <tr><td colspan="6" class="text-center text-muted">No test runs</td></tr>
-      {% endif %}
+      <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
     </tbody>
   </table>
   </div>
@@ -170,33 +154,51 @@ document.addEventListener("DOMContentLoaded", function () {
     row.querySelector('.btn-abort').disabled = data.status !== 'pending';
   };
 
-  document.querySelectorAll('tr[data-run-id]').forEach(row => {
-      const status = row.querySelector('.status-cell').dataset.status;
-      if (status) updateRow(row, {
-        status: status, 
-        started_at: row.querySelector('.start-cell').textContent,
-        finished_at: row.querySelector('.end-cell').textContent
-      });
-  });
-
   const poll = async () => {
     document.querySelectorAll('.device-container').forEach(async container => {
       const deviceUrl = container.dataset.deviceUrl;
+      const tbody = container.querySelector('tbody');
+      const badge = container.querySelector('[data-device-status]');
+
       try {
         const resp = await fetch(`${deviceUrl}/api/v1/test-runs`);
-        if (!resp.ok) return;
+        if (!resp.ok) throw new Error();
 
         const runs = await resp.json();
+        badge.className = "badge ms-2 bg-success";
+        badge.textContent = "Online";
+
+        if (runs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No test runs</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
         for (const run of runs) {
-          const row = container.querySelector(`tr[data-run-id="${run.id}"]`);
-          if (row) updateRow(row, run);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${run.id}</td>
+            <td>${run.config_name}</td>
+            <td class="status-cell"></td>
+            <td class="start-cell"></td>
+            <td class="end-cell"></td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary btn-details" data-run-id="${run.id}">Details</button>
+              <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="${run.id}">Abort</button>
+            </td>
+          `;
+          updateRow(tr, run);
+          tbody.appendChild(tr);
         }
       } catch (err) {
-        console.error(`Failed to fetch test runs:`, err);
+        badge.className = "badge ms-2 bg-secondary";
+        badge.textContent = "Offline";
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Offline</td></tr>';
       }
     });
   };
 
+  poll();
   setInterval(poll, {{polling_interval * 1000 }});
 
   async function updateConfigList() {
@@ -273,14 +275,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Abort button
-  document.querySelectorAll('.btn-abort').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
+  document.addEventListener('click', async (e) => {
+    // Abort button
+    const btnAbort = e.target.closest('.btn-abort');
+    if (btnAbort) {
       if (!confirm("Are you sure you want to abort this test run?")) return;
-
-      const btn = e.target.closest("button");
-      const id = btn.dataset.runId;
-      const deviceUrl = btn.closest(".device-container").dataset.deviceUrl;
+      const id = btnAbort.dataset.runId;
+      const deviceUrl = btnAbort.closest(".device-container").dataset.deviceUrl;
       try {
         const resp = await fetch(`${deviceUrl}/api/v1/test-runs/${id}`, { method: 'DELETE' });
         if (!resp.ok) {
@@ -294,15 +295,13 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Error aborting run:", err);
         alert("An error occurred while trying to abort the run.");
       }
-    });
-  });
+    }
 
-  // Details modal
-  document.querySelectorAll('.btn-details').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const btn = e.target.closest("button");
-      const id = btn.dataset.runId;
-      const deviceUrl = btn.closest(".device-container").dataset.deviceUrl;
+    // Details button
+    const btnDetails = e.target.closest('.btn-details');
+    if (btnDetails) {
+      const id = btnDetails.dataset.runId;
+      const deviceUrl = btnDetails.closest(".device-container").dataset.deviceUrl;
       
       const resp = await fetch(`${deviceUrl}/api/v1/test-runs/${id}`);
       if (!resp.ok) return alert('Failed to fetch run details');
@@ -370,7 +369,7 @@ document.addEventListener("DOMContentLoaded", function () {
       reportLink.href = `${deviceUrl}/api/v1/test-runs/${id}/report`;
 
       new bootstrap.Modal(document.getElementById('testDetailsModal')).show();
-    });
+    }
   });
 });
 </script>
