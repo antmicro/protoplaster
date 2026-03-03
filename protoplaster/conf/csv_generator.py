@@ -2,6 +2,7 @@ from itertools import chain
 import pytest
 import csv
 import io
+from datetime import datetime
 
 
 class CsvReportGenerator:
@@ -10,16 +11,19 @@ class CsvReportGenerator:
         self.columns = columns
         self.report = []
         self.retrieve_field = {
-            "device name": (lambda item, report: item.cls.name(item.instance)),
+            "start time": (lambda item, report, call: datetime.fromtimestamp(
+                call.start).isoformat(timespec="seconds")),
+            "device name":
+            (lambda item, report, call: item.cls.name(item.instance)),
             "test name":
-            (lambda item, report: item.name.removeprefix("test_")),
-            "module":
-            (lambda item, report: report.nodeid[report.nodeid.find("test.py"):]
-             ),
-            "duration": (lambda item, report: report.duration),
-            "message": (lambda item, report: self.get_test_message(report)),
-            "status": (lambda item, report: report.outcome),
-            "artifacts": (lambda item, report: list(
+            (lambda item, report, call: item.name.removeprefix("test_")),
+            "module": (lambda item, report, call: report.nodeid[
+                report.nodeid.find("test.py"):]),
+            "duration": (lambda item, report, call: report.duration),
+            "message":
+            (lambda item, report, call: self.get_test_message(report)),
+            "status": (lambda item, report, call: report.outcome),
+            "artifacts": (lambda item, report, call: list(
                 chain(getattr(item, "_artifacts", []), metadata)))
         }
         if columns:
@@ -47,7 +51,7 @@ class CsvReportGenerator:
             return
 
         row = [
-            self.retrieve_field[column](item, report)
+            self.retrieve_field[column](item, report, call)
             for column in self.columns
         ]
         self.report.append(row)
