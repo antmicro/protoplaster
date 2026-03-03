@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from .metadata import new_run_metadata, RunStatus
 from .worker import run_test
-from .runner import run_tests
+from .runner import create_test_file, run_tests
 from datetime import datetime, timezone
 from email.utils import format_datetime
 from copy import deepcopy
@@ -31,13 +31,25 @@ class RunManager:
         check_args.group = test_suite_name
         check_args.overrides = overrides
 
+        try:
+            create_test_file(check_args)
+        except Exception as e:
+            return {"error": str(e)}
+
         # Generate a "tracked" run when it is a result of a remote dispatch.
         if machine_target:
             return self.create_run(config_name, test_suite_name, base_args,
                                    machine_target, overrides)
 
-        # Ochestrator node execution.
-        self.executor.submit(run_tests, check_args)
+        def on_done(f):
+            try:
+                f.result()
+            except Exception as e:
+                print(f"Run failed: {e}")
+
+        # Orchestrator node execution.
+        future = self.executor.submit(run_tests, check_args)
+        future.add_done_callback(on_done)
         return None
 
     def create_run(self,
