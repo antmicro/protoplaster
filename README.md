@@ -247,6 +247,58 @@ base:
     - path: "/dev/video1"
 ```
 
+## Plugins
+
+Protoplaster supports extending its functionality via **plugins**. Each plugin is a Python module that can be placed in a directory specified when running Protoplaster using:
+
+```bash
+--plugins <dir>
+```
+
+### Directory structure
+
+* Each plugin is a single module at the top level of that directory.
+* Each module must define a class `ProtoplasterPlugin`.
+
+Example structure of a `plugins` directory:
+
+```
+plugins/
+├─ __init__.py
+├─ plugin1.py
+├─ plugin2.py
+└─ plugin3.py
+```
+
+---
+
+### Required plugin class
+
+Each plugin must implement the `ProtoplasterPlugin` class and can optionally implement the hooks `before_test_function` and `after_test_function`.
+
+Both of them have to be decorated with `hookimpl` from `protoplaster.conf.plugin_manager` module.
+
+Example minimal plugin:
+
+```python
+from typing import Callable
+from protoplaster.conf.plugin_manager import hookimpl
+
+class ProtoplasterPlugin:
+    @hookimpl
+    def before_test_function(self, test_instance, test_function: Callable):
+        print(f"hello from {test_instance.name()}", test_instance, test_function.__name__)
+
+    @hookimpl
+    def after_test_function(self, test_instance, test_function: Callable):
+        print(f"goodbye from {test_instance.name()}", test_instance, test_function.__name__)
+```
+
+* `before_test_function` — called **before** each test function is executed.
+* `after_test_function` — called **after** each test function has finished.
+* `test_instance` — the test class instance running the test.
+* `test_function` — the test function itself (of type `Callable`).
+
 ## Protoplaster test report
 Protoplaster provides `protoplaster-test-report`, a tool to convert test CSV output into a HTML or Markdown table.
 ```
