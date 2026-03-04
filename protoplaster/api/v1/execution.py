@@ -45,5 +45,8 @@ def execute_function():
         result = func(*args)
         return jsonify({"result": result})
     except Exception as e:
-        print(error(f"RPC Execution failed: {e}"))
+        print(
+            error(
+                f"RPC Execution failed while calling {func.__name__} with args: {args}: {e}"
+            ))
         return jsonify({"error": str(e)}), 500
