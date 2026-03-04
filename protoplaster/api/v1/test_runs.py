@@ -85,6 +85,7 @@ def trigger_test_run():
     :<json string config_name: name of config for this test run
     :<json string test_suite_name: (optional) name of the test suite for this test run
     :<json string machine_target: (optional) name of the node this test is meant to be run on
+    :<json string overrides: (optional) newline-delimited list of YAML config overrides
 
     **Example Request**
 
