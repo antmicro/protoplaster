@@ -206,6 +206,10 @@ def _trigger_remote_run(machine, base_url, args):
         "machine_target": machine
     }
 
+    overrides = getattr(args, "overrides", [])
+    if overrides:
+        payload["overrides"] = "\n".join(overrides)
+
     try:
         response = requests.post(urljoin(base_url, "/api/v1/test-runs"),
                                  json=payload,
