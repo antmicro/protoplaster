@@ -2,10 +2,6 @@ import inspect
 import functools
 
 
-class BaseTest:
-    machines = None
-
-
 class ModuleName(object):
 
     def __init__(self, name):

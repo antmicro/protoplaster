@@ -3,7 +3,7 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from protoplaster.tools.tools import trigger_on_remote
-from protoplaster.conf.module import ModuleName, BaseTest
+from protoplaster.conf.module import ModuleName
 from protoplaster.tests.http_echo.utils import remote_write, remote_read, remote_read_poll
 from protoplaster.conf.consts import SERVE_IP
 
@@ -43,7 +43,7 @@ def start_server(port=8000):
 
 
 @ModuleName("http_echo")
-class TestEcho(BaseTest):
+class TestEcho:
 
     def configure(self):
         assert hasattr(self, "dev1"), "dev1 parameter required in yaml"
