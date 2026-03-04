@@ -121,21 +121,21 @@ verify_node_execution() {
     fi
 
     # Verify TestSimple::test_success PASSED
-    local success_status=$(grep 'TestSimple::test_success' "$report_file" | cut -d ',' -f6)
+    local success_status=$(grep 'TestSimple::test_success' "$report_file" | cut -d ',' -f7)
     if [ "$success_status" != "passed" ]; then
         echo "FAILURE: $node_name test_success did not pass! Status: $success_status"
         exit 1
     fi
 
     # Verify TestSimple::test_failure FAILED
-    local fail_status=$(grep 'TestSimple::test_failure' "$report_file" | cut -d ',' -f6)
+    local fail_status=$(grep 'TestSimple::test_failure' "$report_file" | cut -d ',' -f7)
     if [ "$fail_status" != "failed" ]; then
         echo "FAILURE: $node_name test_failure did not fail! Status: $fail_status"
         exit 1
     fi
 
     # Verify artifact recorded
-    local artifacts_entry=$(grep 'TestSimple::test_record_artifact' "$report_file" | cut -d ',' -f7-)
+    local artifacts_entry=$(grep 'TestSimple::test_record_artifact' "$report_file" | cut -d ',' -f8-)
     if ! echo "$artifacts_entry" | grep -q "file.txt"; then
         echo "FAILURE: $node_name did not record 'file.txt' artifact in report!"
         exit 1

@@ -29,13 +29,13 @@ EOF
 
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts \
     -t test-no-overrides.yml --csv report.csv --override={"tests.000.1.simple.device: new_name","tests.000.0.simple.device: another_new_name"} > /dev/null
-awk -F',' 'FNR>1 && $1 != "" {print $1}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-names-0
+awk -F',' 'FNR>1 && $2 != "" {print $2}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-names-0
 
 rm -f srv/protoplaster/reports/*.csv
 
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts \
     -t test-with-overrides.yml --csv report.csv > /dev/null
-awk -F',' 'FNR>1 && $1 != "" {print $1}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-names-1
+awk -F',' 'FNR>1 && $2 != "" {print $2}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-names-1
 
 exit_code=0
 

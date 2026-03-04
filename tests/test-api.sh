@@ -33,25 +33,25 @@ for RUN_ID in $(curl -s http://localhost:5000/api/v1/test-runs | jq -r '.[].id')
   curl -s http://localhost:5000/api/v1/test-runs/$RUN_ID/report >> report.csv
 done
 
-TEST_STATUS=$(grep 'test.py::TestSimple::test_success' report.csv | cut -d ',' -f6)
+TEST_STATUS=$(grep 'test.py::TestSimple::test_success' report.csv | cut -d ',' -f7)
 if [ "$TEST_STATUS" != "passed" ] ; then
   echo "Success test did not pass!"
   exit 1
 fi
 
-TEST_STATUS=$(grep 'test.py::TestSimple::test_failure' report.csv | cut -d ',' -f6)
+TEST_STATUS=$(grep 'test.py::TestSimple::test_failure' report.csv | cut -d ',' -f7)
 if [ "$TEST_STATUS" != "failed" ] ; then
   echo "Failure test did not fail!"
   exit 1
 fi
 
-TEST_STATUS=$(grep 'test.py::TestSimple::test_record_artifact' report.csv | cut -d ',' -f6)
+TEST_STATUS=$(grep 'test.py::TestSimple::test_record_artifact' report.csv | cut -d ',' -f7)
 if [ "$TEST_STATUS" != "passed" ] ; then
   echo "Artifacts record test did not pass!"
   exit 1
 fi
 
-TEST_ARTIFACTS=$(grep 'test.py::TestSimple::test_record_artifact' report.csv | cut -d ',' -f7-)
+TEST_ARTIFACTS=$(grep 'test.py::TestSimple::test_record_artifact' report.csv | cut -d ',' -f8-)
 if ! echo "$TEST_ARTIFACTS" | grep -q "file.txt"; then
   echo "file.txt artifacts was not recorded!"
   exit 1

@@ -30,7 +30,7 @@ EOF
 
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts -t test-execution-order.yml --csv report.csv > /dev/null
 
-awk -F',' 'FNR>1 && $1 != "" {print $1}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-order
+awk -F',' 'FNR>1 && $2 != "" {print $2}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-order
 
 cat << EOF > /tmp/expected-order
 simple(foo)
