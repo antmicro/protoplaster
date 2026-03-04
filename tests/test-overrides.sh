@@ -12,6 +12,11 @@ tests:
       device: "bar"
   - simple:
       device: "this_name_stays"
+
+  001:
+    tests:
+      - simple:
+          device: "foo"
 EOF
 
 cat <<EOF > srv/protoplaster/tests/test-with-overrides.yml
@@ -23,12 +28,20 @@ tests:
       device: "bar"
   - simple:
       device: "this_name_stays"
+
+  001:
+    tests:
+      - simple:
+          device: "old_name"
+
   000.1.simple.device: new_name
   000.0.simple.device: another_new_name
+  001.tests.0.simple.device: "overridden"
 EOF
 
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts \
-    -t test-no-overrides.yml --csv report.csv --override={"tests.000.1.simple.device: new_name","tests.000.0.simple.device: another_new_name"} > /dev/null
+    -t test-no-overrides.yml --csv report.csv \
+    --override={"tests.000.1.simple.device: new_name","tests.000.0.simple.device: another_new_name","tests.001.tests.0.simple.device: overridden"} > /dev/null
 awk -F',' 'FNR>1 && $2 != "" {print $2}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-names-0
 
 rm -f srv/protoplaster/reports/*.csv
@@ -43,6 +56,7 @@ cat << EOF > /tmp/expected-names
 simple(another_new_name)
 simple(new_name)
 simple(this_name_stays)
+simple(overridden)
 EOF
 
 echo "Names expected:"
