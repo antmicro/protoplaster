@@ -10,6 +10,7 @@ import shutil
 from waitress import serve
 
 import protoplaster.api.v1
+from protoplaster.conf.plugin_manager import load_plugins_from_dir
 import protoplaster.webui
 import protoplaster.webui.devices
 from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME, SERVE_IP
@@ -136,6 +137,9 @@ def parse_args():
                         action='append',
                         default=[],
                         help="Config property override")
+    parser.add_argument("--plugins",
+                        type=str,
+                        help="Path to a folder with plugins")
     args = parser.parse_args()
 
     if args.csv_columns and not args.csv and not args.report_output:
@@ -243,6 +247,8 @@ def main():
         list_test_suites(args)
         sys.exit()
 
+    if args.plugins:
+        load_plugins_from_dir(args.plugins)
     if args.server or args.dut:
         run_http_server(args)
     else:

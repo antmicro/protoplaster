@@ -2,6 +2,7 @@ import pytest
 import inspect
 import yaml
 import copy
+from .plugin_manager import pm
 
 
 def pytest_addoption(parser):
@@ -111,8 +112,25 @@ def restore_class_state(cls, original_state):
             pass
 
 
+@pytest.fixture(autouse=True)
+def run_before_and_after_tests(request):
+    """Fixture to execute hooks before and after a test is run"""
+    test_function = request._pyfuncitem.obj
+    test_instance = test_function.__self__
+
+    pm.hook.before_test_function(test_instance=test_instance,
+                                 test_function=test_function)
+
+    # execute test
+    yield
+
+    # guaranteed to run regardless of what happens in the tests.
+    pm.hook.after_test_function(test_instance=test_instance,
+                                test_function=test_function)
+
+
 @pytest.fixture(scope='class', autouse=True)
-def setup_tests(request, test_config):
+def setup_tests(request: pytest.FixtureRequest, test_config):
     """
     Setup the test class with the specific configuration for this run.
     The 'test_config' argument is injected by pytest_generate_tests.
