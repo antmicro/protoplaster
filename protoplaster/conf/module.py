@@ -12,6 +12,14 @@ class ModuleName(object):
         self.module_name = name
 
     def __call__(self, test_class):
+        self.verify_no_setup_class(test_class)
+        self.verify_name_existence(test_class)
+        self.set_module_name(test_class)
+        self.flatten_mro(test_class)
+
+        return test_class
+
+    def flatten_mro(self, test_class):
         # Build the members dict manually using reversed MRO and __dict__.
         # We avoid inspect.getmembers() because it sorts alphabetically,
         # and we want to preserve the exact order the tests were defined in the file.
@@ -32,19 +40,21 @@ class ModuleName(object):
                     pass
                 setattr(test_class, name, member)
 
+    def verify_no_setup_class(self, test_class):
         if hasattr(test_class, "setup_class"):
             raise TypeError(
                 f"Class '{test_class.__name__}' must not use setup_class(). Use configure() instead."
             )
 
+    def verify_name_existence(self, test_class):
         name_method = getattr(test_class, "name", None)
         if not callable(name_method):
             raise TypeError(
                 f"Class '{test_class.__name__}' is missing name() method")
 
-        @staticmethod
+    def set_module_name(self, test_class):
+
         def module_name():
             return self.module_name
 
         setattr(test_class, "module_name", module_name)
-        return test_class
