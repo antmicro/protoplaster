@@ -39,8 +39,14 @@ jobs:
         with:
           shared-dirs: ./
           renode-run: |
+            which python
+            which pip
+            python -m pip list
             python -m venv .venv
             source .venv/bin/activate
+            which python
+            which pip
+            python -m pip list
             pip install .
             protoplaster -d tests -r . -a . -t basic.yml
           devices: |
