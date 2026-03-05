@@ -18,7 +18,7 @@ from protoplaster.docs import __file__ as docs_path
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
 from protoplaster.conf.log_generator import LogGenerator
-from protoplaster.conf.parser import TestFile, load_yaml
+from protoplaster.conf.parser import TestFile, load_yaml, CustomizedLoader
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
 from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, run_command
 from protoplaster.tools.log import error, pr_warn, pr_err, warning
@@ -32,8 +32,14 @@ REMOTE_TEST_POLL_INTERVAL = 1
 
 def create_test_file(args) -> TestFile:
     overrides = copy.copy(args.overrides)
+    # CustomizedLoader is a modified YAML loader class that remembers anchors
+    # between parsed files. Calls to _reset_custom() are necessary to reset
+    # the internal structures between parsing files that are actually
+    # semantically separate.
+    CustomizedLoader._reset_custom()
     test_file = TestFile(args.test_dir, args.test_file, args.custom_tests,
                          overrides)
+    CustomizedLoader._reset_custom()
     if len(overrides) > 0:
         pr_err(f"These overrides could not be applied: {overrides}")
     if (group := args.group) not in (None, ""):

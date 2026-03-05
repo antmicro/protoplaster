@@ -21,9 +21,37 @@ def to_path(p: StrPath) -> Path:
     return p if isinstance(p, Path) else Path(p)
 
 
+"""
+Modified version of yaml.SafeLoader that remembers anchors between invocations
+of yaml.load(). Requires calls to _reset_custom() before and after use as a
+trade-off from minimizing interference with parent class contents.
+"""
+
+
+class CustomizedLoader(yaml.SafeLoader):
+
+    @classmethod
+    def _reset_custom(cls):
+        cls.to_override = {"anchors": {}}
+        for name, val in cls.to_override.items():
+            __name = "__" + name
+            setattr(cls, __name, val)
+
+    def __setattr__(self, name, value):
+        if hasattr(CustomizedLoader, "to_override") and (
+                name in CustomizedLoader.to_override) and (not value):
+            __name = "__" + name
+            if not hasattr(self, name):
+                super().__setattr__(name, getattr(CustomizedLoader, __name))
+            else:
+                setattr(CustomizedLoader, __name, getattr(self, name))
+        else:
+            super().__setattr__(name, value)
+
+
 def load_yaml(yaml_file: StrPath):
     with open(yaml_file) as file:
-        content = yaml.safe_load(file)
+        content = yaml.load(file, CustomizedLoader)
     return content
 
 
@@ -230,7 +258,8 @@ class TestFile:
                 or isinstance(file_content, list)):
             pr_err("File has no proper content")
             return
-        self.overrides = yaml.safe_load("\n".join(overrides)) or {}
+        self.overrides = yaml.load("\n".join(overrides),
+                                   CustomizedLoader) or {}
         self.__search_overrides(file_content)
         """
         The list "overrides" will be used outside this function to ensure
