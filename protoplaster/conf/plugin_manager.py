@@ -12,6 +12,10 @@ hookimpl = HookimplMarker(PROTOPLASTER)
 class ProtoplasterSpec:
 
     @hookspec
+    def before_test_setup(self, test_class):
+        """called before test class configure method"""
+
+    @hookspec
     def before_test_function(self, test_instance, test_function):
         """called before test function, but after the configure method"""
 

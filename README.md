@@ -286,6 +286,10 @@ from protoplaster.conf.plugin_manager import hookimpl
 
 class ProtoplasterPlugin:
     @hookimpl
+    def before_test_setup(self, test_class):
+        print(f"setting up test class: {test_class.__name__}")
+
+    @hookimpl
     def before_test_function(self, test_instance, test_function: Callable):
         print(f"hello from {test_instance.name()}", test_instance, test_function.__name__)
 
@@ -294,6 +298,7 @@ class ProtoplasterPlugin:
         print(f"goodbye from {test_instance.name()}", test_instance, test_function.__name__)
 ```
 
+* `before_test_setup` — called **before** the test class's `configure()` method.
 * `before_test_function` — called **before** each test function is executed.
 * `after_test_function` — called **after** each test function has finished.
 * `test_instance` — the test class instance running the test.

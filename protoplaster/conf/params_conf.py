@@ -146,6 +146,8 @@ def setup_tests(request: pytest.FixtureRequest, test_config):
     for key in conf:
         setattr(request.cls, key, conf[key])
 
+    pm.hook.before_test_setup(test_class=request.cls)
+
     if hasattr(request.cls, "configure"):
         func = getattr(request.cls, "configure")
 
