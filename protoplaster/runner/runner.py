@@ -23,7 +23,7 @@ from protoplaster.report_generators.test_report.protoplaster_test_report import 
 from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, run_command
 from protoplaster.tools.tools import error, pr_warn, warning
 from protoplaster.webui.devices import get_all_devices
-from protoplaster.conf.consts import REMOTE_RUN_TRIGGER_TIMEOUT, SERVE_IP, WEBUI_POLLING_INTERVAL
+from protoplaster.conf.consts import REMOTE_RUN_TRIGGER_TIMEOUT, SERVE_IP, WEBUI_POLLING_INTERVAL, LOCAL_DEVICE_HOST
 from protoplaster import __file__ as protoplaster_root
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
@@ -327,11 +327,11 @@ def run_tests(args):
                 if getattr(args, "server", False):
                     # Web server mode: Dispatch to the local Flask server
                     local_url = f"http://{SERVE_IP}:{args.port}"
-                    run_id = _trigger_remote_run("localhost", local_url,
+                    run_id = _trigger_remote_run(LOCAL_DEVICE_HOST, local_url,
                                                  chunk_args)
                     if run_id:
                         remote_runs.append({
-                            "machine": "localhost",
+                            "machine": LOCAL_DEVICE_HOST,
                             "base_url": local_url,
                             "run_id": run_id
                         })
@@ -339,7 +339,7 @@ def run_tests(args):
                     # CLI mode: Execute local tests directly
                     print("Executing local tests directly (CLI mode)")
                     local_chunk_args = copy.copy(chunk_args)
-                    local_chunk_args.machine_target = "localhost"
+                    local_chunk_args.machine_target = LOCAL_DEVICE_HOST
 
                     if getattr(local_chunk_args, "csv", None):
                         csv_name, csv_ext = os.path.splitext(
@@ -357,7 +357,7 @@ def run_tests(args):
 
         return 0, []
 
-    if machine_target == "localhost":
+    if machine_target == LOCAL_DEVICE_HOST:
         machine_target = None
         args.machine_target = None
 
