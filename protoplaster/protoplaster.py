@@ -181,6 +181,10 @@ def run_http_server(args):
         sys.path.append(os.path.abspath(args.custom_tests))
         print(info(f"Added custom tests dir to path: {args.custom_tests}"))
 
+    if args.plugins and os.path.isdir(args.plugins):
+        sys.path.append(os.path.abspath(args.plugins))
+        print(info(f"Added plugins dir to path: {args.plugins}"))
+
     if not args.dut:
         protoplaster.webui.devices.add_device(LOCAL_DEVICE_NAME,
                                               f"http://127.0.0.1:{args.port}")
