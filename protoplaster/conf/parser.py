@@ -232,8 +232,14 @@ class TestFile:
             return
         self.overrides = yaml.safe_load("\n".join(overrides)) or {}
         self.__search_overrides(file_content)
+        """
+        The list "overrides" will be used outside this function to ensure
+        all overrides were applied. Make sure it contains everything
+        """
+        overrides[:] = [f"{key}: {val}" for key, val in self.overrides.items()]
+        applied = []
 
-        for key, val in self.overrides.items():
+        for n, (key, val) in enumerate(self.overrides.items()):
             node = file_content
             path = key.split(".")
             for name in path[:-1]:
@@ -242,15 +248,19 @@ class TestFile:
                 elif (name.isdecimal()) and len(node) > int(name):
                     node = node[int(name)]
                 else:
-                    pr_err(f"\"{key}\": Element \"{name}\" not found")
+                    # Node not found in this file
                     break
                 if not (isinstance(node, dict) or isinstance(node, list)):
                     pr_err(
-                        f"\"{key}\": Element \"{name}\" is neither a sequence nor a mapping"
+                        f"\"{key}\": Element \"{name}\" in file \"{yaml_file}\" is neither a sequence nor a mapping"
                     )
                     break
             else:
                 node[path[-1]] = val
+                applied.append(n)
+
+        for n in sorted(applied, reverse=True):
+            del overrides[n]
 
         if (includes := file_content.get("includes")) is not None:
             for include in includes:
@@ -262,7 +272,8 @@ class TestFile:
 
                 include_file = TestFile(test_dir,
                                         include,
-                                        custom_path, [],
+                                        custom_path,
+                                        overrides,
                                         _visited=visited)
                 self.tests.update(include_file.tests)
                 self.metadata.update(include_file.metadata)

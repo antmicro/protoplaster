@@ -21,7 +21,7 @@ from protoplaster.conf.log_generator import LogGenerator
 from protoplaster.conf.parser import TestFile, load_yaml
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
 from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, run_command
-from protoplaster.tools.tools import error, pr_warn, warning
+from protoplaster.tools.tools import error, pr_warn, pr_err, warning
 from protoplaster.webui.devices import get_all_devices
 from protoplaster.conf.consts import REMOTE_RUN_TRIGGER_TIMEOUT, SERVE_IP, WEBUI_POLLING_INTERVAL, LOCAL_DEVICE_HOST
 from protoplaster import __file__ as protoplaster_root
@@ -31,8 +31,11 @@ REMOTE_TEST_POLL_INTERVAL = 1
 
 
 def create_test_file(args) -> TestFile:
+    overrides = copy.copy(args.overrides)
     test_file = TestFile(args.test_dir, args.test_file, args.custom_tests,
-                         args.overrides)
+                         overrides)
+    if len(overrides) > 0:
+        pr_err(f"These overrides could not be applied: {overrides}")
     if (group := args.group) not in (None, ""):
         test_file.filter_suite(group)
 
