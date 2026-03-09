@@ -8,3 +8,4 @@ protoplaster.md
 .venv
 test_output/
 protoplaster/symlinks
+srv/protoplaster
