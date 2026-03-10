@@ -58,7 +58,8 @@ def fetch_configs():
     try:
         filenames = [
             f for f in os.listdir(config_dir)
-            if os.path.isfile(os.path.join(config_dir, f))
+            if os.path.isfile(os.path.join(config_dir, f)) and f.endswith((
+                ".yml", ".yaml"))
         ]
     except FileNotFoundError:
         return jsonify({"error": f"Directory not found: {config_dir}"}), 404
