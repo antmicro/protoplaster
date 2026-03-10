@@ -66,8 +66,9 @@
           </div>
 
           <div class="mb-3">
-            <label for="testSuiteName" class="form-label">Test suite</label>
-            <input type="text" name="name" class="form-control" id="testSuiteName">
+            <label for="testSuiteSelect" class="form-label">Test suite</label>
+            <select name="testSuite" class="form-select" id="testSuiteSelect">
+            </select>
           </div>
 
           <div class="mb-3">
@@ -226,7 +227,36 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Failed to fetch configs:", err);
         configSelect.innerHTML = '<option disabled>Error loading configs</option>';
     }
+
+    updateTestSuiteList();
   }
+
+  async function updateTestSuiteList() {
+    const testSuiteSelect = document.getElementById("testSuiteSelect");
+    testSuiteSelect.innerHTML = '<option disabled>Loading...</option>';
+    const configSelect = document.getElementById('configSelect');
+    const config = configSelect.value;
+
+    try {
+        // Fetch configs from the local controller
+        const resp = await fetch(`/api/v1/configs/${config}/test-suites`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const suites = await resp.json();
+
+        testSuiteSelect.innerHTML = '<option value="">(all)</option>';
+        suites.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            testSuiteSelect.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Failed to fetch test suites:", err);
+        configSelect.innerHTML = '<option disabled>Error loading test suites</option>';
+    }
+  }
+
+  document.getElementById("configSelect").addEventListener("input", updateTestSuiteList);
 
   const modal = document.getElementById('triggerTestRunModal');
   modal.addEventListener('show.bs.modal', updateConfigList);
@@ -241,7 +271,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById('triggerRunForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const config = document.getElementById('configSelect').value;
-    const testSuite = document.getElementById('testSuiteName').value;
+    const testSuite = document.getElementById('testSuiteSelect').value;
     const overrides = document.getElementById('overrides').value;
 
     try {

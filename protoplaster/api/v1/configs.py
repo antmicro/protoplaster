@@ -3,6 +3,8 @@ import os
 from email.utils import format_datetime
 from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
+from protoplaster.runner.runner import create_test_file
+import copy
 
 configs_blueprint: Blueprint = Blueprint("protoplaster-configs", __name__)
 
@@ -205,6 +207,37 @@ def fetch_config_file(config_name: str):
                                config_name,
                                as_attachment=True,
                                mimetype="text/yaml")
+
+
+@configs_blueprint.route("/api/v1/configs/<string:config_name>/test-suites")
+def fetch_test_suites(config_name: str):
+    """Fetch list of test suites in config file
+
+    :status 200: no error
+    :status 404: config does not exist
+
+    :>json array: list of test suites
+
+    **Example Request**
+
+    .. sourcecode:: http
+
+        GET /api/v1/configs/complex.yml/test-suites HTTP/1.1
+
+    **Example Response**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+
+        ["local","full"]
+    """  # noqa: E501
+    args = copy.copy(current_app.config["ARGS"])
+    config_dir = args.test_dir
+    args.test_file = config_name
+    test_file = create_test_file(args)
+    return jsonify(list(test_file.test_suites))
 
 
 @configs_blueprint.route("/api/v1/configs/<string:config_name>",
