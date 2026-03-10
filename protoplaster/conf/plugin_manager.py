@@ -3,7 +3,7 @@ from pluggy import HookimplMarker, HookspecMarker, PluginManager
 import importlib
 
 from protoplaster.conf.consts import PROTOPLASTER
-from protoplaster.tools.tools import pr_warn, pr_info
+from protoplaster.tools.log import pr_warn, pr_info
 
 hookspec = HookspecMarker(PROTOPLASTER)
 hookimpl = HookimplMarker(PROTOPLASTER)

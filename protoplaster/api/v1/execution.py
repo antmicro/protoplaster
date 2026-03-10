@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 import importlib
-from protoplaster.tools.tools import error
+from protoplaster.tools.log import error
 
 execution_blueprint: Blueprint = Blueprint("protoplaster-execution", __name__)
 

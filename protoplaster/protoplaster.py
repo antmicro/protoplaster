@@ -17,7 +17,7 @@ from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOC
 from protoplaster.runner.manager import RunManager
 from protoplaster.runner.runner import list_tests, list_test_suites, run_tests
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
-from protoplaster.tools.tools import error, info
+from protoplaster.tools.log import error, info
 
 
 def create_docs_app() -> Flask:

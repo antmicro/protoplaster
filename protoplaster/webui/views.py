@@ -3,7 +3,7 @@ from . import webui_blueprint
 import requests
 from protoplaster.webui.devices import get_all_devices, get_device_by_name, add_device, remove_device
 from protoplaster.conf.consts import WEBUI_POLLING_INTERVAL
-from protoplaster.tools.tools import error
+from protoplaster.tools.log import error
 
 
 @webui_blueprint.route("/")

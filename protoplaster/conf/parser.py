@@ -7,7 +7,7 @@ from typing import Any
 import yaml
 
 import protoplaster.tests
-from protoplaster.tools.tools import pr_err, pr_info, pr_warn
+from protoplaster.tools.log import pr_err, pr_info, pr_warn
 
 StrPath = str | Path
 

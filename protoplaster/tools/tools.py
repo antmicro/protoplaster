@@ -1,5 +1,4 @@
 import requests
-from colorama import Fore, Style
 from typing import Callable, Optional, List, Any, Union
 from concurrent.futures import ThreadPoolExecutor, Future
 
@@ -18,30 +17,6 @@ def assert_user_input(user_message,
     )
     if answer != "":
         assert answer.lower() == possible_answers[correct_answer].lower()
-
-
-def warning(text):
-    return Fore.YELLOW + f"[WARNING] {text}" + Style.RESET_ALL
-
-
-def pr_warn(text):
-    print(warning(text))
-
-
-def error(text):
-    return Fore.RED + f"[ERROR] {text}" + Style.RESET_ALL
-
-
-def pr_err(text):
-    print(error(text))
-
-
-def info(text):
-    return f"[INFO] {text}"
-
-
-def pr_info(text):
-    print(info(text))
 
 
 def _execute_request(url: str, method: Callable, args: List[Any]) -> Any:
