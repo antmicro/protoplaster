@@ -39,6 +39,14 @@ tests:
   001.tests.0.simple.device: "overridden"
 EOF
 
+cat <<EOF > srv/protoplaster/tests/test-overrides-includes.yml
+includes: [test-no-overrides.yml]
+tests:
+  000.1.simple.device: new_name
+  000.0.simple.device: another_new_name
+tests.001.tests.0.simple.device: "overridden"
+EOF
+
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts \
     -t test-no-overrides.yml --csv report.csv \
     --override={"tests.000.1.simple.device: new_name","tests.000.0.simple.device: another_new_name","tests.001.tests.0.simple.device: overridden"} > /dev/null
@@ -49,6 +57,12 @@ rm -f srv/protoplaster/reports/*.csv
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts \
     -t test-with-overrides.yml --csv report.csv > /dev/null
 awk -F',' 'FNR>1 && $2 != "" {print $2}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-names-1
+
+rm -f srv/protoplaster/reports/*.csv
+
+protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts \
+    -t test-overrides-includes.yml --csv report.csv > /dev/null
+awk -F',' 'FNR>1 && $2 != "" {print $2}' $(ls -tr srv/protoplaster/reports/*.csv) | uniq > /tmp/actual-names-2
 
 exit_code=0
 
@@ -64,7 +78,7 @@ while read -r r; do
     echo "   - $r"
 done < /tmp/expected-names
 
-for i in $(seq 0 1); do
+for i in $(seq 0 2); do
     if diff -q /tmp/expected-names /tmp/actual-names-$i > /dev/null; then
         echo "-> $i: Overrides applied successfully"
     else
