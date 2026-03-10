@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
+import pickle
 import importlib
 from protoplaster.tools.log import error
 
@@ -20,33 +21,33 @@ def execute_function():
 
     :>json any result: return value of the function
     """
-    data = request.get_json()
+    data = pickle.loads(request.data)
     module_name = data.get("module")
     function_name = data.get("function")
     args = data.get("args", [])
 
     if not module_name or not function_name:
-        return jsonify({"error":
-                        "Module and function names are required"}), 400
+        return pickle.dumps(
+            {"error": "Module and function names are required"}), 400
 
     try:
         module = importlib.import_module(module_name)
     except ImportError:
-        return jsonify({"error": f"Module {module_name} not found"}), 404
+        return pickle.dumps({"error": f"Module {module_name} not found"}), 404
 
     try:
         func = getattr(module, function_name)
     except AttributeError:
-        return jsonify(
+        return pickle.dumps(
             {"error":
              f"Function {function_name} not found in {module_name}"}), 404
 
     try:
         result = func(*args)
-        return jsonify({"result": result})
+        return pickle.dumps({"result": result})
     except Exception as e:
         print(
             error(
                 f"RPC Execution failed while calling {func.__name__} with args: {args}: {e}"
             ))
-        return jsonify({"error": str(e)}), 500
+        return pickle.dumps({"error": str(e)}), 500

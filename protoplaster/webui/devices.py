@@ -4,6 +4,7 @@ from urllib.parse import urlparse, urlunparse
 from concurrent.futures import ThreadPoolExecutor, Future
 from typing import Callable, Optional, List, Any, Union
 import requests
+import pickle
 
 _devices = []
 
@@ -71,9 +72,14 @@ def _execute_request(url: str, function: Callable, args: List[Any]) -> Any:
         "args": args,
     }
 
-    resp = requests.post(f"{url}/api/v1/exec", json=payload, timeout=60)
+    pickled_payload = pickle.dumps(payload)
+    hdrs = {'Content-Type': 'application/octet-stream'}
+    resp = requests.post(f"{url}/api/v1/exec",
+                         data=pickled_payload,
+                         headers=hdrs,
+                         timeout=60)
     resp.raise_for_status()
-    data = resp.json()
+    data = pickle.loads(resp.content)
     if "error" in data:
         raise Exception(data["error"])
     return data["result"]
