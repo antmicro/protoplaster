@@ -3,6 +3,7 @@ from typing import Callable, Optional, List, Any, Union
 from concurrent.futures import ThreadPoolExecutor, Future
 
 from protoplaster.webui.devices import get_device_by_name
+from protoplaster.tools.log import error
 
 # Executor to manage threads for non-blocking `trigger_on_remote` calls
 _executor = ThreadPoolExecutor()
