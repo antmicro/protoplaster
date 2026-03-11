@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, Response
 import pickle
 import importlib
 from protoplaster.tools.log import error
@@ -27,27 +27,37 @@ def execute_function():
     args = data.get("args", [])
 
     if not module_name or not function_name:
-        return pickle.dumps(
-            {"error": "Module and function names are required"}), 400
+        return Response(pickle.dumps(
+            {"error": "Module and function names are required"}),
+                        status=400,
+                        mimetype="application/octet-stream")
 
     try:
         module = importlib.import_module(module_name)
     except ImportError:
-        return pickle.dumps({"error": f"Module {module_name} not found"}), 404
+        return Response(pickle.dumps(
+            {"error": f"Module {module_name} not found"}),
+                        status=404,
+                        mimetype="application/octet-stream")
 
     try:
         func = getattr(module, function_name)
     except AttributeError:
-        return pickle.dumps(
-            {"error":
-             f"Function {function_name} not found in {module_name}"}), 404
+        return Response(pickle.dumps(
+            {"error": f"Function {function_name} not found in {module_name}"}),
+                        status=404,
+                        mimetype="application/octet-stream")
 
     try:
         result = func(*args)
-        return pickle.dumps({"result": result})
+        return Response(pickle.dumps({"result": result}),
+                        status=200,
+                        mimetype="application/octet-stream")
     except Exception as e:
         print(
             error(
                 f"RPC Execution failed while calling {func.__name__} with args: {args}: {e}"
             ))
-        return pickle.dumps({"error": str(e)}), 500
+        return Response(pickle.dumps({"error": str(e)}),
+                        status=500,
+                        mimetype="application/octet-stream")
