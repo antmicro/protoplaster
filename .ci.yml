@@ -78,6 +78,7 @@ api-test:
     - ./tests/test-order.sh
     - ./tests/test-overrides.sh
     - ./tests/test-plugins.sh
+    - ./tests/test-rpc-pickle.sh
   artifacts:
     paths:
       - srv/protoplaster/*
