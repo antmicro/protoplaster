@@ -144,9 +144,16 @@ def generate_docs(tests_full_path, yaml_content):
 def extract_class_names(path):
     with open(path, "r", encoding="utf-8") as f:
         tree = ast.parse(f.read())
-    classes = [
-        node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
-    ]
+
+    classes = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            for decorator in node.decorator_list:
+                if isinstance(decorator, ast.Call) and getattr(
+                        decorator.func, 'id', '') == 'ModuleName':
+                    classes.append(node.name)
+                    break
+
     return classes
 
 
@@ -166,7 +173,7 @@ def prepare_pytest_args(test_paths, args):
     for test_path in test_paths:
         classes = extract_class_names(test_path)
         if len(classes) == 0:
-            pr_warn(f"'{test_path}' has not class to test")
+            pr_warn(f"'{test_path}' has no class with @ModuleName to test")
             continue
         test_class = classes[0]
         if len(classes) > 1:
