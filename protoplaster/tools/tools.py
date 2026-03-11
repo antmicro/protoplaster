@@ -26,7 +26,7 @@ def _execute_request(url: str, method: Callable, args: List[Any]) -> Any:
         "args": args,
     }
 
-    resp = requests.post(f"{url}/api/v1/exec", json=payload, timeout=10)
+    resp = requests.post(f"{url}/api/v1/exec", json=payload, timeout=60)
     resp.raise_for_status()
     data = resp.json()
     if "error" in data:
