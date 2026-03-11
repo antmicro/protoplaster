@@ -171,7 +171,7 @@ def prepare_pytest_args(test_paths, args):
         test_class = classes[0]
         if len(classes) > 1:
             pr_warn(
-                f"'{test_path}' has more that one class to test. Choosing first one: '{test_class}'"
+                f"'{test_path}' has more than one class to test. Choosing first one: '{test_class}'"
             )
 
         # Deduplicate based on the specific class in the file
