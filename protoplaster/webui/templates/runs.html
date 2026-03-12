@@ -71,9 +71,47 @@
             </select>
           </div>
 
-          <div class="mb-3">
-            <label for="overrides" class="form-label">Config property overrides</label>
-            <textarea type="text" name="overrides" class="form-control" id="overrides"></textarea>
+          <div class="mb-3 d-none" id="overrideHints">
+            <label for="hintSelect" class="form-label mb-0">Suggested config property overrides</label>
+            <div class="input-group">
+              <select class="form-select" id="hintSelect">
+              </select>
+              <div class="form-floating">
+                <input class="form-control" placeholder="Value" id="hintValue">
+                <label for="hintValue">Value</label>
+              </div>
+              <button type="button" class="btn btn-secondary" id="overrideHintAddBtn" title="Add"><i class="bi bi-plus"></i></button>
+            </div>
+            <div class="d-none alert alert-danger alert-dismissible mt-3" id="overrideHintError" role="alert">
+              Cannot have multiple overrides for the same property
+              <button type="button" class="btn-close" aria-label="Close"></button>
+            </div>
+          </div>
+          <table class="table table-sm align-middle d-none" id="fromHints">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Value</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <template id="applied">
+                <tr>
+                  <td class="appliedKey"></td>
+                  <td class="appliedValue"></td>
+                  <td class="text-end">
+                    <button type="button" class="appliedDelete btn btn-danger" title="Remove">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <div>
+            <label for="overrides" class="form-label" id="overridesLabel">Config property overrides</label>
+            <textarea name="overrides" class="form-control" id="overrides"></textarea>
           </div>
         </div>
 
@@ -229,6 +267,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     updateTestSuiteList();
+    updateOverrideHintList();
   }
 
   async function updateTestSuiteList() {
@@ -238,7 +277,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const config = configSelect.value;
 
     try {
-        // Fetch configs from the local controller
+        // Fetch test suites list from the local controller
         const resp = await fetch(`/api/v1/configs/${config}/test-suites`);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const suites = await resp.json();
@@ -256,7 +295,91 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  async function updateOverrideHintList() {
+    const formItem = document.getElementById("overrideHints");
+    formItem.classList.add("d-none");
+    const alert = document.getElementById("overrideHintError");
+    alert.classList.add("d-none");
+    // Change label for textarea depending on whether
+    // suggested overrides are visible to make it clearer
+    const otherLabel = document.getElementById("overridesLabel");
+    if ("original" in otherLabel.dataset) {
+      otherLabel.textContent = otherLabel.dataset.original;
+      delete otherLabel.dataset.original;
+    }
+    const applied = document.getElementById("fromHints");
+    applied.classList.add("d-none");
+    applied.querySelectorAll("tbody > tr").forEach(r => r.remove());
+    const hintSelect = document.getElementById("hintSelect");
+    hintSelect.innerHTML = '<option disabled>Loading...</option>';
+    const configSelect = document.getElementById('configSelect');
+    const config = configSelect.value;
+
+    try {
+        // Fetch override hints list from the local controller
+        const resp = await fetch(`/api/v1/configs/${config}/override-hints`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const hints = await resp.json();
+
+        hintSelect.innerHTML = '';
+        if (hints.length > 0) {
+            formItem.classList.remove("d-none");
+            otherLabel.dataset.original = otherLabel.textContent;
+            otherLabel.textContent = "Other overrides";
+        }
+        hints.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            hintSelect.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Failed to fetch override hints:", err);
+        hintSelect.innerHTML = '<option disabled>Error loading override hints</option>';
+    }
+  }
+
+  function retractOverride(e) {
+    const row = e.target.closest("tr");
+    const table = row.closest("table");
+    row.remove();
+    if (table.rows.length <= 1) {
+      table.classList.add("d-none");
+    }
+  }
+
   document.getElementById("configSelect").addEventListener("input", updateTestSuiteList);
+  document.getElementById("configSelect").addEventListener("input", updateOverrideHintList);
+  // The "add" button next to override hints list; append table with chosen override
+  document.getElementById("overrideHintAddBtn").addEventListener("click", (e) => {
+    const key = document.getElementById("hintSelect").value;
+    const hintValue = document.getElementById("hintValue");
+    const template = document.getElementById("applied");
+    const table = template.closest("table");
+    const tbody = table.tBodies[0];
+    for (let i = 0; i < tbody.rows.length; i++) {
+      const rKeyCell = tbody.rows.item(i).querySelector(".appliedKey");
+      if (rKeyCell.textContent == key) {
+        const alert = document.getElementById("overrideHintError");
+        alert.classList.remove("d-none");
+        return;
+      }
+    }
+    const row = document.importNode(template.content, true);
+    const keyCell = row.querySelector(".appliedKey");
+    keyCell.textContent = key;
+    const valueCell = row.querySelector(".appliedValue");
+    valueCell.textContent = hintValue.value;
+    hintValue.value = "";
+    const deleteBtn = row.querySelector(".appliedDelete");
+    deleteBtn.addEventListener("click", retractOverride);
+    table.classList.remove("d-none");
+    tbody.appendChild(row);
+  });
+  // Close button on the override hint error alert
+  document.querySelector("#overrideHints .btn-close").addEventListener("click", (e) => {
+    e.target.parentNode.classList.add("d-none");
+  });
 
   const modal = document.getElementById('triggerTestRunModal');
   modal.addEventListener('show.bs.modal', updateConfigList);
@@ -272,7 +395,23 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
     const config = document.getElementById('configSelect').value;
     const testSuite = document.getElementById('testSuiteSelect').value;
-    const overrides = document.getElementById('overrides').value;
+    // Merge overrides from table and textarea into one list
+    let overrides = "";
+    const overrides_text = document.getElementById('overrides').value;
+    const tbody = document.querySelector("#fromHints tbody");
+    for (const r of [...tbody.rows]) {
+      const key = r.querySelector(".appliedKey").textContent;
+      const val = r.querySelector(".appliedValue").textContent;
+      for (const l of overrides_text.split(/\r?\n/)) {
+        if (l.startsWith(`${key}: `)) {
+          const alert = document.getElementById("overrideHintError");
+          alert.classList.remove("d-none");
+          return;
+        }
+      }
+      overrides += `${key}: ${val}\n`;
+    }
+    overrides += document.getElementById('overrides').value;
 
     try {
         // Post only to the controller

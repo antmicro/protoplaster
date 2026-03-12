@@ -214,7 +214,6 @@ def fetch_test_suites(config_name: str):
     """Fetch list of test suites in config file
 
     :status 200: no error
-    :status 404: config does not exist
 
     :>json array: list of test suites
 
@@ -238,6 +237,36 @@ def fetch_test_suites(config_name: str):
     args.test_file = config_name
     test_file = create_test_file(args)
     return jsonify(list(test_file.test_suites))
+
+
+@configs_blueprint.route("/api/v1/configs/<string:config_name>/override-hints")
+def fetch_override_hints(config_name: str):
+    """Fetch list of suggested overrides in config file
+
+    :status 200: no error
+
+    :>json array: list of override hints
+
+    **Example Request**
+
+    .. sourcecode:: http
+
+        GET /api/v1/configs/some_example.yml/override-hints HTTP/1.1
+
+    **Example Response**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+
+        ["tests.check.0.simple.device","tests.simple_test.0.simple.device"]
+    """  # noqa: E501
+    args = copy.copy(current_app.config["ARGS"])
+    config_dir = args.test_dir
+    args.test_file = config_name
+    test_file = create_test_file(args)
+    return jsonify(list(test_file.override_hints))
 
 
 @configs_blueprint.route("/api/v1/configs/<string:config_name>",

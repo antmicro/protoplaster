@@ -93,7 +93,7 @@ class ConfigObj:
 class TestBody:
     name: str
     module: Path
-    params: list[dict[Any]]
+    params: dict[str, Any]
 
 
 @dataclass
@@ -245,6 +245,7 @@ class TestFile:
         self.tests = dict()
         self.metadata = dict()
         self.test_suites = dict()
+        self.override_hints: list[str] = []
 
         if not self.file.is_file():
             pr_warn(f'{self.file.name}: unknown test file')
@@ -254,8 +255,7 @@ class TestFile:
         visited.add(self.file.name)
 
         file_content = load_yaml(self.file)
-        if not (isinstance(file_content, dict)
-                or isinstance(file_content, list)):
+        if not (isinstance(file_content, dict)):
             pr_err("File has no proper content")
             return
         self.overrides = yaml.load("\n".join(overrides),
@@ -307,6 +307,7 @@ class TestFile:
                 self.tests.update(include_file.tests)
                 self.metadata.update(include_file.metadata)
                 self.test_suites.update(include_file.test_suites)
+                self.override_hints += include_file.override_hints
 
         if (tests := file_content.get("tests")) is not None:
             for name, content in tests.items():
@@ -366,9 +367,22 @@ class TestFile:
             return  # base case: node is a scalar
         for key, val in items:
             full_path = ("{}.{}".format(path, key)) if path else str(key)
-            if (isinstance(key, str)) and ("." in key):
-                self.overrides[full_path] = val
-                del node[key]
+            if isinstance(key, str):
+                if "." in key:
+                    self.overrides[full_path] = val
+                    del node[key]
+                elif (key == "override"):
+                    if isinstance(val, list):
+                        for k in val:
+                            self.override_hints.append(
+                                f"{path}.{k}" if path else str(k))
+                    elif isinstance(val, str):
+                        self.override_hints.append(
+                            f"{path}.{val}" if path else val)
+                    else:
+                        pr_warn(
+                            f"{full_path}: override hint must be a string or a list of strings"
+                        )
             self.__search_overrides(val, full_path)  # recurse
 
     def filter_suite(self, suite: str):
