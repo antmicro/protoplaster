@@ -1,5 +1,9 @@
 from protoplaster.conf.consts import LOCAL_DEVICE_NAME
+from protoplaster.tools.log import error
 from urllib.parse import urlparse, urlunparse
+from concurrent.futures import ThreadPoolExecutor, Future
+from typing import Callable, Optional, List, Any, Union
+import requests
 
 _devices = []
 
@@ -41,3 +45,58 @@ def remove_device(device_name):
     before = len(_devices)
     _devices = [d for d in _devices if d["name"] != device_name]
     return len(_devices) < before
+
+
+# Executor to manage threads for non-blocking `trigger_on_remote` calls
+_executor = ThreadPoolExecutor()
+
+
+def _execute_request(url: str, method: Callable, args: List[Any]) -> Any:
+    payload = {
+        "module": method.__module__,
+        "function": method.__name__,
+        "args": args,
+    }
+
+    resp = requests.post(f"{url}/api/v1/exec", json=payload, timeout=60)
+    resp.raise_for_status()
+    data = resp.json()
+    if "error" in data:
+        raise Exception(data["error"])
+    return data["result"]
+
+
+def trigger_on_remote(
+        target: str,
+        method: Callable,
+        args: Optional[List[Any]] = None,
+        non_blocking: bool = False) -> Union[Optional[Any], Future]:
+    """
+    Executes a function on a remote node via RPC.
+
+    - target (str): The name of the target device (e.g., 'node1') as registered in the device manager.
+    - method (Callable): The actual function object to execute on the remote node. The function must be defined in a module accessible to the remote agent.
+    - args (list, optional): A list of positional arguments to pass to the remote function. Defaults to None.
+    - non_blocking (bool, optional): If True, returns a Future object immediately. Defaults to False.
+
+    Returns:
+        - If non_blocking=False: The return value of the executed function (or None on failure).
+        - If non_blocking=True: A `concurrent.futures.Future` object representing the execution.
+    """
+    args = args or []
+    device = get_device_by_name(target)
+    if not device:
+        print(error(f"Device {target} not found"))
+        return None
+
+    url = device["url"]
+
+    try:
+        requests.get(url, timeout=5)
+    except requests.exceptions.RequestException:
+        raise Exception(f"Device {target} is offline")
+
+    if non_blocking:
+        return _executor.submit(_execute_request, url, method, args)
+    else:
+        return _execute_request(url, method, args)
