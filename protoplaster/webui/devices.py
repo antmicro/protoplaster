@@ -12,11 +12,15 @@ def get_all_devices():
     return list(_devices)
 
 
+def get_remote_devices():
+    return [d for d in _devices if d["name"] != LOCAL_DEVICE_NAME]
+
+
 def get_device_by_name(device_name):
     return next((d for d in _devices if d["name"] == device_name), None)
 
 
-def add_device(name, url):
+def add_device(name, url, is_broadcast=False):
 
     # Check for missing scheme manually first. We do this string check because
     # `urlparse` gets confused by "host:port". If "://" is missing, we force http.
@@ -35,15 +39,24 @@ def add_device(name, url):
         raise ValueError(f"Device with URL '{url}' already exists")
     device = {"name": name, "url": url}
     _devices.append(device)
+    if not is_broadcast:
+        for d in get_remote_devices()[:-1]:
+            # Tell other devices about this device
+            trigger_on_remote(d["name"], add_device, [name, url, True])
+            # And this device about other devices
+            trigger_on_remote(name, add_device, [d["name"], d["url"], True])
     return device
 
 
-def remove_device(device_name):
+def remove_device(device_name, is_broadcast=False):
     global _devices
     if device_name == LOCAL_DEVICE_NAME:
         raise ValueError("Cannot remove the local device")
     before = len(_devices)
     _devices = [d for d in _devices if d["name"] != device_name]
+    if not is_broadcast:
+        for d in get_remote_devices():
+            trigger_on_remote(d["name"], remove_device, [device_name, True])
     return len(_devices) < before
 
 
