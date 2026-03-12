@@ -6,12 +6,20 @@
   <h2>Eye diagram</h2>
 
   <div class="opts">
-    <div>Lane</div>
-    <div>Bit Number</div>
-    <select onchange="updateEyeDiagram()" name="lanes" id="lanes"></select>
-    <select onchange="updateEyeDiagram()" name="bits" id="bits">
-      <option>Average All Bits</option>
-    </select>
+    <div class="opt-item">
+      <label for="dacs">DAC</label>
+      <select onchange="updateEyeDiagram()" name="dacs" id="dacs"></select>
+    </div>
+    <div class="opt-item">
+      <label for="lanes">Lane</label>
+      <select onchange="updateEyeDiagram()" name="lanes" id="lanes"></select>
+    </div>
+    <div class="opt-item">
+      <label for="bits">Bit Number</label>
+      <select onchange="updateEyeDiagram()" name="bits" id="bits">
+        <option>Average All Bits</option>
+      </select>
+    </div>
   </div>
 
   <div>
@@ -29,17 +37,35 @@ canvas {
 }
 
 .opts {
-  display: grid;
-  width: 10em;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5em;
+  margin-bottom: 1em;
+  align-items: flex-end;
+}
+
+.opt-item {
+  display: flex;
+  flex-direction: column;
   gap: 0.3em;
+}
+
+.opt-item label {
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.opt-item select {
+  padding: 4px;
+  min-width: 120px;
 }
 
 .stats {
   display: grid;
   width: 15em;
   grid-template-columns: 1fr 1fr;
-  margin-left: 3em
+  margin-left: 3em;
+  margin-top: 10px;
 }
 </style>
 
@@ -141,11 +167,20 @@ function log2(number) {
 }
 
 function updateEyeDiagram() {
+  const dacId = document.getElementById("dacs").value;
   const laneNumber = document.getElementById("lanes").selectedIndex;
   const bitNumber = document.getElementById("bits").selectedIndex - 1;
 
+  ctx.clearRect(axisPadding.left, axisPadding.top, gridSize.x * cell.width, gridSize.y * cell.height);
+
+  const dacData = chartData[dacId];
+  if (!dacData) {
+    console.warn(`No DAC data available for ${dacId}`)
+    return;
+  }
+
   // Calculate current amplitude grid
-  const gridData = chartData[laneNumber]
+  const gridData = dacData[laneNumber]
     .map((pixel) => {
       const amp = bitNumber == -1
         ? pixel.amp.reduce((a, b) => a + b, 0) / pixel.amp.length
@@ -203,12 +238,20 @@ function updateEyeDiagram() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  const selectDacs = document.getElementById("dacs");
+  Object.keys(chartData).sort().forEach(dacId => {
+    const option = document.createElement("option");
+    option.text = `DAC ${dacId}`;
+    option.value = dacId;
+    selectDacs.add(option);
+  });
+
   const selectLanes = document.getElementById("lanes");
-    for (var i = 0; i < nLanes; i++) {
-      const option = document.createElement("option");
-      option.text = i;
-      selectLanes.add(option);
-    }
+  for (var i = 0; i < nLanes; i++) {
+    const option = document.createElement("option");
+    option.text = i;
+    selectLanes.add(option);
+  }
 
   const selectBits = document.getElementById("bits");
   for (var i = 0; i < numBits; i++) {

@@ -113,9 +113,9 @@ class TestTiDac38j8xEyescan:
           {{ _item('max_height') }}
         {%- endmacro %}
         """
-        samples = self.eyescan.parse_file()
-        samples = self.eyescan.aggregate_samples(samples,
-                                                 lambda x: sum(x) / len(x))
+        samples_dict = self.eyescan.parse_file()
+        aggregated_dict = self.eyescan.aggregate_samples(
+            samples_dict, lambda x: sum(x) / len(x))
 
         min_width = getattr(self, "min_width", -float('inf'))
         max_width = getattr(self, "max_width", float('inf'))
@@ -125,10 +125,14 @@ class TestTiDac38j8xEyescan:
         assert min_width <= max_width, f"Invalid range: [{min_width}, {max_width}]"
         assert min_height <= max_height, f"Invalid range: [{min_height}, {max_height}]"
 
-        for sample in samples:
-            width, height = self.eyescan.get_eye_size(sample)
-            assert min_width <= width <= max_width, f"Eye width {width} is not in accepted range: [{min_width}, {max_width}]"
-            assert min_height <= height <= max_height, f"Eye height {height} is not in accepted range: [{min_height}, {max_height}]"
+        for dac_id, lanes in aggregated_dict.items():
+            for sample in lanes:
+                width, height = self.eyescan.get_eye_size(sample)
+
+                assert min_width <= width <= max_width, \
+                    f"DAC {dac_id} lane width {width} not in range [{min_width}, {max_width}]"
+                assert min_height <= height <= max_height, \
+                    f"DAC {dac_id} lane height {height} not in range [{min_height}, {max_height}]"
 
     def name(self):
         return "eyescan-" + str(self.daisy_chain_number)
