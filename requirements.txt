@@ -6,10 +6,10 @@ spidev==3.8
 colorama==0.3.9
 Jinja2==3.1.2
 MarkupSafe==2.1.1
-pyrav4l2 @ git+https://github.com/antmicro/pyrav4l2.git@3c071a7
+pyrav4l2 @ https://github.com/antmicro/pyrav4l2/archive/3c071a7494b6b67263c4dddb87b47025338fd960.zip
 pyudev==0.24.1
 Flask==3.1.2
 flask-cors==6.0.1
 requests==2.32.5
 waitress==3.0.2
-eyescan @ git+https://github.com/antmicro/dac-eyescan-test.git@bba62b9c
+eyescan @ https://github.com/antmicro/dac-eyescan-test/archive/ca0bc71308764b3e22f5d6733e8b02a6eb8feeb9.zip
