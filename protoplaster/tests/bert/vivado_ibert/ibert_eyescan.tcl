@@ -48,20 +48,26 @@ proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits lo
 	write_hw_sio_scan -force $outputPath [get_hw_sio_scans $xil_newScan]
 }
 
-set requiredArgs 7
-if { $argc != $requiredArgs } {
-	puts "Incorrect argument count, got $argc, expected $requiredArgs"
+set argNames {
+	outputPath
+	hwServer
+	serialNumber
+	channelPath
+	prbsBits
+	loopback
+	reportFile
+	dwellMode
+	dwellValue
+}
+
+if { $argc != [llength $argNames] } {
+	puts "Incorrect argument count, got $argc, expected [llength $argNames]"
+	puts "Usage: script.tcl $argNames"
 	exit 1
 }
 
-set outputPath [lindex $argv 0]
-set hwServer [lindex $argv 1]
-set serialNumber [lindex $argv 2]
-set channelPath [lindex $argv 3]
-set prbsBits [lindex $argv 4]
-set loopback [lindex $argv 5]
-set reportFile [lindex $argv 6]
-set dwellMode [lindex $argv 7]
-set dwellValue [lindex $argv 8]
+for {set i 0} {$i < [llength $argNames]} {incr i} {
+	set [lindex $argNames $i] [lindex $argv $i]
+}
 
 perform_eye_scan $outputPath $hwServer $serialNumber $channelPath $prbsBits $loopback $reportFile $dwellMode $dwellValue
