@@ -64,10 +64,10 @@ def remove_device(device_name, is_broadcast=False):
 _executor = ThreadPoolExecutor()
 
 
-def _execute_request(url: str, method: Callable, args: List[Any]) -> Any:
+def _execute_request(url: str, function: Callable, args: List[Any]) -> Any:
     payload = {
-        "module": method.__module__,
-        "function": method.__name__,
+        "module": function.__module__,
+        "function": function.__name__,
         "args": args,
     }
 
@@ -81,14 +81,14 @@ def _execute_request(url: str, method: Callable, args: List[Any]) -> Any:
 
 def trigger_on_remote(
         target: str,
-        method: Callable,
+        function: Callable,
         args: Optional[List[Any]] = None,
         non_blocking: bool = False) -> Union[Optional[Any], Future]:
     """
     Executes a function on a remote node via RPC.
 
     - target (str): The name of the target device (e.g., 'node1') as registered in the device manager.
-    - method (Callable): The actual function object to execute on the remote node. The function must be defined in a module accessible to the remote agent.
+    - function (Callable): The actual function object to execute on the remote node. It must be a module-level named function defined in a module accessible to the remote agent.
     - args (list, optional): A list of positional arguments to pass to the remote function. Defaults to None.
     - non_blocking (bool, optional): If True, returns a Future object immediately. Defaults to False.
 
@@ -110,6 +110,6 @@ def trigger_on_remote(
         raise Exception(f"Device {target} is offline")
 
     if non_blocking:
-        return _executor.submit(_execute_request, url, method, args)
+        return _executor.submit(_execute_request, url, function, args)
     else:
-        return _execute_request(url, method, args)
+        return _execute_request(url, function, args)
