@@ -16,12 +16,15 @@ class EyeScan:
                  ftdi_reset_bit: int, daisy_chain_device_number: int,
                  daisy_chain_device_count: int, bit: int,
                  test_pattern: TestPattern, sample_rate: int,
-                 dwell_time: float) -> None:
+                 dwell_time: float, voltage_increment: int,
+                 phase_increment: int) -> None:
         self.eyescan_file = tempfile.NamedTemporaryFile()
         self.axis_multiplier = {"x": 1, "y": 10}
         self.bit = bit
         self.sample_rate = sample_rate
         self.dwell_time = dwell_time
+        self.voltage_increment = voltage_increment
+        self.phase_increment = phase_increment
 
         perform_eyescan(pyftdi_url=pyftdi_url,
                         ftdi_jtag_frequency=ftdi_jtag_frequency,
@@ -33,7 +36,31 @@ class EyeScan:
                         output_path=self.eyescan_file.name,
                         bit_number=bit,
                         test_pattern=test_pattern,
-                        dwell_time=dwell_time)
+                        dwell_time=dwell_time,
+                        voltage_increment=voltage_increment,
+                        phase_increment=phase_increment)
+
+    def fill_increment_data(self, samples_by_lane):
+        for samples in samples_by_lane:
+            for voltage in range(31, -33, -1):
+                for phase in range(15, -17, -1):
+                    if voltage not in range(
+                            31, -33, -1 * self.voltage_increment) and (
+                                voltage + 1,
+                                phase) in samples_by_lane[samples]:
+                        samples_by_lane[samples][(
+                            voltage,
+                            phase)] = samples_by_lane[samples][(voltage + 1,
+                                                                phase)]
+                    if phase not in range(
+                            15, -17, -1 * self.phase_increment) and (
+                                voltage,
+                                phase + 1) in samples_by_lane[samples]:
+                        samples_by_lane[samples][(
+                            voltage,
+                            phase)] = samples_by_lane[samples][(voltage,
+                                                                phase + 1)]
+        return samples_by_lane
 
     def parse_file(self) -> list[dict]:
         samples_by_lane = defaultdict(lambda: defaultdict(list))
@@ -41,6 +68,7 @@ class EyeScan:
             for row in csv.reader(file, delimiter="\t"):
                 lane, bit, y, x, amp = map(int, row)
                 samples_by_lane[lane][(y, x)].append((bit, amp))
+        samples_by_lane = self.fill_increment_data(samples_by_lane)
         return [lane for _, lane in sorted(samples_by_lane.items())]
 
     def aggregate_samples(self,

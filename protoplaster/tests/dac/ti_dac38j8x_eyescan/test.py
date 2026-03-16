@@ -55,6 +55,10 @@ class TestTiDac38j8xEyescan:
             setattr(self, "test_pattern", TestPattern.PRBS_7_BIT)
         else:
             self.test_pattern = parse_test_pattern(self.test_pattern)
+        if not hasattr(self, "voltage_increment"):
+            setattr(self, "voltage_increment", 1)
+        if not hasattr(self, "phase_increment"):
+            setattr(self, "phase_increment", 1)
 
         self.eyescan = EyeScan(
             pyftdi_url=self.pyftdi_url,
@@ -67,7 +71,9 @@ class TestTiDac38j8xEyescan:
             bit=self.bit,
             test_pattern=self.test_pattern,
             sample_rate=self.sample_rate,
-            dwell_time=self.dwell_time)
+            dwell_time=self.dwell_time,
+            voltage_increment=self.voltage_increment,
+            phase_increment=self.phase_increment)
 
     def test_create_diagram(self, record_artifact, artifacts_dir):
         """
