@@ -80,6 +80,7 @@ api-test:
     - ./tests/test-plugins.sh
     - ./tests/test-rpc-pickle.sh
     - ./tests/test-anchors.sh
+    - ./tests/test-api-abort.sh
   artifacts:
     paths:
       - srv/protoplaster/*
