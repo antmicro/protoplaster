@@ -28,6 +28,7 @@ def run_test(run, base_args):
     args.artifacts_dir = os.path.join(args.artifacts_dir, run["id"])
     args.force_local = run.get("force_local", False)
     args.overrides = run["overrides"]
+    args.run_obj = run
 
     os.makedirs(args.artifacts_dir, exist_ok=True)
 
@@ -43,7 +44,9 @@ def run_test(run, base_args):
         for name in metadata
     }
 
-    if ret == 0:
+    if run.get("abort_requested"):
+        run["status"] = RunStatus.ABORTED
+    elif ret == 0:
         run["status"] = RunStatus.FINISHED
     else:
         run["status"] = RunStatus.FAILED

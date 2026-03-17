@@ -103,5 +103,7 @@ class RunManager:
             future.cancel()
             run["status"] = RunStatus.ABORTED
             run["finished_at"] = format_datetime(datetime.now(timezone.utc))
+        elif run["status"] == RunStatus.RUNNING:
+            run["abort_requested"] = True
 
         return run

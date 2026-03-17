@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
     row.querySelector('.status-cell').innerHTML = `<span class="badge bg-${cls}">${text}</span>`;
     row.querySelector('.start-cell').textContent = data.started_at || '-';
     row.querySelector('.end-cell').textContent = data.finished_at || '-';
-    row.querySelector('.btn-abort').disabled = data.status !== 'pending';
+    row.querySelector('.btn-abort').disabled = (data.status !== 'pending' && data.status !== 'running');
   };
 
   const poll = async () => {

@@ -263,12 +263,12 @@ def delete_test_run(identifier: str):
         }
     """  # noqa: E501
     manager = current_app.config["RUN_MANAGER"]
-    run = manager.cancel_run(identifier)
+    run = manager.get_run(identifier)
     if not run:
         return jsonify({"error": "Test run not found"}), 404
 
-    if run.get("status") != RunStatus.PENDING:
-        return jsonify({"error": "Test run not pending"}), 400
+    if run.get("status") not in (RunStatus.PENDING, RunStatus.RUNNING):
+        return jsonify({"error": "Test run not pending or running"}), 400
 
     run = manager.cancel_run(identifier)
 

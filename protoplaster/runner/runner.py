@@ -26,6 +26,19 @@ from protoplaster.webui.devices import get_all_devices
 from protoplaster.conf.consts import REMOTE_RUN_TRIGGER_TIMEOUT, SERVE_IP, WEBUI_POLLING_INTERVAL, LOCAL_DEVICE_HOST
 from protoplaster import __file__ as protoplaster_root
 
+
+class PytestAbortPlugin:
+    """Plugin to gracefully abort pytest execution between tests if requested."""
+
+    def __init__(self, run_obj):
+        self.run_obj = run_obj
+
+    @pytest.hookimpl(tryfirst=True)
+    def pytest_runtest_setup(self, item):
+        if self.run_obj and self.run_obj.get("abort_requested"):
+            pytest.exit("Aborted by user via WebUI")
+
+
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
 REMOTE_TEST_POLL_INTERVAL = 1
 
@@ -405,6 +418,12 @@ def run_tests(args):
             log_report_gen = LogGenerator(
                 f"{args.artifacts_dir}/protoplaster.log")
             plugins.append(log_report_gen)
+
+        # Inject a plugin that runs before every test in a test module to check
+        # if the `abort_requested` field is set.
+        if getattr(args, "run_obj", None):
+            plugins.append(PytestAbortPlugin(args.run_obj))
+
         ret = pytest.main(prepare_pytest_args(paths_to_tests, args),
                           plugins=plugins)
     if args.csv:
