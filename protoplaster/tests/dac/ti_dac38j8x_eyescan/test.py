@@ -73,7 +73,8 @@ class TestTiDac38j8xEyescan:
             sample_rate=self.sample_rate,
             dwell_time=self.dwell_time,
             voltage_increment=self.voltage_increment,
-            phase_increment=self.phase_increment)
+            phase_increment=self.phase_increment,
+            parallel=getattr(self, "parallel", False))
 
     def test_create_diagram(self, record_artifact, artifacts_dir):
         """

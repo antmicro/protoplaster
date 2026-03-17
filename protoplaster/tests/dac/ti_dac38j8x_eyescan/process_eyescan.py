@@ -5,7 +5,7 @@ import tempfile
 from typing import Callable
 
 from jinja2 import Environment, DictLoader
-from eyescan.eyescan import perform_eyescan
+from eyescan.eyescan import perform_eyescan, perform_parallel_eyescan
 from eyescan.instructions import TestPattern
 
 
@@ -17,7 +17,7 @@ class EyeScan:
                  daisy_chain_device_count: int, bit: int,
                  test_pattern: TestPattern, sample_rate: int,
                  dwell_time: float, voltage_increment: int,
-                 phase_increment: int) -> None:
+                 phase_increment: int, parallel: bool) -> None:
         self.eyescan_file = tempfile.NamedTemporaryFile()
         self.axis_multiplier = {"x": 1, "y": 10}
         self.bit = bit
@@ -26,19 +26,22 @@ class EyeScan:
         self.voltage_increment = voltage_increment
         self.phase_increment = phase_increment
 
-        perform_eyescan(pyftdi_url=pyftdi_url,
-                        ftdi_jtag_frequency=ftdi_jtag_frequency,
-                        ftdi_direction=ftdi_direction,
-                        ftdi_initial_value=ftdi_initial_value,
-                        ftdi_reset_bit=ftdi_reset_bit,
-                        daisy_chain_device_number=daisy_chain_device_number,
-                        daisy_chain_device_count=daisy_chain_device_count,
-                        output_path=self.eyescan_file.name,
-                        bit_number=bit,
-                        test_pattern=test_pattern,
-                        dwell_time=dwell_time,
-                        voltage_increment=voltage_increment,
-                        phase_increment=phase_increment)
+        perform_eyescan_func = perform_parallel_eyescan if parallel else perform_eyescan
+
+        perform_eyescan_func(
+            pyftdi_url=pyftdi_url,
+            ftdi_jtag_frequency=ftdi_jtag_frequency,
+            ftdi_direction=ftdi_direction,
+            ftdi_initial_value=ftdi_initial_value,
+            ftdi_reset_bit=ftdi_reset_bit,
+            daisy_chain_device_number=daisy_chain_device_number,
+            daisy_chain_device_count=daisy_chain_device_count,
+            output_path=self.eyescan_file.name,
+            bit_number=bit,
+            test_pattern=test_pattern,
+            dwell_time=dwell_time,
+            voltage_increment=voltage_increment,
+            phase_increment=phase_increment)
 
     def fill_increment_data(self, samples_by_lane):
         for samples in samples_by_lane:
