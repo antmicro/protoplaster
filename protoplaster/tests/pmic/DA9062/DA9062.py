@@ -1,5 +1,5 @@
 from enum import IntEnum
-from smbus2 import SMBus, i2c_msg
+from smbus2 import SMBus
 
 
 class DA9062Regs(IntEnum):
@@ -33,26 +33,20 @@ class DA9062Regs(IntEnum):
         raise IndexError()
 
     @staticmethod
-    def LDOSel(n):
-        if 1 <= n <= 4:
-            return DA9062Regs(DA9062Regs.LDO1Cont + (n - 1))
-        raise IndexError()
-
-    @staticmethod
     def VLDO(n, selection):
         if 1 <= n <= 4:
             if selection == LDOSelection.A:
-                DA9062Regs(DA9062Regs.VLDO1A + (n - 1))
+                return DA9062Regs(DA9062Regs.VLDO1A + (n - 1))
             else:
-                DA9062Regs(DA9062Regs.VLDO1B + (n - 1))
+                return DA9062Regs(DA9062Regs.VLDO1B + (n - 1))
         raise IndexError()
 
 
 class DVC1(IntEnum):
     VBUCK1Sel = 1 << 0
     VBUCK2Sel = 1 << 1
-    VBUCK3Sel = 1 << 2
-    VBUCK4Sel = 1 << 3
+    VBUCK3Sel = 1 << 3  # yes, 3 and 4 really are swapped...
+    VBUCK4Sel = 1 << 2  # see DS Table 72: DVC_1 (0x032)
     VLDO1Sel = 1 << 4
     VLDO2Sel = 1 << 5
     VLDO3Sel = 1 << 6
@@ -61,7 +55,7 @@ class DVC1(IntEnum):
     @classmethod
     def VLDOSel(cls, n):
         if 1 <= n <= 4:
-            return cls(DVC1.VLDO1SEL + (n - 1))
+            return cls(DVC1.VLDO1Sel << (n - 1))
         raise IndexError()
 
 
