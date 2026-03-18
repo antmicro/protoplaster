@@ -1,6 +1,13 @@
 from typing import Literal
 
-from spidev import SpiDev
+SPIDEV_LIBRARY = False
+try:
+    from spidev import SpiDev
+    SPIDEV_LIBRARY = True
+except OSError:
+    print(
+        "Warning: SPIDEV library is not available. Disabling spi module tests."
+    )
 
 
 class SPI:
@@ -23,6 +30,8 @@ class SPI:
         self.address_endian: Literal["little", "big"] = address_endian
         self.data_bytes = data_bytes
         self.data_endian: Literal["little", "big"] = data_endian
+
+        assert SPIDEV_LIBRARY, "SPIDEV library is not available."
 
     def read_register(self,
                       register: int,
