@@ -2,3 +2,11 @@ tests:
   base:
   - simple:
       device: "simple"
+      override: device
+
+override: ["tests.ext.0.simple.device"]
+
+test-suites:
+  compl:
+    tests:
+      - base

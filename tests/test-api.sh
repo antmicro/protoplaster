@@ -18,12 +18,24 @@ if [ "$TEST_UPLOAD_NAME" != "api-test.yml" ] ; then
   exit 1
 fi
 
+TEST_SUITES=$(curl -s http://localhost:5000/api/v1/configs/api-test.yml/test-suites | jq -r '.[]')
+if [ "$TEST_SUITES" != "compl" ] ; then
+  echo "Fetching list of test suites failed!"
+  exit 1
+fi
+
+OVERRIDE_HINTS=$(curl -s http://localhost:5000/api/v1/configs/api-test.yml/override-hints | jq -r '.[]')
+if [ "$OVERRIDE_HINTS" != $'tests.base.0.simple.device\ntests.ext.0.simple.device' ] ; then
+  echo "Fetching list of override hints failed!"
+  exit 1
+fi
+
 # Trigger test run
 curl -s -X POST http://localhost:5000/api/v1/test-runs -H "Content-Type: application/json" -d '{"config_name": "api-test.yml"}' > /dev/null
 sleep 2
 
 # Wait for test runs to finish and collect reports
-touch report.csv
+rm -f report.csv
 for RUN_ID in $(curl -s http://localhost:5000/api/v1/test-runs | jq -r '.[].id'); do
   STATUS=""
   while [ "$STATUS" != "finished" ] && [ "$STATUS" != "failed" ]; do
