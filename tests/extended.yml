@@ -51,10 +51,10 @@ tests:
       current_voltages:
       - ldo_id: 2
         max_voltage: 10
-        min_volatge: 9.3
+        min_voltage: 9.3
       - ldo_id: 4
         max_voltage: 1
-        min_volatge: 5
+        min_voltage: 5
   - UCD90320U:
       _name: "UCD90320U(1, 0x25)"
       bus: 1

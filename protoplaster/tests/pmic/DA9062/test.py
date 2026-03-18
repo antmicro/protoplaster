@@ -84,9 +84,9 @@ class TestDA9062:
             if 'max_voltage' in ldo:
                 assert curr_voltage <= ldo['max_voltage'], \
                     f"The voltage of ldo({ldo['ldo_id']}) is {curr_voltage}, above max {ldo['max_voltage']}."
-            if 'min_volatge' in ldo:
-                assert ldo['min_volatge'] <= curr_voltage, \
-                    f"The voltage of ldo({ldo['ldo_id']}) is {curr_voltage}, below min {ldo['min_volatge']}."
+            if 'min_voltage' in ldo:
+                assert ldo['min_voltage'] <= curr_voltage, \
+                    f"The voltage of ldo({ldo['ldo_id']}) is {curr_voltage}, below min {ldo['min_voltage']}."
 
     def name(self):
         return f"DA9062({self.bus}, {hex(self.address)})"
