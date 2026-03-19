@@ -1,3 +1,4 @@
+import traceback
 from flask import Blueprint, request, Response
 import pickle
 import importlib
@@ -58,6 +59,6 @@ def execute_function():
             error(
                 f"RPC Execution failed while calling {func.__name__} with args: {args}: {e}"
             ))
-        return Response(pickle.dumps({"error": str(e)}),
-                        status=500,
-                        mimetype="application/octet-stream")
+        tb = "\n".join(traceback.format_exc().splitlines()[:-1])
+        body = pickle.dumps({"error": str(e), "traceback": tb})
+        return Response(body, status=500, mimetype="application/octet-stream")

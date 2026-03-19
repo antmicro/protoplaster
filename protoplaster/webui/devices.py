@@ -86,7 +86,8 @@ def _execute_request(url: str, function: Callable, args: List[Any]) -> Any:
     try:
         data = pickle.loads(resp.content)
         if "error" in data:
-            raise RemoteException(data["error"])
+            details = [data[k] for k in ("error", "traceback") if k in data]
+            raise RemoteException(*details)
         return data["result"]
     except pickle.UnpicklingError:
         raise ValueError(
