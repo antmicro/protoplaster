@@ -258,9 +258,10 @@ class TestFile:
         if not (isinstance(file_content, dict)):
             pr_err("File has no proper content")
             return
-        self.overrides = yaml.load("\n".join(overrides),
-                                   CustomizedLoader) or {}
+        self.overrides = {}
         self.__search_overrides(file_content)
+        self.overrides.update(
+            yaml.load("\n".join(overrides), CustomizedLoader) or {})
         """
         The list "overrides" will be used outside this function to ensure
         all overrides were applied. Make sure it contains everything
