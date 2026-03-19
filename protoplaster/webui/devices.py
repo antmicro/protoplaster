@@ -61,6 +61,10 @@ def remove_device(device_name, is_broadcast=False):
     return len(_devices) < before
 
 
+class RemoteException(Exception):
+    pass
+
+
 # Executor to manage threads for non-blocking `trigger_on_remote` calls
 _executor = ThreadPoolExecutor()
 
@@ -78,11 +82,16 @@ def _execute_request(url: str, function: Callable, args: List[Any]) -> Any:
                          data=pickled_payload,
                          headers=hdrs,
                          timeout=60)
-    resp.raise_for_status()
-    data = pickle.loads(resp.content)
-    if "error" in data:
-        raise Exception(data["error"])
-    return data["result"]
+    # Error responses are returned as a pickled payload with an error status code.
+    try:
+        data = pickle.loads(resp.content)
+        if "error" in data:
+            raise RemoteException(data["error"])
+        return data["result"]
+    except pickle.UnpicklingError:
+        raise ValueError(
+            f"Received undecodable response with HTTP {resp.status_code} code, starting with:",
+            resp.text[:50])
 
 
 def trigger_on_remote(
