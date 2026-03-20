@@ -1,5 +1,4 @@
 from protoplaster.conf.module import ModuleName
-from protoplaster.tests.gpio.PI4IO.PI4IO import PI4IOE5V96224
 from protoplaster.tests.gpio.gpio.gpio import GPIO, Direction
 
 
@@ -33,7 +32,7 @@ class TestGPIO:
             self._test_read()
 
     def name(self):
-        return f"/sys/class/gpio/{self.number}"
+        return getattr(self, "test_name", f"/sys/class/gpio/{self.number}")
 
     def _test_read(self):
         with GPIO(self.number, Direction.IN, gpio_name=self.gpio_name) as gpio:
