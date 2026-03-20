@@ -35,11 +35,12 @@ def execute_function():
 
     try:
         module = importlib.import_module(module_name)
-    except ImportError:
-        return Response(pickle.dumps(
-            {"error": f"Module {module_name} not found"}),
-                        status=404,
-                        mimetype="application/octet-stream")
+    except ImportError as e:
+        body = pickle.dumps({
+            "error":
+            f"While importing {module_name}: module {e.name} not found"
+        })
+        return Response(body, status=404, mimetype="application/octet-stream")
 
     try:
         func = getattr(module, function_name)
