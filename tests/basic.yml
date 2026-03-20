@@ -6,6 +6,7 @@ tests:
       - name: "Sensor name"
         address: 0x1C
   - gpio:
+      test_name: "GPIO 20 write test"
       number: 20
       value: 1
       write: True
