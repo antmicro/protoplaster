@@ -85,7 +85,7 @@ tests:
       bus: 0            # An interface specifier
       devices:          # Multiple instances of devices can be defined in one module
       - name: "Sensor name"
-        address: 0x3c   # The given device parameters determine which tests will be run for the module
+        address: 0x1c   # The given device parameters determine which tests will be run for the module
       - name: "I2C-bus multiplexer"
         address: 0x70
   - camera:
@@ -101,6 +101,7 @@ tests:
   - gpio:
       number: 20
       value: 1
+      write: True
 
 metadata:               # Additional metadata to be generated on tested device
   uname:                # Metadata name
