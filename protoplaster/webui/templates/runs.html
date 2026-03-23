@@ -247,8 +247,8 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
         // Fetch configs from the local controller
         const resp = await fetch('/api/v1/configs');
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const configs = await resp.json();
+        if (!resp.ok) throw new Error(configs.error || `HTTP ${resp.status}`);
 
         configSelect.innerHTML = '';
         if (configs.length === 0) {
@@ -279,8 +279,8 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
         // Fetch test suites list from the local controller
         const resp = await fetch(`/api/v1/configs/${config}/test-suites`);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const suites = await resp.json();
+        if (!resp.ok) throw new Error(suites.error || `HTTP ${resp.status}`);
 
         testSuiteSelect.innerHTML = '<option value="">(all)</option>';
         suites.forEach(s => {
@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     } catch (err) {
         console.error("Failed to fetch test suites:", err);
-        configSelect.innerHTML = '<option disabled>Error loading test suites</option>';
+        testSuiteSelect.innerHTML = '<option disabled>Error loading test suites</option>';
     }
   }
 
@@ -318,8 +318,8 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
         // Fetch override hints list from the local controller
         const resp = await fetch(`/api/v1/configs/${config}/override-hints`);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const hints = await resp.json();
+        if (!resp.ok) throw new Error(hints.error || `HTTP ${resp.status}`);
 
         hintSelect.innerHTML = '';
         if (hints.length > 0) {

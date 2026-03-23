@@ -381,9 +381,9 @@ class TestFile:
                         self.override_hints.append(
                             f"{path}.{val}" if path else val)
                     else:
-                        pr_warn(
-                            f"{full_path}: override hint must be a string or a list of strings"
-                        )
+                        msg = f"{full_path}: override hint must be a string or a list of strings"
+                        pr_err(msg)
+                        raise ValueError(msg)
             self.__search_overrides(val, full_path)  # recurse
 
     def filter_suite(self, suite: str):

@@ -214,6 +214,7 @@ def fetch_test_suites(config_name: str):
     """Fetch list of test suites in config file
 
     :status 200: no error
+    :status 500: error while parsing file
 
     :>json array: list of test suites
 
@@ -235,7 +236,10 @@ def fetch_test_suites(config_name: str):
     args = copy.copy(current_app.config["ARGS"])
     config_dir = args.test_dir
     args.test_file = config_name
-    test_file = create_test_file(args)
+    try:
+        test_file = create_test_file(args)
+    except Exception as e:
+        return jsonify({"error": f"Failed to parse file: {str(e)}"}), 500
     return jsonify(list(test_file.test_suites))
 
 
@@ -244,6 +248,7 @@ def fetch_override_hints(config_name: str):
     """Fetch list of suggested overrides in config file
 
     :status 200: no error
+    :status 500: error while parsing file
 
     :>json array: list of override hints
 
@@ -265,7 +270,10 @@ def fetch_override_hints(config_name: str):
     args = copy.copy(current_app.config["ARGS"])
     config_dir = args.test_dir
     args.test_file = config_name
-    test_file = create_test_file(args)
+    try:
+        test_file = create_test_file(args)
+    except Exception as e:
+        return jsonify({"error": f"Failed to parse file: {str(e)}"}), 500
     return jsonify(list(test_file.override_hints))
 
 
