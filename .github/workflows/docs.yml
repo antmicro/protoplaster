@@ -46,7 +46,7 @@ jobs:
             protoplaster-test-report report.csv -t md
           devices: |
             gpio 0 32
-            i2c 0x3C
+            i2c 0x1C
             i2c 0x70
           tasks: |
             ${{ github.workspace }}/.github/test_platform/v4l2.yml
