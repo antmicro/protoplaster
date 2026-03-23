@@ -19,6 +19,7 @@ proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits lo
 	set_property RX_PATTERN "PRBS $prbsBits-bit" [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
 	set_property TX_PATTERN "PRBS $prbsBits-bit" [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
 	commit_hw_sio [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]
+	refresh_hw_sio [list [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]]]
 
 	set link_obj [lindex [get_hw_sio_links -of_objects [get_hw_sio_linkgroups {Link_Group_0}]] 0]
 	set line_rate [get_property LINE_RATE $link_obj]
