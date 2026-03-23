@@ -89,7 +89,7 @@ def save_class_state(cls):
         if k not in ('__dict__', '__weakref__'):
             try:
                 original_state[k] = copy.deepcopy(v)
-            except TypeError:
+            except (TypeError, ValueError):
                 # fallback if the object cannot be deepcopied (i.e: staticmethods)
                 original_state[k] = v
     return original_state
