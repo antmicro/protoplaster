@@ -159,6 +159,14 @@ def setup_tests(request: pytest.FixtureRequest, test_config):
     # execute tests
     yield
 
+    if hasattr(request.cls, "deconfigure"):
+        func = getattr(request.cls, "deconfigure")
+
+        if inspect.ismethod(func):
+            func()
+        else:
+            func(request.cls)
+
     # restore original state
     restore_class_state(request.cls, original_state)
 
