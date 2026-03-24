@@ -3,7 +3,7 @@ from .metadata import RunStatus
 from datetime import datetime, timezone
 from email.utils import format_datetime
 import time
-from protoplaster.runner.runner import run_tests
+from protoplaster.runner.runner import run_tests, LOCAL_SUCCESS, LOCAL_ERROR
 from copy import deepcopy
 import os
 
@@ -37,7 +37,12 @@ def run_test(run, base_args):
         run["status"] = RunStatus.FAILED
         return
 
-    ret, metadata = run_tests(args)
+    try:
+        ret, metadata = run_tests(args)
+    except Exception as e:
+        run["error"] = str(e)
+        ret = LOCAL_ERROR
+        metadata = []
 
     run["metadata"] = {
         name: load_metadata(args.artifacts_dir, name)
@@ -48,6 +53,9 @@ def run_test(run, base_args):
         run["status"] = RunStatus.ABORTED
     elif ret == 0:
         run["status"] = RunStatus.FINISHED
+    elif ret == LOCAL_SUCCESS:
+        run["status"] = RunStatus.FINISHED
+        run["hidden"] = True
     else:
         run["status"] = RunStatus.FAILED
 

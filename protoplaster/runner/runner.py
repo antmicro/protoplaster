@@ -41,6 +41,16 @@ class PytestAbortPlugin:
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"
 REMOTE_TEST_POLL_INTERVAL = 1
+"""
+Test runs triggered from the web UI are special: they
+split config files into test suites and trigger secondary runs.
+For the ability to report errors, they are tracked normally
+and only shown to the user if they exit with an error.
+We introduce two custom exit codes to implement this behavior.
+"""
+LAST_PYTEST_EXIT_CODE = list(pytest.ExitCode)[-1]._value_
+LOCAL_SUCCESS = LAST_PYTEST_EXIT_CODE + 1
+LOCAL_ERROR = LAST_PYTEST_EXIT_CODE + 2
 
 
 def create_test_file(args) -> TestFile:
@@ -383,7 +393,7 @@ def run_tests(args):
 
             wait_for_remote_runs(remote_runs)
 
-        return 0, []
+        return LOCAL_SUCCESS, []
 
     if machine_target == LOCAL_DEVICE_HOST:
         machine_target = None

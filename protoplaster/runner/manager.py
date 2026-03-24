@@ -22,9 +22,6 @@ class RunManager:
                            base_args,
                            machine_target=None,
                            overrides=[]):
-        """
-        Decides whether to create a tracked local run or bypass it for a remote dispatch.
-        """
         # Prepare args for inspection
         check_args = deepcopy(base_args)
         check_args.test_file = config_name
@@ -36,21 +33,9 @@ class RunManager:
         except Exception as e:
             return {"error": str(e)}
 
-        # Generate a "tracked" run when it is a result of a remote dispatch.
-        if machine_target:
-            return self.create_run(config_name, test_suite_name, base_args,
-                                   machine_target, overrides)
-
-        def on_done(f):
-            try:
-                f.result()
-            except Exception as e:
-                print(f"Run failed: {e}")
-
-        # Orchestrator node execution.
-        future = self.executor.submit(run_tests, check_args)
-        future.add_done_callback(on_done)
-        return None
+        # Generate a "tracked" run.
+        return self.create_run(config_name, test_suite_name, base_args,
+                               machine_target, overrides)
 
     def create_run(self,
                    config_name: str,

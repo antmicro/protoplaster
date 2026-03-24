@@ -157,6 +157,8 @@
           <dt class="col-sm-3">Start time</dt><dd class="col-sm-9" id="detail-start">-</dd>
           <dt class="col-sm-3">Finish time</dt><dd class="col-sm-9" id="detail-end">-</dd>
         </dl>
+        <div class="d-none alert alert-danger mt-3" id="testDetailsError" role="alert">
+        </div>
         <h6>Artifacts</h6>
         <ul id="artifact-list" class="list-group mb-3">
           <li class="list-group-item text-muted">No artifacts</li>
@@ -186,11 +188,15 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   const updateRow = (row, data) => {
+    if (data.hidden) {
+      return false;
+    }
     const [cls, text] = statusMap[data.status];
     row.querySelector('.status-cell').innerHTML = `<span class="badge bg-${cls}">${text}</span>`;
     row.querySelector('.start-cell').textContent = data.started_at || '-';
     row.querySelector('.end-cell').textContent = data.finished_at || '-';
     row.querySelector('.btn-abort').disabled = (data.status !== 'pending' && data.status !== 'running');
+    return true;
   };
 
   const poll = async () => {
@@ -226,8 +232,9 @@ document.addEventListener("DOMContentLoaded", function () {
               <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="${run.id}">Abort</button>
             </td>
           `;
-          updateRow(tr, run);
-          tbody.appendChild(tr);
+          if (updateRow(tr, run)) {
+            tbody.appendChild(tr);
+          }
         }
       } catch (err) {
         badge.className = "badge ms-2 bg-secondary";
@@ -485,6 +492,13 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById('detail-status').textContent = data.status;
       document.getElementById('detail-start').textContent = data.started_at || '-';
       document.getElementById('detail-end').textContent = data.finished_at || '-';
+      const errorBox = document.getElementById('testDetailsError');
+      errorBox.classList.add("d-none");
+      errorBox.textContent = data.error || '';
+      if (errorBox.textContent) {
+        errorBox.innerHTML = '<b>Error:</b> ' + errorBox.textContent;
+        errorBox.classList.remove("d-none");
+      }
 
       // Populate artifacts
       const artifactList = document.getElementById('artifact-list');
