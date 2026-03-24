@@ -36,7 +36,7 @@ class PytestAbortPlugin:
     @pytest.hookimpl(tryfirst=True)
     def pytest_runtest_setup(self, item):
         if self.run_obj and self.run_obj.get("abort_requested"):
-            pytest.exit("Aborted by user via WebUI")
+            pytest.exit("Aborted by user")
 
 
 TOP_LEVEL_TEMPLATE_PATH = "template.md"

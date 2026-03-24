@@ -96,14 +96,27 @@ class RunManager:
             run = self.runs.get(run_id)
             future = self.futures.get(run_id)
 
-        if not run:
-            return None
+            if not run:
+                return None
 
-        if run["status"] == RunStatus.PENDING and future:
-            future.cancel()
-            run["status"] = RunStatus.ABORTED
-            run["finished_at"] = format_datetime(datetime.now(timezone.utc))
-        elif run["status"] == RunStatus.RUNNING:
-            run["abort_requested"] = True
+            if run["status"] == RunStatus.PENDING and future:
+                future.cancel()
+                run["status"] = RunStatus.ABORTED
+                run["finished_at"] = format_datetime(datetime.now(
+                    timezone.utc))
+            elif run["status"] == RunStatus.RUNNING:
+                run["abort_requested"] = True
 
-        return run
+            return run
+
+    def try_cancel_all_running_tests(self):
+        canceled_anything = False
+        for run_id, run in self.runs.items():
+            with self.lock:
+                status = run["status"]
+            if status in [RunStatus.PENDING, RunStatus.RUNNING]:
+                print("canceling test", run_id, "status", status)
+                self.cancel_run(run_id)
+                canceled_anything = True
+
+        return canceled_anything

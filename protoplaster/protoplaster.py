@@ -7,6 +7,7 @@ from colorama import init
 from flask import Flask
 from flask_cors import CORS
 import shutil
+import signal
 from waitress import serve
 
 import protoplaster.api.v1
@@ -192,10 +193,14 @@ def run_http_server(args):
 
     app = Flask(__name__)
     CORS(app)
+    manager = RunManager()
     app.secret_key = "protoplaster-secret"
     app.config["ARGS"] = args
-    app.config["RUN_MANAGER"] = RunManager()
+    app.config["RUN_MANAGER"] = manager
     app.register_blueprint(protoplaster.api.v1.create_routes())
+
+    signal.signal(signal.SIGINT, lambda _, __: handle_sigint(manager))
+
     if not args.dut:
         app.register_blueprint(protoplaster.webui.webui_blueprint)
 
@@ -205,6 +210,15 @@ def run_http_server(args):
         ))
 
     serve(app, host=SERVE_IP, port=int(args.port))
+
+
+def handle_sigint(manager):
+    if manager.try_cancel_all_running_tests():
+        print("Canceled running tests.")
+    else:
+        print("There are no tests to cancel.")
+        print("Exiting...")
+        sys.exit(0)
 
 
 def main():
