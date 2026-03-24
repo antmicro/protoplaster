@@ -80,12 +80,14 @@ includes:
   - addition.yml        # Import additional definitions from external file
 
 tests:
-  simple_test:          # Test name
+  base:                 # Test name
   - i2c:                # A module specifier
       bus: 0            # An interface specifier
       devices:          # Multiple instances of devices can be defined in one module
       - name: "Sensor name"
-        address: 0x1C
+        address: 0x1c   # The given device parameters determine which tests will be run for the module
+      - name: "I2C-bus multiplexer"
+        address: 0x70
   - camera:
       device: "/dev/video0"
       camera_name: "vivid"
@@ -108,7 +110,7 @@ metadata:               # Additional metadata to be generated on tested device
 test-suites:
   basic:                # Test suite name
     tests:              # Tests to include
-      - simple_test
+      - base
   full:
     tests:
       - basic           # Test suites can include other test suites
