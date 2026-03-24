@@ -3,6 +3,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from contextlib import contextmanager
+from threading import Lock
 
 import yaml
 
@@ -23,19 +25,26 @@ def to_path(p: StrPath) -> Path:
 
 """
 Modified version of yaml.SafeLoader that remembers anchors between invocations
-of yaml.load(). Requires calls to _reset_custom() before and after use as a
+of yaml.load(). Requires using the _reset_custom() context manager as a
 trade-off from minimizing interference with parent class contents.
 """
 
 
 class CustomizedLoader(yaml.SafeLoader):
+    lock = Lock()
 
     @classmethod
+    @contextmanager
     def _reset_custom(cls):
+        cls.lock.acquire()
         cls.to_override = {"anchors": {}}
         for name, val in cls.to_override.items():
             __name = "__" + name
             setattr(cls, __name, val)
+        try:
+            yield
+        finally:
+            cls.lock.release()
 
     def __setattr__(self, name, value):
         if hasattr(CustomizedLoader, "to_override") and (

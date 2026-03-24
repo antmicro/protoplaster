@@ -36,10 +36,9 @@ def create_test_file(args) -> TestFile:
     # between parsed files. Calls to _reset_custom() are necessary to reset
     # the internal structures between parsing files that are actually
     # semantically separate.
-    CustomizedLoader._reset_custom()
-    test_file = TestFile(args.test_dir, args.test_file, args.custom_tests,
-                         overrides)
-    CustomizedLoader._reset_custom()
+    with CustomizedLoader._reset_custom():
+        test_file = TestFile(args.test_dir, args.test_file, args.custom_tests,
+                             overrides)
     if len(overrides) > 0:
         pr_err(f"These overrides could not be applied: {overrides}")
     if (group := args.group) not in (None, ""):
