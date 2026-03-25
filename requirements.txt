@@ -1,5 +1,6 @@
 myst_parser==4.0.1
 pytest==7.4.3
+pytest-instafail==0.5.0
 pyyaml==5.3.1
 smbus2==0.3.0
 spidev==3.8; python_version > '3.11.10'

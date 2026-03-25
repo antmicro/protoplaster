@@ -186,7 +186,7 @@ def extract_class_names(path):
 
 
 def prepare_pytest_args(test_paths, args):
-    pytest_args = f" --keep-duplicates -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} "
+    pytest_args = f" --keep-duplicates -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} --instafail "
     if args.output:
         pytest_args += f"--junitxml={args.output} "
     if args.artifacts_dir:
