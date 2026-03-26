@@ -101,6 +101,7 @@ tests:
   - gpio:
       number: 20
       value: 1
+      write: True
 
 metadata:               # Additional metadata to be generated on tested device
   uname:                # Metadata name
