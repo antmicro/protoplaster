@@ -42,7 +42,7 @@ jobs:
             source .venv/bin/activate
             pip install .
             protoplaster -d . -r . -a /tmp -t example.yml --csv report.csv
-            protoplaster-test-report report.csv -t md
+            protoplaster-test-report report_base.csv -t md
           devices: |
             gpio 0 32
             i2c 0x3C
@@ -60,7 +60,7 @@ jobs:
           cp -r .github/docs-template docs/
           cp README.md docs/source/readme.md
           cp protoplaster.md docs/source/
-          cp report.md docs/source/
+          cp report_base.md docs/source/
           echo -e "\`\`\`\n$(cat system-report-example.yml)\n\`\`\`" >>  docs/source/system-report-example.yml
           mkdir -p docs/source/_static/system_report
           unzip report.zip -d docs/source/_static/system_report
