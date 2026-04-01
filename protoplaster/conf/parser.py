@@ -37,25 +37,41 @@ class CustomizedLoader(yaml.SafeLoader):
     @contextmanager
     def _reset_custom(cls):
         cls.lock.acquire()
-        cls.to_override = {"anchors": {}}
+        cls.to_override = {"anchors": {}, "constructed_objects": {}}
         for name, val in cls.to_override.items():
-            __name = "__" + name
-            setattr(cls, __name, val)
+            _name = "_" + name
+            setattr(cls, _name, val)
         try:
             yield
         finally:
             cls.lock.release()
 
     def __setattr__(self, name, value):
-        if hasattr(CustomizedLoader, "to_override") and (
-                name in CustomizedLoader.to_override) and (not value):
-            __name = "__" + name
-            if not hasattr(self, name):
-                super().__setattr__(name, getattr(CustomizedLoader, __name))
-            else:
-                setattr(CustomizedLoader, __name, getattr(self, name))
-        else:
-            super().__setattr__(name, value)
+        if (name not in getattr(__class__, "to_override", {})) or value:
+            return super().__setattr__(name, value)
+        _name = "_" + name
+        if not hasattr(self, name):
+            return super().__setattr__(name, getattr(__class__, _name))
+        setattr(__class__, _name, getattr(self, name))
+
+    @classmethod
+    def _refresh_internals(cls):
+        """
+        __anchors maps names to internal representations;
+        __constructed_objects maps internal representations to usable data structures.
+        Having applied overrides to the data elsewhere, this function updates
+        the internal representations so that properties reused in other files
+        using anchors are also overridden.
+        """
+        objects_new = {}
+        r = yaml.representer.SafeRepresenter()
+        for label in cls._anchors:
+            node = cls._anchors[label]
+            if node in cls._constructed_objects:
+                node_new = r.represent_data(cls._constructed_objects[node])
+                objects_new[node_new] = cls._constructed_objects[node]
+                cls._anchors[label] = node_new
+        cls._constructed_objects = objects_new
 
 
 def load_yaml(yaml_file: StrPath):
@@ -300,6 +316,8 @@ class TestFile:
 
         for n in sorted(applied, reverse=True):
             del overrides[n]
+
+        CustomizedLoader._refresh_internals()
 
         if (includes := file_content.get("includes")) is not None:
             for include in includes:
