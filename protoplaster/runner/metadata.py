@@ -12,11 +12,12 @@ class RunStatus(str, Enum):
     ABORTED = "aborted"
 
 
-def new_run_metadata(config_name, test_suite_name, overrides):
+def new_run_metadata(config_name, test_suite_name, machine_target, overrides):
     return {
         "id": str(uuid.uuid4()),
         "config_name": config_name,
         "test_suite_name": "" if test_suite_name is None else test_suite_name,
+        "machine_target": machine_target,
         "overrides": overrides,
         "status": RunStatus.PENDING,
         "created_at": format_datetime(datetime.now(timezone.utc)),

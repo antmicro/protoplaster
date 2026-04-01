@@ -8,11 +8,11 @@
 <body>
 {% endif %}
 
-<table class="table table-sm table-striped table-hover mb-0" style="font-size: 0.9em;">
-    <thead class="table-light sticky-top">
+<table class="table table-sm table-striped table-hover mb-0 align-middle" style="font-size: 0.9em;">
+    <thead class="table-light">
         <tr>
         {%- for field in fields %}
-            <th>{{field|capitalize}}</th>
+            <th data-key="{{field}}">{{field|capitalize}}</th>
         {%- endfor %}
         </tr>
     </thead>

@@ -168,11 +168,24 @@
           <div id="results-container"></div>
         </div>
         <div class="text-end">
+          <button id="rerun-all" class="btn btn-outline-secondary btn-rerun" data-pattern="">
+            <i class="bi bi-repeat"></i> Repeat test run
+          </button>
           <a id="report-link" href="#" class="btn btn-outline-secondary" target="_blank">
-            <i class="bi bi-file-earmark-text"></i> Download CSV Report
+            <i class="bi bi-file-earmark-text"></i> Download CSV report
           </a>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Test Re-run Toast -->
+<div class="toast-container top-0 end-0 m-3">
+  <div class="toast align-items-center" id="rerunToast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body"></div>
+      <button type="button" class="btn-close me-2 m-auto btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
   </div>
 </div>
@@ -230,6 +243,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <td>
               <button class="btn btn-sm btn-outline-primary btn-details" data-run-id="${run.id}">Details</button>
               <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="${run.id}">Abort</button>
+              <button class="btn btn-sm btn-outline-secondary btn-rerun" data-run-id="${run.id}" data-device-url="${deviceUrl}" data-pattern="">Re-run</button>
             </td>
           `;
           if (updateRow(tr, run)) {
@@ -543,6 +557,25 @@ document.addEventListener("DOMContentLoaded", function () {
       const resp_report = await fetch(`${deviceUrl}/api/v1/test-runs/${id}/report?format=html`);
       if (resp_report.ok) {
         resultsContainer.innerHTML = await resp_report.text();
+        // Create "re-run" buttons
+        const table = resultsContainer.querySelector("table");
+        table.dataset.deviceUrl = deviceUrl;
+        table.dataset.runId = data.id;
+        const actionsTh = document.createElement("th");
+        actionsTh.textContent = "Actions";
+        actionsTh.dataset.key = "actions";
+        table.tHead.rows[0].appendChild(actionsTh);
+        const testNameIdx = table.tHead.querySelector("[data-key='test name']").cellIndex;
+        for (const row of table.tBodies[0].rows) {
+          const cell = row.insertCell();
+          const rerun = document.createElement("button");
+          rerun.classList = "btn btn-sm btn-outline-secondary btn-rerun";
+          rerun.dataset.pattern = row.cells.item(testNameIdx).textContent;
+          rerun.dataset.deviceUrl = deviceUrl;
+          rerun.dataset.runId = data.id;
+          rerun.innerHTML = "<i class='bi bi-repeat'></i> Re-run";
+          cell.appendChild(rerun);
+        }
       } else {
         resultsContainer.innerHTML = '<div class="text-center text-muted p-3">No results found.</div>';
       }
@@ -551,9 +584,51 @@ document.addEventListener("DOMContentLoaded", function () {
       const reportLink = document.getElementById('report-link');
       reportLink.href = `${deviceUrl}/api/v1/test-runs/${id}/report`;
 
+      // Repeat run
+      const repeatBtn = document.getElementById('rerun-all');
+      repeatBtn.dataset.runId = id;
+      repeatBtn.dataset.deviceUrl = deviceUrl;
+
       new bootstrap.Modal(document.getElementById('testDetailsModal')).show();
     }
+
+    const btnRerun = e.target.closest('.btn-rerun');
+    if (btnRerun) {
+      repeatRun(btnRerun);
+    }
   });
+
+  // Re-run button
+  async function repeatRun(e) {
+    const { deviceUrl, runId, pattern } = "currentTarget" in e ? e.currentTarget.dataset : e.dataset;
+    const toastDom = document.getElementById("rerunToast");
+    toastDom.classList.remove("text-bg-success", "text-bg-danger");
+    const toast = bootstrap.Toast.getOrCreateInstance(toastDom);
+    const toastBody = toastDom.querySelector(".toast-body");
+    try {
+        const resp = await fetch(`${deviceUrl}/api/v1/test-runs/${runId}/repeat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pattern)
+        });
+        if (resp.ok) {
+          toastDom.classList.add("text-bg-success");
+          toastBody.innerHTML = `Restarted${pattern ? " test <i>" + pattern + "</i>" : ""}; added new test run to list`;
+        } else {
+          const data = await resp.json();
+          toastDom.classList.add("text-bg-danger");
+          const msg = "Server returned an error while attempting to repeat test"
+          toastBody.innerHTML = `${msg}:<br><code class="text-reset">${data.error || resp.statusText}</code>`;
+          console.error(`${msg}: ${data.error || resp.statusText}`);
+        }
+      } catch (err) {
+        toastDom.classList.add("text-bg-danger");
+        const msg = "Could not send re-run request";
+        toastBody.innerHTML = `${msg}:<br><code class="text-reset">${err}</code>`;
+        console.error(`${msg}: ${err}`);
+      }
+      toast.show();
+  }
 });
 </script>
 {% endblock %}

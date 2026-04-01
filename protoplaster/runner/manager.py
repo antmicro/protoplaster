@@ -21,7 +21,8 @@ class RunManager:
                            test_suite_name,
                            base_args,
                            machine_target=None,
-                           overrides=[]):
+                           overrides=[],
+                           pattern=""):
         # Prepare args for inspection
         check_args = deepcopy(base_args)
         check_args.test_file = config_name
@@ -35,14 +36,15 @@ class RunManager:
 
         # Generate a "tracked" run.
         return self.create_run(config_name, test_suite_name, base_args,
-                               machine_target, overrides)
+                               machine_target, overrides, pattern)
 
     def create_run(self,
                    config_name: str,
                    test_suite_name: str | None,
                    base_args,
                    machine_target=None,
-                   overrides=[]):
+                   overrides=[],
+                   pattern=""):
 
         def on_done(f):
             try:
@@ -51,7 +53,8 @@ class RunManager:
             except Exception as e:
                 print(f"[{run['id']}] failed: {e}")
 
-        run = new_run_metadata(config_name, test_suite_name, overrides)
+        run = new_run_metadata(config_name, test_suite_name, machine_target,
+                               overrides)
 
         with self.lock:
             self.runs[run["id"]] = run
@@ -60,6 +63,8 @@ class RunManager:
         run_args = deepcopy(base_args)
         if machine_target:
             run_args.machine_target = machine_target
+        if pattern:
+            run_args.pattern = pattern
 
         future = self.executor.submit(run_test, run, run_args)
         future.add_done_callback(on_done)

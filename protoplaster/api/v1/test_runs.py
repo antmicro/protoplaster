@@ -143,6 +143,7 @@ def trigger_test_run():
     test_suite_name = data.get("test_suite_name", None)
     machine_target = data.get("machine_target", None)
     overrides = data.get("overrides", "").splitlines()
+    pattern = data.get("pattern", "")
 
     config_dir = current_app.config["ARGS"].test_dir
     config_path = os.path.join(config_dir, config_name)
@@ -157,7 +158,8 @@ def trigger_test_run():
                                      test_suite_name,
                                      args,
                                      machine_target=machine_target,
-                                     overrides=overrides)
+                                     overrides=overrides,
+                                     pattern=pattern)
 
     if run is None:
         # Remote run triggered successfully, no local tracking.
@@ -426,6 +428,68 @@ def fetch_artifacts(identifier: str):
     artifacts = [file_to_artifacts_entry(artifacts_dir, f) for f in filenames]
 
     return jsonify(artifacts)
+
+
+@test_runs_blueprint.route("/api/v1/test-runs/<string:identifier>/repeat",
+                           methods=["POST"])
+def repeat_run(identifier: str):
+    """Repeat a test run
+
+    :param identifier: test run identifier
+    :status 200: no error
+    :status 404: test run does not exist
+    :status 500: failed to dispatch
+
+    :<json string: test name pattern (repeat whole run if empty)
+
+    :>json: test run description object
+
+    **Example Request**
+
+    .. sourcecode:: http
+
+        POST /api/v1/test-runs/25d9f4a2-2556-4647-b3cc-762348dc51ce/repeat HTTP/1.1
+        Content-Type: application/json
+        Accept: application/json, text/javascript
+
+        "exist[test_config0] or speed"
+
+    **Example Response**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+
+        {
+          "id": "bff55077-77c8-4035-a2a9-9273f57a09de",
+          "config_name": "config1.yaml"
+          "test_suite_name": "simple-test"
+          "status": "pending",
+          "created_at": "Wed, 25 Mar 2026 18:56:11 +0000",
+          "started_at": "",
+          "finished_at": "",
+          "metadata": {}
+        }
+    """  # noqa: E501
+    manager = current_app.config["RUN_MANAGER"]
+    run = manager.get_run(identifier)
+
+    if run is None:
+        return jsonify({"error": f"Run not found: {identifier}"}), 404
+
+    pattern = request.get_json()
+
+    new_run = manager.handle_run_request(run["config_name"],
+                                         run["test_suite_name"],
+                                         current_app.config["ARGS"],
+                                         run["machine_target"],
+                                         run["overrides"], pattern)
+
+    if "error" in new_run:
+        return jsonify(new_run), 500
+
+    return jsonify(new_run)
 
 
 @test_runs_blueprint.route(
