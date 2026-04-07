@@ -73,6 +73,13 @@ def fetch_test_runs():
     return jsonify(runs)
 
 
+@test_runs_blueprint.route("/api/v1/test-runs/trigger")
+def fetch_test_triggers():
+    manager = current_app.config["RUN_MANAGER"]
+    triggers = manager.list_triggers()
+    return jsonify(triggers)
+
+
 @test_runs_blueprint.route("/api/v1/test-runs", methods=["POST"])
 def trigger_test_run():
     """Trigger a test run
@@ -140,6 +147,7 @@ def trigger_test_run():
     """  # noqa: E501
     data = request.get_json()
     config_name = data["config_name"]
+    trigger_id = data.get("trigger_id", None)
     test_suite_name = data.get("test_suite_name", None)
     machine_target = data.get("machine_target", None)
     overrides = data.get("overrides", "").splitlines()
@@ -155,6 +163,7 @@ def trigger_test_run():
     args = current_app.config["ARGS"]
 
     run = manager.handle_run_request(config_name,
+                                     trigger_id,
                                      test_suite_name,
                                      args,
                                      machine_target=machine_target,
@@ -229,9 +238,20 @@ def fetch_one_test_run(identifier: str):
     return jsonify(run)
 
 
+@test_runs_blueprint.route("/api/v1/test-runs/trigger/<string:identifier>")
+def fetch_one_test_trigger(identifier: str):
+    manager = current_app.config["RUN_MANAGER"]
+    trigger = manager.get_trigger(identifier)
+
+    if not trigger:
+        return jsonify({"error": "Trigger not found"}), 404
+
+    return jsonify(trigger)
+
+
 @test_runs_blueprint.route("/api/v1/test-runs/<string:identifier>",
                            methods=["DELETE"])
-def delete_test_run(identifier: str):
+def abort_test_run(identifier: str):
     """Cancel a pending test run
 
     :param identifier: test run identifier
@@ -266,15 +286,32 @@ def delete_test_run(identifier: str):
     """  # noqa: E501
     manager = current_app.config["RUN_MANAGER"]
     run = manager.get_run(identifier)
+
     if not run:
         return jsonify({"error": "Test run not found"}), 404
 
-    if run.get("status") not in (RunStatus.PENDING, RunStatus.RUNNING):
+    if not manager.cancel_run(identifier):
         return jsonify({"error": "Test run not pending or running"}), 400
 
-    run = manager.cancel_run(identifier)
-
     return jsonify(run)
+
+
+@test_runs_blueprint.route("/api/v1/test-runs/trigger/<string:identifier>",
+                           methods=["DELETE"])
+def abort_test_trigger(identifier: str):
+    manager = current_app.config["RUN_MANAGER"]
+    trigger = manager.get_trigger(identifier)
+
+    if not trigger:
+        return jsonify({"error": "Trigger not found"}), 404
+
+    if not manager.cancel_trigger(identifier):
+        return jsonify({
+            "error":
+            "There is no pending or running suite in specified trigger"
+        }), 400
+
+    return jsonify(trigger)
 
 
 @test_runs_blueprint.route("/api/v1/test-runs/<string:identifier>/report")
@@ -480,7 +517,7 @@ def repeat_run(identifier: str):
 
     pattern = request.get_json()
 
-    new_run = manager.handle_run_request(run["config_name"],
+    new_run = manager.handle_run_request(run["config_name"], run["trigger_id"],
                                          run["test_suite_name"],
                                          current_app.config["ARGS"],
                                          run["machine_target"],

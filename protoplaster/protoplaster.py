@@ -15,8 +15,8 @@ from protoplaster.conf.plugin_manager import load_plugins_from_dir
 import protoplaster.webui
 import protoplaster.webui.devices
 from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME, SERVE_IP
-from protoplaster.runner.manager import RunManager
-from protoplaster.runner.runner import list_tests, list_test_suites, run_tests
+from protoplaster.runner.manager import OrchestratorData, RunManager
+from protoplaster.runner.runner import list_tests, list_test_suites, orchestrate_tests, run_tests
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
 from protoplaster.tools.log import error, info
 
@@ -199,7 +199,8 @@ def run_http_server(args):
     app.config["RUN_MANAGER"] = manager
     app.register_blueprint(protoplaster.api.v1.create_routes())
 
-    signal.signal(signal.SIGINT, lambda _, __: handle_sigint(manager))
+    signal.signal(signal.SIGINT,
+                  lambda _, __: handle_sigint(manager, args.server))
 
     if not args.dut:
         app.register_blueprint(protoplaster.webui.webui_blueprint)
@@ -212,8 +213,8 @@ def run_http_server(args):
     serve(app, host=SERVE_IP, port=int(args.port))
 
 
-def handle_sigint(manager):
-    if manager.try_cancel_all_running_tests():
+def handle_sigint(manager, is_server):
+    if manager.try_cancel_all_running_tests(is_server):
         print("Canceled running tests.")
     else:
         print("There are no tests to cancel.")
@@ -271,7 +272,7 @@ def main():
         run_http_server(args)
     else:
         load_external_devices(args)
-        run_tests(args)
+        orchestrate_tests(args, OrchestratorData())
 
 
 if __name__ == "__main__":

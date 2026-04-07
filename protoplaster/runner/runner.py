@@ -2,6 +2,7 @@ import ast
 import os
 import sys
 import time
+import uuid
 import zipfile
 import requests
 import copy
@@ -244,6 +245,7 @@ def _trigger_remote_run(machine, base_url, args):
     config_name = os.path.basename(args.test_file)
     payload = {
         "config_name": config_name,
+        "trigger_id": args.trigger_id,
         "test_suite_name": args.group,
         "machine_target": machine
     }
@@ -314,11 +316,76 @@ def has_local_tests(args) -> bool:
     return len(test_file.tests) > 0
 
 
+def orchestrate_tests(args, orchestrator_data):
+    devices = {d['name']: d['url'] for d in get_all_devices()}
+    test_file = create_test_file(args)
+
+    for test_name, test_obj in test_file.tests.items():
+        print(f"Executing test group: {test_name}")
+
+        chunk_args = copy.copy(args)
+        chunk_args.group = test_name
+        chunk_args.trigger_id = orchestrator_data.trigger_id
+
+        machines = set()
+        has_local = False
+        for body in test_obj.body:
+            ms = body.params.get("machines")
+            if ms:
+                machines.update([ms] if isinstance(ms, str) else ms)
+            else:
+                has_local = True
+
+        remote_runs = []
+        for machine in machines:
+            if machine in devices:
+                mach_url = devices[machine]
+                orchestrator_data.triggered_machines.add(mach_url)
+
+                run_id = _trigger_remote_run(machine, mach_url, chunk_args)
+                if run_id:
+                    remote_runs.append({
+                        "machine": machine,
+                        "base_url": devices[machine],
+                        "run_id": run_id
+                    })
+            else:
+                print(
+                    error(f"Machine '{machine}' not defined in devices list"))
+
+        if has_local:
+            if getattr(args, "server", False):
+                # Web server mode: Dispatch to the local Flask server
+                local_url = f"http://{SERVE_IP}:{args.port}"
+                run_id = _trigger_remote_run(LOCAL_DEVICE_HOST, local_url,
+                                             chunk_args)
+                if run_id:
+                    remote_runs.append({
+                        "machine": LOCAL_DEVICE_HOST,
+                        "base_url": local_url,
+                        "run_id": run_id
+                    })
+            else:
+                # CLI mode: Execute local tests directly
+                print("Executing local tests directly (CLI mode)")
+                local_chunk_args = copy.copy(chunk_args)
+                local_chunk_args.machine_target = LOCAL_DEVICE_HOST
+
+                if getattr(local_chunk_args, "csv", None):
+                    csv_name, csv_ext = os.path.splitext(local_chunk_args.csv)
+                    modified_csv = f"{csv_name}_{test_name}{csv_ext}"
+                    local_chunk_args.csv = modified_csv
+                    print(
+                        warning(
+                            f"Multiple test runs detected in CLI mode. Report for group '{test_name}' will be saved to: {modified_csv}"
+                        ))
+
+                run_tests(local_chunk_args)
+
+        wait_for_remote_runs(remote_runs)
+
+
 def run_tests(args):
-    # Check execution context:
-    # - <string>: Triggered by a `_trigger_remote_run` call from the orchestrator.
-    #             Act as a DUT node, running ONLY the tests assigned to this specific node.
-    # - None:     Act as the orchestrator, dispatching remote tests and running local ones.
     machine_target = getattr(args, "machine_target", None)
 
     if args.generate_docs:
@@ -329,75 +396,6 @@ def run_tests(args):
                 OrderedDict.fromkeys(paths_to_tests).keys(),
                 load_yaml(tf.name))
             sys.exit()
-
-    if not machine_target:
-        devices = {d['name']: d['url'] for d in get_all_devices()}
-        test_file = create_test_file(args)
-
-        for test_name, test_obj in test_file.tests.items():
-            print(f"Executing test group: {test_name}")
-            chunk_args = copy.copy(args)
-            chunk_args.group = test_name
-
-            machines = set()
-            has_local = False
-            for body in test_obj.body:
-                ms = body.params.get("machines")
-                if ms:
-                    machines.update([ms] if isinstance(ms, str) else ms)
-                else:
-                    has_local = True
-
-            remote_runs = []
-            for machine in machines:
-                if machine in devices:
-                    run_id = _trigger_remote_run(machine, devices[machine],
-                                                 chunk_args)
-                    if run_id:
-                        remote_runs.append({
-                            "machine": machine,
-                            "base_url": devices[machine],
-                            "run_id": run_id
-                        })
-                else:
-                    print(
-                        error(
-                            f"Machine '{machine}' not defined in devices list")
-                    )
-
-            if has_local:
-                if getattr(args, "server", False):
-                    # Web server mode: Dispatch to the local Flask server
-                    local_url = f"http://{SERVE_IP}:{args.port}"
-                    run_id = _trigger_remote_run(LOCAL_DEVICE_HOST, local_url,
-                                                 chunk_args)
-                    if run_id:
-                        remote_runs.append({
-                            "machine": LOCAL_DEVICE_HOST,
-                            "base_url": local_url,
-                            "run_id": run_id
-                        })
-                else:
-                    # CLI mode: Execute local tests directly
-                    print("Executing local tests directly (CLI mode)")
-                    local_chunk_args = copy.copy(chunk_args)
-                    local_chunk_args.machine_target = LOCAL_DEVICE_HOST
-
-                    if getattr(local_chunk_args, "csv", None):
-                        csv_name, csv_ext = os.path.splitext(
-                            local_chunk_args.csv)
-                        modified_csv = f"{csv_name}_{test_name}{csv_ext}"
-                        local_chunk_args.csv = modified_csv
-                        print(
-                            warning(
-                                f"Multiple test runs detected in CLI mode. Report for group '{test_name}' will be saved to: {modified_csv}"
-                            ))
-
-                    run_tests(local_chunk_args)
-
-            wait_for_remote_runs(remote_runs)
-
-        return LOCAL_SUCCESS, []
 
     if machine_target == LOCAL_DEVICE_HOST:
         machine_target = None
