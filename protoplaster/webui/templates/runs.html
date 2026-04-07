@@ -190,6 +190,41 @@
   </div>
 </div>
 
+<!-- Abort Modal -->
+<div class="modal fade" id="abortModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Abort</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3" id="abortTypeSelector">
+          <label for="abortTypeSelect" class="form-label">Abort type</label>
+          <select class="form-select" id="abortTypeSelect" name="config">
+            <option selected>This run</option>
+            <option>This trigger</option>
+          </select>
+        </div>
+        <hr>
+        <div id="abortFormContainer">
+          <form id="runAbortForm">
+            <p><i>This option will abort <b>only</b> selected run on this machine</i></p><hr>
+            <button type="submit" class="btn btn-primary">Abort</button>
+          </form>
+          <form id="triggerAbortForm" hidden="true">
+            <p><i>This option will abort whole trigger (all running, pending and not created yet runs) on selected machines</i></p><hr>
+            <h6>Select machines</h6>
+            <div class="abort-options">
+            </div>
+            <button type="submit" class="btn btn-primary">Abort</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const statusMap = {
@@ -208,7 +243,7 @@ document.addEventListener("DOMContentLoaded", function () {
     row.querySelector('.status-cell').innerHTML = `<span class="badge bg-${cls}">${text}</span>`;
     row.querySelector('.start-cell').textContent = data.started_at || '-';
     row.querySelector('.end-cell').textContent = data.finished_at || '-';
-    row.querySelector('.btn-abort').disabled = (data.status !== 'pending' && data.status !== 'running');
+    row.querySelector('.btn-abort').disabled = (data.status !== 'pending' && data.status !== 'running') || (data.abort_requested === true);
     return true;
   };
 
@@ -242,7 +277,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <td class="end-cell"></td>
             <td>
               <button class="btn btn-sm btn-outline-primary btn-details" data-run-id="${run.id}">Details</button>
-              <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="${run.id}">Abort</button>
+              <button class="btn btn-sm btn-outline-danger btn-abort" data-run-id="${run.id}" data-trigger-id="${run.trigger_id}">Abort</button>
               <button class="btn btn-sm btn-outline-secondary btn-rerun" data-run-id="${run.id}" data-device-url="${deviceUrl}" data-pattern="">Re-run</button>
             </td>
           `;
@@ -465,26 +500,152 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // Abort type change
+  const abortForms = [
+    document.getElementById('runAbortForm'), 
+    document.getElementById('triggerAbortForm')
+  ];
+
+  const abortTypeSelect = document.getElementById('abortTypeSelect');
+
+  function updateAbortFormsVisibility() {
+    const idx = abortTypeSelect.selectedIndex;
+
+    for (let i = 0; i < abortForms.length; i++) {
+      const element = abortForms[i];
+      element.hidden = i != idx;
+    }
+  }
+  
+  abortTypeSelect.addEventListener('change', (e) => updateAbortFormsVisibility());
+
+  async function executeForAbortForm(formName, executeCallback) {
+    const container = document.getElementById('abortFormContainer');
+    const form = container.querySelector(formName);
+    const options = form.querySelector('.abort-options');
+
+    const deviceUrl = container.dataset.deviceUrl;
+    const runId = container.dataset.runId;
+    const triggerId = container.dataset.triggerId;
+
+    await executeCallback(container, form, options, deviceUrl, runId, triggerId);
+  }
+
+  function hideAbortMenu() {
+    const triggerModal = bootstrap.Modal.getInstance(document.getElementById('abortModal'));
+    if (triggerModal) {
+      triggerModal.hide();
+      document.getElementById('abortTypeSelect').selectedIndex = 0;
+    }
+  }
+
+  function createAbortOptionElements(parent, name, deviceUrl, runs) {
+    let listContent = `<ul>`;
+    runs.forEach((r) => listContent += `<li>${r.id}</li>`);
+    listContent += `</ul><br>`;
+    
+    const option = document.createElement('div');
+
+    option.innerHTML = `
+      <input class="abort-option" type="checkbox" name="${name}" data-device-url="${deviceUrl}" checked>
+      <label class="form-label" for="${name}">${name}</label>
+      ${listContent}
+    `;
+
+    parent.appendChild(option);
+  }
+
+  document.getElementById('runAbortForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    await executeForAbortForm('#runAbortForm', async (container, form, _, deviceUrl, runId, triggerId) => {
+      const resp = await fetch(`${deviceUrl}/api/v1/test-runs/${runId}`, { method: 'DELETE' });
+      if (!resp.ok) {
+        const data = await resp.json();
+        alert(`Failed to abort: ${data.error || resp.statusText}`);
+      } else {
+        // Refresh statuses
+        poll();
+      }
+
+      hideAbortMenu();
+    });
+  });
+
+  document.getElementById('triggerAbortForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    await executeForAbortForm('#triggerAbortForm', async (container, form, options, deviceUrl, runId, triggerId) => {
+      const abortOptions = options.querySelectorAll('.abort-option');
+      let errorMessage = '';
+
+      for(const abortOption of abortOptions) {
+        if(!abortOption.checked) {
+          break;
+        }
+
+        const optionDeviceUrl = abortOption.dataset.deviceUrl;
+        const resp = await fetch(`${optionDeviceUrl}/api/v1/test-runs/trigger/${triggerId}`, { method: 'DELETE' });
+
+        if(!resp.ok) {
+          const data = await resp.json();
+          const name = abortOption.name;
+          errorMessage += `- ${name} (${optionDeviceUrl}): ${data}\n`;
+        }
+      }
+
+      if(errorMessage !== '') {
+        alert(`Failed to abort following suites:\n${errorMessage}`);
+      } else {
+        poll();
+      }
+
+      hideAbortMenu();
+    });    
+  });
+
   document.addEventListener('click', async (e) => {
     // Abort button
     const btnAbort = e.target.closest('.btn-abort');
     if (btnAbort) {
-      if (!confirm("Are you sure you want to abort this test run?")) return;
       const id = btnAbort.dataset.runId;
-      const deviceUrl = btnAbort.closest(".device-container").dataset.deviceUrl;
-      try {
-        const resp = await fetch(`${deviceUrl}/api/v1/test-runs/${id}`, { method: 'DELETE' });
-        if (!resp.ok) {
-          const data = await resp.json();
-          alert(`Failed to abort: ${data.error || resp.statusText}`);
-        } else {
-          // Refresh statuses
-          poll();
+      const triggerId = btnAbort.dataset.triggerId;
+      const containers = document.querySelectorAll(".device-container");
+
+      const abortFormContainer = document.getElementById('abortFormContainer');
+      const suiteAbortForm = abortFormContainer.querySelector('#suiteAbortForm');
+      const triggerAbortForm = abortFormContainer.querySelector('#triggerAbortForm');
+
+      const triggerAbortOptions = triggerAbortForm.querySelector('.abort-options');
+      
+      triggerAbortOptions.innerHTML = '';
+      
+      abortFormContainer.dataset.runId = id;
+      abortFormContainer.dataset.triggerId = triggerId;
+      abortFormContainer.dataset.deviceUrl = btnAbort.closest(".device-container").dataset.deviceUrl;
+
+      for (const deviceContainer of containers) {
+        const badge = deviceContainer.querySelector('[data-device-status]');
+        const name = badge.dataset.deviceStatus;
+        const deviceUrl = deviceContainer.dataset.deviceUrl;
+        const resp = await fetch(`${deviceUrl}/api/v1/test-runs`);
+
+        if(!resp.ok) {
+          break;
         }
-      } catch (err) {
-        console.error("Error aborting run:", err);
-        alert("An error occurred while trying to abort the run.");
-      }
+
+        const runs = await resp.json();
+        const triggers = runs.filter(r => r.trigger_id === triggerId);
+
+        if (triggers.length === 0) {
+          break;
+        }
+
+        createAbortOptionElements(triggerAbortOptions, name, deviceUrl, triggers);
+      };
+
+      updateAbortFormsVisibility();
+      new bootstrap.Modal(document.getElementById('abortModal')).show();
     }
 
     // Details button
