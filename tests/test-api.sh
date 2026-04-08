@@ -42,7 +42,12 @@ for RUN_ID in $(curl -s http://localhost:5000/api/v1/test-runs | jq -r '.[].id')
     STATUS=$(curl -s http://localhost:5000/api/v1/test-runs/$RUN_ID | jq -r '.status')
     sleep 1
   done
+  HIDDEN=$(curl -s http://localhost:5000/api/v1/test-runs/$RUN_ID | jq -r '.hidden')
+  if [ "$HIDDEN" == "true" ]; then
+    continue
+  fi
   curl -s http://localhost:5000/api/v1/test-runs/$RUN_ID/report >> report.csv
+  RUN_UNDER_TEST=$RUN_ID
 done
 
 TEST_STATUS=$(grep 'test.py::TestSimple::test_success' report.csv | cut -d ',' -f7)
@@ -75,6 +80,23 @@ done
 
 if [ "$(cat file.txt 2>/dev/null)" != "test" ] ; then
   echo "file.txt contents does not match!"
+  exit 1
+fi
+
+NEW_ID=$(curl -s http://localhost:5000/api/v1/test-runs/$RUN_UNDER_TEST/repeat -H "Content-Type: application/json" -d '"success or conditional_skip"' | jq -r '.id')
+STATUS=""
+while [ "$STATUS" != "finished" ] && [ "$STATUS" != "failed" ]; do
+  STATUS=$(curl -s http://localhost:5000/api/v1/test-runs/$NEW_ID | jq -r '.status')
+  sleep 1
+done
+curl -s http://localhost:5000/api/v1/test-runs/$NEW_ID/report > report.csv
+awk -F',' 'FNR>1 && $3 != "" {print $3}' $(ls -tr report.csv) | sort > /tmp/actual-names
+cat << EOF > /tmp/expected-names
+conditional_skip[test_config0]
+success[test_config0]
+EOF
+if ! diff -q /tmp/expected-names /tmp/actual-names > /dev/null; then
+  echo "Unexpected list of executed tests!"
   exit 1
 fi
 
