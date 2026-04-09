@@ -71,6 +71,7 @@ canvas {
 
 <script>
 const chartData = {{ samples|tojson }};
+const eyesizes = {{ eyesizes|tojson }};
 const numBits = {{ num_bits }};
 
 const ctx = document.getElementById("eye_diagram").getContext("2d");
@@ -169,7 +170,7 @@ function log2(number) {
 function updateEyeDiagram() {
   const dacId = document.getElementById("dacs").value;
   const laneNumber = document.getElementById("lanes").selectedIndex;
-  const bitNumber = document.getElementById("bits").selectedIndex - 1;
+  const bitNumber = document.getElementById("bits").selectedIndex;
 
   ctx.clearRect(axisPadding.left, axisPadding.top, gridSize.x * cell.width, gridSize.y * cell.height);
 
@@ -182,19 +183,14 @@ function updateEyeDiagram() {
   // Calculate current amplitude grid
   const gridData = dacData[laneNumber]
     .map((pixel) => {
-      const amp = bitNumber == -1
+      const amp = bitNumber == 0
         ? pixel.amp.reduce((a, b) => a + b, 0) / pixel.amp.length
-        : pixel.amp[bitNumber];
+        : pixel.amp[bitNumber - 1];
       return { ...pixel, amp };
     });
 
-  // Calculate width and height
-  const maxValue = Math.max(...gridData.map(({ amp }) => amp));
-  const eyePixels = gridData.filter(({ amp }) => amp !== maxValue);
-  const width = (Math.max(...eyePixels.map(({ x }) => x)) - Math.min(...eyePixels.map(({ x }) => x))) * axisMultiplier.x;
-  const height = (Math.max(...eyePixels.map(({ y }) => y)) - Math.min(...eyePixels.map(({ y }) => y))) * axisMultiplier.y;
-  document.getElementById("width").innerText = width;
-  document.getElementById("height").innerText = height;
+  document.getElementById("width").innerText = eyesizes[dacId][laneNumber][bitNumber]["width"];
+  document.getElementById("height").innerText = eyesizes[dacId][laneNumber][bitNumber]["height"];
 
   // Fill grid
   for (const pixel of gridData) {

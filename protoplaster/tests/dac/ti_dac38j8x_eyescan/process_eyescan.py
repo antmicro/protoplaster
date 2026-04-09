@@ -115,20 +115,30 @@ class EyeScan:
         samples = self.parse_file()
         samples = self.aggregate_samples(samples)
         diagram_template = self.read_diagram_template()
+        eyesizes = dict()
+        for dac_id, lanes in samples.items():
+            eyesizes[dac_id] = dict()
+            for i, sample in enumerate(lanes):
+                eyesizes[dac_id][i] = dict()
+                result = self.get_eye_sizes(sample)
+                for bit, val in enumerate(result):
+                    eyesizes[dac_id][i][bit] = {
+                        "width": val[0],
+                        "height": val[1]
+                    }
         return self.render_template(diagram_template,
                                     samples=samples,
                                     axis_multiplier=self.axis_multiplier,
                                     disable_nav=True,
                                     num_bits=self.bit,
                                     sample_number=self.dwell_time *
-                                    self.sample_rate)
+                                    self.sample_rate,
+                                    eyesizes=eyesizes)
 
     def get_eyescan_file_path(self) -> str:
         return self.eyescan_file.name
 
-    def get_eye_size(self, sample: list[dict]) -> tuple[int, int]:
-        max_value = max(pixel["amp"] for pixel in sample)
-        eye_pixels = [pixel for pixel in sample if pixel["amp"] != max_value]
+    def get_eye_size(self, eye_pixels: list) -> tuple[int, int]:
         x_values = [pixel["x"] for pixel in eye_pixels]
         y_values = [pixel["y"] for pixel in eye_pixels]
         if len(x_values):
@@ -141,3 +151,14 @@ class EyeScan:
             height = 0
         return (width * self.axis_multiplier["x"],
                 height * self.axis_multiplier["y"])
+
+    def get_eye_sizes(self, sample: list[dict]) -> list[tuple[int, int]]:
+        result = list()
+        # Average over all bits
+        eye_pixels = [pixel for pixel in sample if sum(pixel["amp"]) == 0]
+        result.append(self.get_eye_size(eye_pixels))
+        bits = len(sample[0]["amp"]) if len(sample) else 0
+        for bit in range(bits):
+            eye_pixels = [pixel for pixel in sample if pixel["amp"][bit] == 0]
+            result.append(self.get_eye_size(eye_pixels))
+        return result

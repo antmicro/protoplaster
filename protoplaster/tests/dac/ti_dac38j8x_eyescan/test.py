@@ -115,25 +115,38 @@ class TestTiDac38j8xEyescan:
         {%- endmacro %}
         """
         samples_dict = self.eyescan.parse_file()
-        aggregated_dict = self.eyescan.aggregate_samples(
-            samples_dict, lambda x: sum(x) / len(x))
+        aggregated_dict = self.eyescan.aggregate_samples(samples_dict)
 
         min_width = getattr(self, "min_width", -float('inf'))
         max_width = getattr(self, "max_width", float('inf'))
         min_height = getattr(self, "min_height", -float('inf'))
         max_height = getattr(self, "max_height", float('inf'))
+        ignore_dac_lanes = getattr(self, "ignore_dac_lanes", [])
 
         assert min_width <= max_width, f"Invalid range: [{min_width}, {max_width}]"
         assert min_height <= max_height, f"Invalid range: [{min_height}, {max_height}]"
 
         for dac_id, lanes in aggregated_dict.items():
-            for sample in lanes:
-                width, height = self.eyescan.get_eye_size(sample)
+            for laneid, sample in enumerate(lanes):
+                skip_check = False
+                for dac in ignore_dac_lanes:
+                    if dac_id in dac:
+                        if laneid in dac[dac_id]:
+                            skip_check = True
+                            break
+                if skip_check:
+                    continue
+                result = self.eyescan.get_eye_sizes(sample)
 
-                assert min_width <= width <= max_width, \
-                    f"DAC {dac_id} lane width {width} not in range [{min_width}, {max_width}]"
-                assert min_height <= height <= max_height, \
-                    f"DAC {dac_id} lane height {height} not in range [{min_height}, {max_height}]"
+                for bit, val in enumerate(result):
+                    width = val[0]
+                    height = val[1]
+                    bit_string = "average all bits" if bit == 0 else f"bit {bit}"
+
+                    assert min_width <= width <= max_width, \
+                        f"DAC {dac_id} lane {laneid} {bit_string} width {width} not in range [{min_width}, {max_width}]"
+                    assert min_height <= height <= max_height, \
+                        f"DAC {dac_id} lane {laneid} {bit_string} height {height} not in range [{min_height}, {max_height}]"
 
     def name(self):
         return "eyescan-" + str(self.daisy_chain_number)
