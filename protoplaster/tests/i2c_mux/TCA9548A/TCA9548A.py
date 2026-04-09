@@ -50,12 +50,3 @@ class TCA9548A(I2CMux):
     def set_mask(self, mask: int) -> None:
         self._validate_mask(mask)
         self.bus.write_byte(self.address, mask)
-
-    def close(self) -> None:
-        self.bus.close()
-        bus = Path(f"/sys/bus/i2c/devices/i2c-{self.bus_index}")
-        dev = bus / f"{self.bus_index}-{self.address:04x}"
-        driver = (dev / "modalias").read_text().split(":")[-1]
-        address_hex = f"{self.address:#x}"
-        (bus / "delete_device").write_text(address_hex)
-        (bus / "new_device").write_text(f"{driver} {address_hex}")

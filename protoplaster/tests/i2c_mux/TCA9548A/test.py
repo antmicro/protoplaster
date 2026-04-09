@@ -46,8 +46,5 @@ class TestTCA9548A:
         current_mask = self.mux.get_mask()
         assert current_mask == TestTCA9548A.mask_after_reset, f"Reset mask mismatch: expected {hex(TestTCA9548A.mask_after_reset)}, read {hex(current_mask)}"
 
-    def teardown_class(self):
-        self.mux.close()
-
     def name(self):
         return f"TCA9548A({self.i2c_bus}, {hex(self.i2c_address)})"
