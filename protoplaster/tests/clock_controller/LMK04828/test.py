@@ -32,7 +32,9 @@ class TestLmk04828:
 
     _RESET_VALUES = {
         Register.ID_DEVICE_TYPE: 0x06,
-        Register.ID_PROD: 0xd05b,
+        Register.ID_PROD1: 0xd0,
+        Register.ID_PROD2: 0x5b,
         Register.ID_MASKREV: 0x20,
-        Register.ID_VNDR: 0x5104,
+        Register.ID_VNDR1: 0x51,
+        Register.ID_VNDR2: 0x04,
     }

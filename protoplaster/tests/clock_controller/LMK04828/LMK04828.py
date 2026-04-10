@@ -5,9 +5,11 @@ from protoplaster.tests.spi.spi import SPI
 
 class Register(Enum):
     ID_DEVICE_TYPE = (0x003, 1)
-    ID_PROD = (0x004, 2)
+    ID_PROD1 = (0x004, 1)
+    ID_PROD2 = (0x005, 1)
     ID_MASKREV = (0x006, 1)
-    ID_VNDR = (0x00C, 2)
+    ID_VNDR1 = (0x00C, 1)
+    ID_VNDR2 = (0x00D, 1)
 
     def __new__(cls, index, data_bytes=1):
         obj = object.__new__(cls)
