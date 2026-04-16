@@ -73,14 +73,10 @@ api-test:
     - python3 -m venv ./venv
     - source ./venv/bin/activate
     - pip install .
-    - ./tests/test-api.sh
-    - ./tests/test-tests-extension.sh
-    - ./tests/test-order.sh
-    - ./tests/test-overrides.sh
-    - ./tests/test-plugins.sh
-    - ./tests/test-rpc-pickle.sh
-    - ./tests/test-anchors.sh
-    - ./tests/test-api-abort.sh
+    - |
+      for f in tests/*.sh; do
+        bash "$f"
+      done
   artifacts:
     paths:
       - srv/protoplaster/*
