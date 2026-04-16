@@ -46,8 +46,9 @@ def format_artifacts(raw_value):
 
 
 custom_columns_md = {
-    "status": (lambda value: f"<span style='color:green'>{value}"
-               if value == "passed" else f"<span style='color:red'>{value}"),
+    "status":
+    (lambda value: f"<span style='color:green'>{value}</span>"
+     if value == "passed" else f"<span style='color:red'>{value}</span>"),
     "duration": (lambda value: human_readable_time(float(value))),
     "artifacts": (lambda value: ", ".join(format_artifacts(value))),
 }
