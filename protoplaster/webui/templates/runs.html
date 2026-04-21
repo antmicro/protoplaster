@@ -30,6 +30,7 @@
       <tr>
         <th>ID</th>
         <th>Config</th>
+        <th>Test suite name</th>
         <th>Status</th>
         <th>Started</th>
         <th>Finished</th>
@@ -153,6 +154,7 @@
         <dl class="row">
           <dt class="col-sm-3">Run ID</dt><dd class="col-sm-9" id="detail-id">-</dd>
           <dt class="col-sm-3">Config</dt><dd class="col-sm-9" id="detail-config">-</dd>
+          <dt class="col-sm-3">Test suite name</dt><dd class="col-sm-9" id="detail-test-suite-name">-</dd>
           <dt class="col-sm-3">Status</dt><dd class="col-sm-9" id="detail-status">-</dd>
           <dt class="col-sm-3">Start time</dt><dd class="col-sm-9" id="detail-start">-</dd>
           <dt class="col-sm-3">Finish time</dt><dd class="col-sm-9" id="detail-end">-</dd>
@@ -272,6 +274,7 @@ document.addEventListener("DOMContentLoaded", function () {
           tr.innerHTML = `
             <td>${run.id}</td>
             <td>${run.config_name}</td>
+            <td>${run.test_suite_name}</td>
             <td class="status-cell"></td>
             <td class="start-cell"></td>
             <td class="end-cell"></td>
