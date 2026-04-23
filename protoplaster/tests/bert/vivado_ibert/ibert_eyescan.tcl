@@ -1,4 +1,4 @@
-proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits loopback reportFile dwellMode dwellValue } {
+proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits loopback reportFile dwellMode dwellValue horizontalIncrement verticalIncrement } {
 	# Connect to the emulator
 	open_hw_manager
 	connect_hw_server -url "$hwServer"
@@ -33,6 +33,8 @@ proc perform_eye_scan { outputPath hwServer serialNumber channelPath prbsBits lo
 	# Create, run, and save scan
 	set xil_newScan [create_hw_sio_scan -description {Scan 0} 2d_full_eye  [lindex [get_hw_sio_links $fullPath/TX->$fullPath/RX] 0 ]]
 
+	set_property HORIZONTAL_INCREMENT $horizontalIncrement [get_hw_sio_scans $xil_newScan]
+	set_property VERTICAL_INCREMENT $verticalIncrement [get_hw_sio_scans $xil_newScan]
 	if { $dwellMode eq "BER" } {
 		if { $dwellValue ne "" } {
 			set_property DWELL_BER $dwellValue [get_hw_sio_scans $xil_newScan]
@@ -59,6 +61,8 @@ set argNames {
 	reportFile
 	dwellMode
 	dwellValue
+	horizontalIncrement
+	verticalIncrement
 }
 
 if { $argc != [llength $argNames] } {
@@ -71,4 +75,4 @@ for {set i 0} {$i < [llength $argNames]} {incr i} {
 	set [lindex $argNames $i] [lindex $argv $i]
 }
 
-perform_eye_scan $outputPath $hwServer $serialNumber $channelPath $prbsBits $loopback $reportFile $dwellMode $dwellValue
+perform_eye_scan $outputPath $hwServer $serialNumber $channelPath $prbsBits $loopback $reportFile $dwellMode $dwellValue $horizontalIncrement $verticalIncrement

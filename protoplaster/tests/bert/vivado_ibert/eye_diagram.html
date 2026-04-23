@@ -29,6 +29,8 @@ canvas {
 
 <script>
 const chartData = {{ samples|tojson }};
+const eye_width = {{ eye_width }};
+const eye_height = {{ eye_height }};
 
 const ctx = document.getElementById("eye_diagram").getContext("2d");
 
@@ -40,14 +42,21 @@ const stepSize = {
   y: yValues[1] - yValues[0],
 };
 
-const avgAmplitude = 0.27;
-const axisPadding = { left: 55, right: 120, top: 10, bottom: 35 };
-const gridSize = { x: xValues.length, y: yValues.length };
+const ampData = chartData
+  .flat(1)
+  .flatMap((pixel) => pixel.amp);
+
+const maxAmplitude = ampData
+  .reduce((a, b) => Math.max(a, b), -Infinity);
+const avgAmplitude = ampData
+  .reduce((a, b) => a + b, 0) / ampData.length;
+const axisPadding = { left: 55, right: 90, top: 10, bottom: 35 };
+const gridSize = { x: xValues.length - 1, y: yValues.length - 1 };
 const translateOrigin = { x: gridSize.x / 2, y: gridSize.y / 2 };
 const ticksCommon = {
   length: 9,
   padding: { grid: 1, text: 2 },
-  step: 2,
+  step: 8,
 };
 const ticks = { x: { ...ticksCommon }, y: { ...ticksCommon } };
 
@@ -73,12 +82,12 @@ ctx.fillText("Unit Interval", axisPadding.left + cell.width * gridSize.x / 2, ct
 
 // Legend
 {
-  const label = "Amplitude";
+  const label = "BER";
   const width = 30;
-  const height = 120;
+  const height = gridSize.y * cell.height;
   const padding = {
     grid: 10,
-    label: 10,
+    label: 32,
   };
 
   const x = axisPadding.left + (gridSize.x + 1) * cell.width + padding.grid;
@@ -104,17 +113,14 @@ ctx.fillText("Unit Interval", axisPadding.left + cell.width * gridSize.x / 2, ct
   ctx.textBaseline = "middle";
   ctx.fillStyle = "black";
   const ticksLength = 6;
-  const maxValue = chartData
-    .flat(1)
-    .flatMap((pixel) => pixel.amp)
-    .reduce((a, b) => Math.max(a, b), -Infinity); // Math.max(...values) causes stack overflow
-  const ticksValues = [0, avgAmplitude, maxValue];
+  const maxValue = 12;
+  const ticksValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   ticksValues.forEach((value) => {
     const xPos = x + width + borderWidth
     const yPos = y + height - value / maxValue * height;
     ctx.moveTo(xPos + 1, yPos);
     ctx.lineTo(xPos + 1 + ticksLength, yPos);
-    ctx.fillText(value, xPos + ticksLength + 3, yPos + ctx.lineWidth / 4);
+    ctx.fillText((value == 12 ? ">" : "") + Number.parseFloat((value != 0 ? 2 ** value : 1) / maxAmplitude).toExponential(1), xPos + ticksLength + 3, yPos + ctx.lineWidth / 4);
   });
   const maxTicksWidth = Math.max(...ticksValues.map((value) => ctx.measureText(value).width));
   ctx.font = font; // restore font
@@ -128,13 +134,8 @@ ctx.fillText("Unit Interval", axisPadding.left + cell.width * gridSize.x / 2, ct
 }
 
 function updateEyeDiagram() {
-  // Calculate eye width and height
-  const minValue = Math.min(...chartData.map(({ amp }) => amp));
-  const eyePixels = chartData.filter(({ amp }) => amp === minValue);
-  const width = (Math.max(...eyePixels.map(({ x }) => x)) - Math.min(...eyePixels.map(({ x }) => x)));
-  const height = (Math.max(...eyePixels.map(({ y }) => y)) - Math.min(...eyePixels.map(({ y }) => y)));
-  document.getElementById("width").innerText = width;
-  document.getElementById("height").innerText = height;
+  document.getElementById("width").innerText = eye_width;
+  document.getElementById("height").innerText = eye_height;
 
   // Fill grid
   for (const pixel of chartData) {
@@ -144,8 +145,8 @@ function updateEyeDiagram() {
     const yPos = (translateOrigin.y - yIndex - 1) * cell.height + axisPadding.top;
 
     const fillStyle = pixel.amp >= 0 && pixel.amp <= avgAmplitude
-      ? `rgb(${(pixel.amp / avgAmplitude) * 255}, 0, ${(1 - pixel.amp / avgAmplitude) * 255})`
-      : `rgb(${(1 - ((pixel.amp - avgAmplitude) / avgAmplitude)) * 255}, 0, 0)`;
+      ? `rgb(${pixel.amp * 255}, 0, ${(1 - pixel.amp) * 255})`
+      : `rgb(${(1 - ((pixel.amp))) * 255}, 0, 0)`;
 
     ctx.fillStyle = fillStyle;
     ctx.fillRect(xPos, yPos, cell.width, cell.height);

@@ -47,6 +47,9 @@ class TestIbertEyescan:
                 "`dwell_value` test attribute must be convertible to `float` when provided"
             )
 
+        horizontal_increment = getattr(self, "horizontal_increment", 8)
+        vertical_increment = getattr(self, "vertical_increment", 8)
+
         if not hasattr(self, "test_name"):
             if dwell_mode == None:
                 dwell_string = "DEFAULT DWELL"
@@ -58,7 +61,8 @@ class TestIbertEyescan:
                 f"{'' if loopback else 'no '} loopback, {dwell_string}")
         self.eyescan = EyeScan(vivado_cmd, hw_server, self.serial_number,
                                self.channel_path, self.prbs_bits, loopback,
-                               dwell_mode, dwell_value)
+                               dwell_mode, dwell_value, horizontal_increment,
+                               vertical_increment)
 
     def test_transceiver_status(self):
         """
@@ -134,17 +138,16 @@ class TestIbertEyescan:
           {{ _item('max_height') }}
         {%- endmacro %}
         """
-        samples = self.eyescan.parse_file()
+        _, width, height = self.eyescan.parse_file()
 
-        min_width = getattr(self, "min_width", -float('inf'))
-        max_width = getattr(self, "max_width", float('inf'))
-        min_height = getattr(self, "min_height", -float('inf'))
-        max_height = getattr(self, "max_height", float('inf'))
+        min_width = getattr(self, "min_width", -int('inf'))
+        max_width = getattr(self, "max_width", int('inf'))
+        min_height = getattr(self, "min_height", -int('inf'))
+        max_height = getattr(self, "max_height", int('inf'))
 
         assert min_width <= max_width, f"Invalid range: [{min_width}, {max_width}]"
         assert min_height <= max_height, f"Invalid range: [{min_height}, {max_height}]"
 
-        width, height = self.eyescan.get_eye_size(samples)
         assert min_width <= width <= max_width, f"Eye width {width} is not in accepted range: [{min_width}, {max_width}]"
         assert min_height <= height <= max_height, f"Eye height {height} is not in accepted range: [{min_height}, {max_height}]"
 

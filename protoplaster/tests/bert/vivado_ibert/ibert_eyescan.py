@@ -13,7 +13,9 @@ class EyeScan:
     def __init__(self, vivado_cmd: str, hw_server: str, serial_number: str,
                  channel_path: str, prbs_bits: int, loopback: bool,
                  dwell_mode: Optional[Literal["BER", "TIME"]],
-                 dwell_value: Optional[float]):
+                 dwell_value: Optional[float],
+                 horizontal_increment: Optional[int],
+                 vertical_increment: Optional[int]):
         self.eyescan_file = tempfile.NamedTemporaryFile(suffix=".csv")
         self.hw_server = hw_server
         self.serial_number = serial_number
@@ -23,6 +25,8 @@ class EyeScan:
         self.report_file = tempfile.NamedTemporaryFile(suffix=".report")
         self.dwell_mode = dwell_mode
         self.dwell_value = dwell_value
+        self.horizontal_increment = horizontal_increment
+        self.vertical_increment = vertical_increment
 
         # Check if Vivado is available
         if shutil.which(vivado_cmd) is None:
@@ -49,6 +53,8 @@ class EyeScan:
             self.report_file.name,
             self.dwell_mode or "",
             str(self.dwell_value) if self.dwell_value is not None else "",
+            str(self.horizontal_increment),
+            str(self.vertical_increment),
         ]
         res = subprocess.run(vivado_argv,
                              cwd=os.path.dirname(__file__),
@@ -58,11 +64,17 @@ class EyeScan:
             raise RuntimeError("Eye scan failed, Vivado stdout:\n" +
                                res.stdout + "\nVivado stderr:\n" + res.stderr)
 
-    def parse_file(self) -> list[dict]:
+    def parse_file(self) -> tuple[list[dict], int, int]:
         samples = []
+        width = 0
+        height = 0
         with open(self.get_eyescan_file_path()) as file:
             for line in file:
-                if line.strip() == "Scan Start":
+                if "Horizontal Opening" in line:
+                    width = int(line.split(",")[1])
+                elif "Vertical Opening" in line:
+                    height = int(line.split(",")[1])
+                elif line.strip() == "Scan Start":
                     break
             else:
                 raise ValueError(
@@ -79,7 +91,7 @@ class EyeScan:
             else:
                 raise ValueError("Scan data end marker not found in CSV file")
 
-        return samples
+        return (samples, width, height)
 
     def read_diagram_template(self) -> str:
         with open(f"{os.path.dirname(__file__)}/eye_diagram.html") as file:
@@ -102,12 +114,14 @@ class EyeScan:
         return template.render(**kwargs)
 
     def render_diagram(self) -> str:
-        samples = self.parse_file()
+        samples, width, height = self.parse_file()
         diagram_template = self.read_diagram_template()
         return self.render_template(diagram_template,
                                     samples=samples,
                                     disable_nav=True,
-                                    num_bits=self.prbs_bits)
+                                    num_bits=self.prbs_bits,
+                                    eye_width=width,
+                                    eye_height=height)
 
     def get_eyescan_file_path(self) -> str:
         return self.eyescan_file.name
@@ -118,21 +132,6 @@ class EyeScan:
     def read_report_file(self) -> str:
         with open(self.report_file.name) as report_file:
             return report_file.read()
-
-    def get_eye_size(self, sample: list[dict]) -> tuple[int, int]:
-        min_value = min(pixel["amp"] for pixel in sample)
-        eye_pixels = [pixel for pixel in sample if pixel["amp"] != min_value]
-        x_values = [pixel["x"] for pixel in eye_pixels]
-        y_values = [pixel["y"] for pixel in eye_pixels]
-        if len(x_values):
-            width = max(x_values) - min(x_values)
-        else:
-            width = 0
-        if len(y_values):
-            height = max(y_values) - min(y_values)
-        else:
-            height = 0
-        return (width, height)
 
     def get_entry_from_report(self, entry) -> str | None:
         with open(self.report_file.name, "r") as report_file:
