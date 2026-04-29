@@ -141,6 +141,11 @@ def parse_args():
     parser.add_argument("--plugins",
                         type=str,
                         help="Path to a folder with plugins")
+    parser.add_argument(
+        "-k",
+        "--pattern",
+        type=str,
+        help="Only run tests which match the given substring expression")
     args = parser.parse_args()
 
     if args.csv_columns and not args.csv and not args.report_output:

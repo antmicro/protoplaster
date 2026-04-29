@@ -219,7 +219,8 @@ def prepare_pytest_args(test_paths, args):
     pytest_args = test_to_run + pytest_args
     pytest_args = pytest_args.strip().split(" ")
     # Processing pattern separately as it might contain whitespaces
-    if hasattr(args, "pattern"):
+    if hasattr(args, "pattern") and args.pattern is not None and len(
+            args.pattern):
         pytest_args.append(f'-k={args.pattern}')
     return pytest_args
 
