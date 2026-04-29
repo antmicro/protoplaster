@@ -277,6 +277,8 @@ class TestFile:
     tests: dict[str, Test]
     metadata: dict[str, Metadata]
     test_suites: dict[str, TestSuite]
+    combined_results_dir_prefix: str = "combined_"
+    aggregate_results: bool = False
 
     def __init__(
         self,
@@ -339,6 +341,14 @@ class TestFile:
             del overrides[n]
 
         CustomizedLoader._refresh_internals()
+
+        if (aggregate_results :=
+                file_content.get("aggregate_results")) is not None:
+            self.aggregate_results = aggregate_results
+
+        if (custom_dir :=
+                file_content.get("combined_results_dir_prefix")) is not None:
+            self.combined_results_dir_prefix = str(custom_dir)
 
         if (includes := file_content.get("includes")) is not None:
             for include in includes:

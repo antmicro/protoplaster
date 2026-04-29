@@ -341,7 +341,7 @@ def orchestrate_tests(args, orchestrator_data):
         for machine in machines:
             if machine in devices:
                 mach_url = devices[machine]
-                orchestrator_data.triggered_machines.add(mach_url)
+                orchestrator_data.triggered_machines[machine] = mach_url
 
                 run_id = _trigger_remote_run(machine, mach_url, args,
                                              test_name)

@@ -9,13 +9,19 @@ from datetime import datetime, timezone
 from email.utils import format_datetime
 from copy import deepcopy
 import requests
+import shutil
+import os
 
 
 class OrchestratorData:
 
-    def __init__(self):
+    def __init__(self,
+                 aggregate_results=False,
+                 combined_results_dir_prefix=""):
         self.trigger_id = str(uuid.uuid4())
-        self.triggered_machines = set()
+        self.triggered_machines = {}
+        self.aggregate_results = aggregate_results
+        self.combined_results_dir_prefix = combined_results_dir_prefix
 
 
 class RunManager:
@@ -43,7 +49,9 @@ class RunManager:
         check_args.overrides = overrides
 
         try:
-            create_test_file(check_args)
+            test_file = create_test_file(check_args)
+            aggregate_results = test_file.aggregate_results
+            combined_results_dir_prefix = test_file.combined_results_dir_prefix
         except Exception as e:
             return {"error": str(e)}
 
@@ -54,7 +62,9 @@ class RunManager:
         # if there is no trigger id it means that
         # this is an orchestrator job
         if trigger_id is None:
-            orchestrator_data = OrchestratorData()
+            orchestrator_data = OrchestratorData(
+                aggregate_results=aggregate_results,
+                combined_results_dir_prefix=combined_results_dir_prefix)
             self.orchestrators[
                 orchestrator_data.trigger_id] = orchestrator_data
             self.create_orchestrator(run_metadata, base_args,
@@ -79,7 +89,11 @@ class RunManager:
     def create_orchestrator(self, run_metadata, base_args, orchestrator_data):
 
         def on_done(f):
-            print("Orchestrator finished")
+            print(f"Orchestrator {orchestrator_data.trigger_id} finished.")
+            if orchestrator_data.aggregate_results:
+                print(f"Aggregating results...")
+                self.aggregate_results(orchestrator_data.trigger_id, base_args,
+                                       orchestrator_data)
 
         future = self.executor.submit(run_orchestrator, run_metadata,
                                       base_args, orchestrator_data)
@@ -196,10 +210,10 @@ class RunManager:
         if is_server:
             canceled_anything = False
             orchestrator = self.orchestrators[trigger_to_cancel]
-            for mach in orchestrator.triggered_machines:
+            for _, mach_url in orchestrator.triggered_machines:
                 try:
                     response = requests.delete(urljoin(
-                        mach,
+                        mach_url,
                         f"/api/v1/test-runs/trigger/{trigger_to_cancel}"),
                                                timeout=5)
                     canceled_anything = True
@@ -207,3 +221,76 @@ class RunManager:
                     pass
 
         return canceled_anything
+
+    def aggregate_results(self, trigger_id, base_args, orchestrator_data):
+        aggregation_dir = os.path.join(
+            base_args.artifacts_dir,
+            f"{orchestrator_data.combined_results_dir_prefix}{trigger_id}")
+        os.makedirs(aggregation_dir, exist_ok=True)
+
+        local_trigger = self.get_trigger(trigger_id)
+        if local_trigger:
+            for run in local_trigger["runs"]:
+                run_id = run["id"]
+                local_artifacts = os.path.join(base_args.artifacts_dir, run_id)
+                if os.path.exists(local_artifacts):
+                    shutil.copytree(local_artifacts,
+                                    os.path.join(aggregation_dir,
+                                                 f"local_{run_id}"),
+                                    dirs_exist_ok=True)
+
+                local_report = os.path.join(base_args.reports_dir,
+                                            run_id + ".csv")
+                if os.path.exists(local_report):
+                    shutil.copy(
+                        local_report,
+                        os.path.join(aggregation_dir, f"local_{run_id}.csv"))
+
+        for machine_name, machine_url in orchestrator_data.triggered_machines.items(
+        ):
+            try:
+                resp = requests.get(urljoin(
+                    machine_url, f"/api/v1/test-runs/trigger/{trigger_id}"),
+                                    timeout=5)
+
+                remote_metadata = resp.json()
+                for remote_run in remote_metadata.get("runs", []):
+                    remote_run_id = remote_run["id"]
+                    self._download_run_results(machine_name, machine_url,
+                                               remote_run_id, aggregation_dir,
+                                               base_args.reports_dir)
+            except Exception as e:
+                print(f"Failed to query machine {machine_url}: {e}")
+
+    def _download_run_results(self, machine_name, machine_url, run_id,
+                              aggregation_dir, reports_dir):
+        run_dest_dir = os.path.join(aggregation_dir,
+                                    f"remote_{machine_name}_{run_id}")
+        os.makedirs(run_dest_dir, exist_ok=True)
+
+        try:
+            report_url = urljoin(machine_url,
+                                 f"/api/v1/test-runs/{run_id}/report")
+            report_resp = requests.get(report_url, timeout=5)
+            if report_resp.status_code == 200:
+                with open(
+                        os.path.join(aggregation_dir,
+                                     f"remote_{machine_name}_{run_id}.csv"),
+                        "wb") as f:
+                    f.write(report_resp.content)
+
+            artifacts_url = urljoin(machine_url,
+                                    f"/api/v1/test-runs/{run_id}/artifacts")
+            artifacts_list = requests.get(artifacts_url, timeout=5).json()
+
+            for artifact in artifacts_list:
+                artifact_name = artifact["name"]
+                file_url = urljoin(
+                    machine_url,
+                    f"/api/v1/test-runs/{run_id}/artifacts/{artifact_name}")
+                file_resp = requests.get(file_url, timeout=5)
+                with open(os.path.join(run_dest_dir, artifact_name),
+                          "wb") as f:
+                    f.write(file_resp.content)
+        except Exception as e:
+            print(f"Error downloading results for run {run_id}: {e}")
