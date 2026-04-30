@@ -1,0 +1,4 @@
+Protoplaster tests report
+==================
+|start time|device name|test name|module|duration|message|status|artifacts|
+|---|---|---|---|---|---|---|---|
