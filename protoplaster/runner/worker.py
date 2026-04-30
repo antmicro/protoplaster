@@ -49,7 +49,7 @@ def run_test(run_metadata, base_args):
         return
 
     try:
-        ret, metadata = run_tests(args)
+        ret, metadata = run_tests(args, args.machine_target, args.csv)
     except Exception as e:
         run_metadata["error"] = str(e)
         ret = LOCAL_ERROR

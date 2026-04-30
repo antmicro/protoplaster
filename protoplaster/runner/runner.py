@@ -240,14 +240,14 @@ def generate_metadata(args, metadata_cmds):
     return cmd_results
 
 
-def _trigger_remote_run(machine, base_url, args):
+def _trigger_remote_run(machine, base_url, args, group):
     print(f"Triggering run on {machine} ({base_url})")
 
     config_name = os.path.basename(args.test_file)
     payload = {
         "config_name": config_name,
         "trigger_id": args.trigger_id,
-        "test_suite_name": args.group,
+        "test_suite_name": group,
         "machine_target": machine
     }
 
@@ -321,12 +321,9 @@ def orchestrate_tests(args, orchestrator_data):
     devices = {d['name']: d['url'] for d in get_all_devices()}
     test_file = create_test_file(args)
 
+    args.trigger_id = orchestrator_data.trigger_id
     for test_name, test_obj in test_file.tests.items():
         print(f"Executing test group: {test_name}")
-
-        chunk_args = copy.copy(args)
-        chunk_args.group = test_name
-        chunk_args.trigger_id = orchestrator_data.trigger_id
 
         machines = set()
         has_local = False
@@ -343,7 +340,8 @@ def orchestrate_tests(args, orchestrator_data):
                 mach_url = devices[machine]
                 orchestrator_data.triggered_machines.add(mach_url)
 
-                run_id = _trigger_remote_run(machine, mach_url, chunk_args)
+                run_id = _trigger_remote_run(machine, mach_url, args,
+                                             test_name)
                 if run_id:
                     remote_runs.append({
                         "machine": machine,
@@ -359,7 +357,7 @@ def orchestrate_tests(args, orchestrator_data):
                 # Web server mode: Dispatch to the local Flask server
                 local_url = f"http://{SERVE_IP}:{args.port}"
                 run_id = _trigger_remote_run(LOCAL_DEVICE_HOST, local_url,
-                                             chunk_args)
+                                             args, test_name)
                 if run_id:
                     remote_runs.append({
                         "machine": LOCAL_DEVICE_HOST,
@@ -369,24 +367,23 @@ def orchestrate_tests(args, orchestrator_data):
             else:
                 # CLI mode: Execute local tests directly
                 print("Executing local tests directly (CLI mode)")
-                local_chunk_args = copy.copy(chunk_args)
-                local_chunk_args.machine_target = LOCAL_DEVICE_HOST
 
-                if getattr(local_chunk_args, "csv", None):
-                    csv_name, csv_ext = os.path.splitext(local_chunk_args.csv)
+                csv = getattr(args, "csv", None)
+                if csv:
+                    csv_name, csv_ext = os.path.splitext(csv)
                     modified_csv = f"{csv_name}_{test_name}{csv_ext}"
-                    local_chunk_args.csv = modified_csv
+                    csv = modified_csv
                     print(
                         warning(
                             f"Multiple test runs detected in CLI mode. Report for group '{test_name}' will be saved to: {modified_csv}"
                         ))
 
-                run_tests(local_chunk_args)
+                run_tests(args, LOCAL_DEVICE_HOST, csv)
 
         wait_for_remote_runs(remote_runs)
 
 
-def run_tests(args):
+def run_tests(args, machine_target, csv):
     machine_target = getattr(args, "machine_target", None)
 
     if args.generate_docs:
@@ -439,8 +436,8 @@ def run_tests(args):
 
         ret = pytest.main(prepare_pytest_args(paths_to_tests, args),
                           plugins=plugins)
-    if args.csv:
-        with open(f"{args.reports_dir}/{args.csv}", "w") as csv_file:
+    if csv:
+        with open(f"{args.reports_dir}/{csv}", "w") as csv_file:
             csv_file.write(csv_report_gen.report)
     if args.report_output:
         with open(args.report_output, "wb") as archive_file:
