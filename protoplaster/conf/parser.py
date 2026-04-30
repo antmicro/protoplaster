@@ -10,6 +10,7 @@ import yaml
 
 import protoplaster.tests
 from protoplaster.tools.log import pr_err, pr_info, pr_warn
+from _pytest.mark.expression import Expression
 
 StrPath = str | Path
 
@@ -250,6 +251,26 @@ class TestSuite(ConfigObj):
 
 
 @dataclass
+class PatternMatcher:
+
+    __slots__ = ("_name", )
+
+    _name: str
+
+    @classmethod
+    def from_test(cls, test):
+        _name = test.name
+        return cls(_name)
+
+    def __call__(self, subname: str, /,
+                 **kwargs: str | int | bool | None) -> bool:
+        if kwargs:
+            pr_err("kwargs are unused in this matcher")
+        subname = subname.lower()
+        return subname in self._name.lower()
+
+
+@dataclass
 class TestFile:
     file: Path
 
@@ -424,6 +445,16 @@ class TestFile:
             self.test_suites = {}
         else:
             pr_err(f'Unknown test suite or test group "{suite}"')
+
+    def filter_pattern(self, pattern: str):
+        expr = Expression.compile(pattern)
+
+        for _, tests in list(self.tests.items()):
+            tests_body = []
+            for test in tests.body:
+                if expr.evaluate(PatternMatcher.from_test(test)):
+                    tests_body.append(test)
+            tests.body = tests_body
 
     def filter_runnable_tests(self, target: str | None):
         """

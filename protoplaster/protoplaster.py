@@ -146,6 +146,11 @@ def parse_args():
         "--pattern",
         type=str,
         help="Only run tests which match the given substring expression")
+    parser.add_argument(
+        "-p",
+        "--module-pattern",
+        type=str,
+        help="Only run modules which match the given substring expression")
     args = parser.parse_args()
 
     if args.csv_columns and not args.csv and not args.report_output:

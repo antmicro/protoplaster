@@ -67,6 +67,8 @@ def create_test_file(args) -> TestFile:
         pr_err(f"These overrides could not be applied: {overrides}")
     if (group := args.group) not in (None, ""):
         test_file.filter_suite(group)
+    if (pattern := args.module_pattern) not in (None, ""):
+        test_file.filter_pattern(pattern)
 
     return test_file
 
@@ -186,8 +188,8 @@ def extract_class_names(path):
     return classes
 
 
-def prepare_pytest_args(test_paths, args):
-    pytest_args = f" --keep-duplicates -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={args.test_file} --instafail "
+def prepare_pytest_args(test_paths, args, test_file_path):
+    pytest_args = f" --keep-duplicates -s -p no:cacheprovider -p protoplaster.conf.params_conf --yaml_file={test_file_path} --instafail "
     if args.output:
         pytest_args += f"--junitxml={args.output} "
     if args.artifacts_dir:
@@ -324,6 +326,7 @@ def orchestrate_tests(args, orchestrator_data):
     args.trigger_id = orchestrator_data.trigger_id
     for test_name, test_obj in test_file.tests.items():
         print(f"Executing test group: {test_name}")
+        args.group = test_name
 
         machines = set()
         has_local = False
@@ -384,8 +387,6 @@ def orchestrate_tests(args, orchestrator_data):
 
 
 def run_tests(args, machine_target, csv):
-    machine_target = getattr(args, "machine_target", None)
-
     if args.generate_docs:
         test_file = create_test_file(args)
         paths_to_tests = test_file.list_paths_to_tests()
@@ -418,8 +419,6 @@ def run_tests(args, machine_target, csv):
         return 0, metadata
 
     with test_file.merged_test_file() as tf:
-        args.test_file = tf.name
-
         plugins = []
         csv_report_gen = CsvReportGenerator(args.csv_columns, metadata)
         plugins.append(csv_report_gen)
@@ -434,7 +433,7 @@ def run_tests(args, machine_target, csv):
         if getattr(args, "run_obj", None):
             plugins.append(PytestAbortPlugin(args.run_obj))
 
-        ret = pytest.main(prepare_pytest_args(paths_to_tests, args),
+        ret = pytest.main(prepare_pytest_args(paths_to_tests, args, tf.name),
                           plugins=plugins)
     if csv:
         with open(f"{args.reports_dir}/{csv}", "w") as csv_file:
