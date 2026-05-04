@@ -140,10 +140,10 @@ class TestIbertEyescan:
         """
         _, width, height = self.eyescan.parse_file()
 
-        min_width = getattr(self, "min_width", -int('inf'))
-        max_width = getattr(self, "max_width", int('inf'))
-        min_height = getattr(self, "min_height", -int('inf'))
-        max_height = getattr(self, "max_height", int('inf'))
+        min_width = getattr(self, "min_width", -float('inf'))
+        max_width = getattr(self, "max_width", float('inf'))
+        min_height = getattr(self, "min_height", -float('inf'))
+        max_height = getattr(self, "max_height", float('inf'))
 
         assert min_width <= max_width, f"Invalid range: [{min_width}, {max_width}]"
         assert min_height <= max_height, f"Invalid range: [{min_height}, {max_height}]"
