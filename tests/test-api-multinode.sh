@@ -11,6 +11,8 @@ mkdir -p /tmp/protoplaster/main/{tests,reports,artifacts}
 OUTPUT_DIR="test_output"
 mkdir -p "$OUTPUT_DIR"
 
+COMBINED_DIR_PREFIX="custom-prefix_"
+
 # Create devices.yaml for the main node
 cat <<EOF > /tmp/protoplaster/devices.yaml
 node1: localhost:2138
@@ -19,6 +21,8 @@ EOF
 
 # Create the multinode test config
 cat <<EOF > /tmp/protoplaster/api-test-multinode-simple.yml
+aggregate_results: true
+combined_results_dir_prefix: "${COMBINED_DIR_PREFIX}"
 tests:
   local_tests:
     - simple:
@@ -151,10 +155,49 @@ verify_node_execution() {
     echo "SUCCESS: $node_name verified."
 }
 
+verify_combined_artifacts() {
+    local orchestrator_port=$1
+    declare -a nodes=("${!2}")
+    declare -a ports=("${!3}")
+
+    local artifacts_dir="/tmp/protoplaster/main/artifacts"
+    local prefix=${COMBINED_DIR_PREFIX}
+
+    # Get the latest trigger ID
+    local trigger_id=$(curl -s http://localhost:$orchestrator_port/api/v1/test-runs/trigger | jq -r '.[-1].trigger_id')
+
+    for i in "${!nodes[@]}"; do
+
+        local run_id=$(curl -s http://localhost:${ports[i]}/api/v1/test-runs/trigger/$trigger_id | jq -r '.runs[-1].id')
+
+        if [ ! -e "${artifacts_dir}/${prefix}${trigger_id}/${nodes[i]}_${run_id}.csv" ] ; then
+            echo "FAILURE: Combined artifacts: missing test report for node ${nodes[i]}!"
+            exit 1
+        fi
+
+        if [ ! -d "${artifacts_dir}/${prefix}${trigger_id}/${nodes[i]}_${run_id}" ] ; then
+            echo "FAILURE: Combined artifacts: missing artifacts directory for node ${nodes[i]}!"
+            exit 1
+        fi
+
+        if [ ! -e "${artifacts_dir}/${prefix}${trigger_id}/${nodes[i]}_${run_id}/file.txt" ] ; then
+            echo "FAILURE: Combined artifacts: missing artifact file for node ${nodes[i]}!"
+            exit 1
+        fi
+
+    done
+
+    echo "SUCCESS: combined artifacts verified."
+}
+
 # Verify all nodes
 verify_node_execution 5000 "MainNode"
 verify_node_execution 2138 "Node1"
 verify_node_execution 2139 "Node2"
+
+nodes=("local" "remote_node1" "remote_node2")
+ports=(5000 2138 2139)
+verify_combined_artifacts 5000 nodes[@] ports[@]
 
 echo "---------------------------------------------------"
 echo "Multinode Simple Test: ALL CHECKS PASSED"
