@@ -7,3 +7,4 @@ WEBUI_POLLING_INTERVAL = 1  # seconds
 SERVE_IP = "0.0.0.0"
 REMOTE_RUN_TRIGGER_TIMEOUT = 10  # seconds
 PROTOPLASTER = "protoplaster"
+TEST_FILE = "test.yaml"

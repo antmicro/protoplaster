@@ -14,7 +14,7 @@ import protoplaster.api.v1
 from protoplaster.conf.plugin_manager import load_plugins_from_dir
 import protoplaster.webui
 import protoplaster.webui.devices
-from protoplaster.conf.consts import CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME, SERVE_IP
+from protoplaster.conf.consts import TEST_FILE, CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME, SERVE_IP
 from protoplaster.runner.manager import OrchestratorData, RunManager
 from protoplaster.runner.runner import list_tests, list_test_suites, orchestrate_tests, run_tests
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
@@ -59,7 +59,7 @@ def parse_args():
         "-t",
         "--test-file",
         type=str,
-        default="test.yaml",
+        default=f"{TEST_FILE}",
         help="Path to the yaml test description in the test directory")
     parser.add_argument("-g",
                         "--group",
