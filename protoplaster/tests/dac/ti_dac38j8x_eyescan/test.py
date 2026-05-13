@@ -2,14 +2,14 @@ import os
 import shutil
 
 from protoplaster.conf.module import ModuleName
-from .process_eyescan import EyeScan
+from protoplaster.tests.dac.ti_dac38j8x_eyescan.process_eyescan import EyeScan
 from eyescan.instructions import TestPattern
 
 
 @ModuleName("ti_dac38j8x_eyescan")
 class TestTiDac38j8xEyescan:
     """
-    {% macro TestEyeScan(prefix) -%}
+    {% macro TestTiDac38j8xEyescan(prefix) -%}
     Eye Scan tests
     -----------------
     This module provides tests for Eye Scan:

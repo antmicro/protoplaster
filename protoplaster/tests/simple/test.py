@@ -1,25 +1,27 @@
 import pytest
 from protoplaster.conf.module import ModuleName
 from protoplaster.tests.simple.simple import Simple
+from protoplaster.docs.docs import Hint
 import os
+from typing import Annotated
 
 
 @ModuleName("simple")
 class TestSimple:
     """
-    {% macro TestSimple(prefix) -%}
+    {% macro TestSimple(device) -%}
     Simple tests
     ------------
-    {% do prefix.append('') %}
-    This module provides simple dummy tests:
-    {%- endmacro %}
+    This module provides simple dummy tests: {{ label("device", device['device']) }}
+    {% endmacro %}
     """
     counter = 0
+    device: Annotated[str, Hint("Name to use in dummy tests", required=True)]
 
-    def configure(self):
+    def configure(self) -> None:
         self.counter += 1
 
-    def test_success(self):
+    def test_success(self) -> None:
         """
         {% macro test_success(device) -%}
            This test always succeeds.
@@ -27,7 +29,7 @@ class TestSimple:
         """
         assert True
 
-    def test_failure(self):
+    def test_failure(self) -> None:
         """
         {% macro test_failure(device) -%}
            This test always fails.
@@ -35,7 +37,7 @@ class TestSimple:
         """
         assert False
 
-    def test_conditional_skip(self):
+    def test_conditional_skip(self) -> None:
         """
         {% macro test_conditional_skip(device) -%}
            This test is skipped if the device name is "skip"
@@ -45,7 +47,7 @@ class TestSimple:
             pytest.skip()
         assert True
 
-    def test_record_artifact(self, artifacts_dir, record_artifact):
+    def test_record_artifact(self, artifacts_dir, record_artifact) -> None:
         """
         {% macro test_record_artifact(device) -%}
            This test always succeeds, and records an artifact.
@@ -58,15 +60,17 @@ class TestSimple:
 
         assert True
 
-    def test_configure_runs_once(self):
+    def test_configure_runs_once(self) -> None:
         """
-        Test that asserts `configure` has been executed and the class state
-        is correctly initialized for the current test run.
+        {% macro test_configure_runs_once(device) -%}
+           This test asserts `configure` has been executed and the class state
+           is correctly initialized for the current test run.
+        {%- endmacro %}
         """
         assert type(
             self
         ).counter == 1, f"configure was run {type(self).counter} times!"
 
-    def name(self):
+    def name(self) -> str:
         return "simple" + (f"({self.device})"
                            if hasattr(self, "device") else "")

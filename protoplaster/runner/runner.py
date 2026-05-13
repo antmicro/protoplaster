@@ -88,6 +88,13 @@ def list_test_suites(args):
             print(f"- {test}")
 
 
+def label(label: str, value: Any = None) -> str:
+    # function for use in Jinja templates
+    if value:
+        return f"`{label}`: *{value}*"
+    return f"`{label}`"
+
+
 def generate_rst_doc(tests_doc_list, docs_dict):
 
     jinja2_env = Environment(
@@ -98,6 +105,7 @@ def generate_rst_doc(tests_doc_list, docs_dict):
         ],
         lstrip_blocks=True,
     )
+    jinja2_env.globals["label"] = label
 
     template = jinja2_env.get_template(TOP_LEVEL_TEMPLATE_PATH)
     output = template.render(tests_doc_list=tests_doc_list)

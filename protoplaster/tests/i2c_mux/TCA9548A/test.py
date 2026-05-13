@@ -6,10 +6,10 @@ import pytest
 @ModuleName("TCA9548A")
 class TestTCA9548A:
     """
-    {% macro TestDAC(prefix) -%}
-    DAC device test
+    {% macro TestTCA9548A(prefix) -%}
+    TCA9548A test
     ---------------
-    This module provides tests for DAC devices:
+    This module provides tests for the TCA9548A:
     {%- endmacro %}
     """
 

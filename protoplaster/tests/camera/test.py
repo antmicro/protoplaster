@@ -2,25 +2,30 @@ from protoplaster.conf.module import ModuleName
 from protoplaster.tests.camera.camera import Camera
 import pyudev
 import os
+from typing import Annotated
+from protoplaster.docs.docs import Hint
 
 
 @ModuleName("camera")
 class TestCamera:
     """
-    {% macro TestCamera(prefix) -%}
+    {% macro TestCamera(device) -%}
     Camera sensor tests
     -------------------
-    {% do prefix.append('') %}
-    This module provides tests dedicated to V4L devices on specific video node:
-    {%- endmacro %}
+    This module provides tests dedicated to V4L devices on specific video node: {{ label("device", device['device']) }}
+    {% endmacro %}
     """
+    device: Annotated[str, Hint("Video device", required=True)]
+    camera_name: Annotated[str, Hint("Camera sensor name", required=True)]
+    driver_name: Annotated[str, Hint("Video driver name", required=True)]
+    save_file: Annotated[str, Hint("Output file for frame test")]
 
     def test_frame(self, record_artifact, artifacts_dir):
         """
         {% macro test_frame(device) -%}
           try to capture frame
           {%- if device['save_file'] is defined %}
-            and store it to `{{ device['save_file'] }}` file
+            and store it to file {{ label("save_file", device['save_file']) }}
           {%- endif %}
         {%- endmacro %}
         """
@@ -36,7 +41,7 @@ class TestCamera:
     def test_device_name(self):
         """
         {% macro test_device_name(device) -%}
-          check if the camera sensor name is `{{ device['camera_name'] }}`
+          check if the camera sensor name is {{ label("camera_name", device['camera_name']) }}
         {%- endmacro %}
         """
         device = Camera(self.device)
@@ -46,7 +51,7 @@ class TestCamera:
     def test_driver_name(self):
         """
         {% macro test_driver_name(device) -%}
-          check if the camera sensor driver name is `{{ device['driver_name'] }}`
+          check if the camera sensor driver name is {{ label("driver_name", device['driver_name']) }}
         {%- endmacro %}
         """
         device = Camera(self.device)

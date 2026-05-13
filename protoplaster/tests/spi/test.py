@@ -8,7 +8,6 @@ class TestSPI:
     {% macro TestSPI(prefix) -%}
     SPI device tests
     -----------------
-    {% do prefix.append('/dev/spidev') %}
     This module provides tests dedicated to SPI devices:
     {%- endmacro %}
     """

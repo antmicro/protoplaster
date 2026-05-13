@@ -1,13 +1,24 @@
 from protoplaster.conf.module import ModuleName
 import os
 import pytest
+from typing import Annotated
+from protoplaster.docs.docs import Hint
 
 
 @ModuleName("usbdev")
 class TestUsb:
+    """
+    {% macro TestUsb(device) -%}
+    USB tests
+    ------------
+    This module provides tests for USB devices: {{ label("device", device['device']) }}
+    {% endmacro %}
+    """
+    device: Annotated[str,
+                      Hint("Name of device as seen by kernel", required=True)]
+    speed: Annotated[int, Hint("Expected speed [Mbps]")]
 
     def configure(self):
-        assert hasattr(self, "device"), "'device' is an obligatory argument"
         self.sysfs_path = f"/sys/bus/usb/devices/{self.device}"
 
     def test_sysfs_interface(self):

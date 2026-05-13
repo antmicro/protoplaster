@@ -1,11 +1,13 @@
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Annotated
 
 from protoplaster.tools.tools import trigger_on_remote
 from protoplaster.conf.module import ModuleName
 from protoplaster.tests.http_echo.utils import remote_write, remote_read, remote_read_poll
 from protoplaster.conf.consts import SERVE_IP
+from protoplaster.docs.docs import Hint
 
 
 class SimpleEchoHandler(BaseHTTPRequestHandler):
@@ -44,20 +46,32 @@ def start_server(port=8000):
 
 @ModuleName("http_echo")
 class TestEcho:
+    """
+    {% macro TestEcho(device) -%}
+    HTTP echo tests
+    ------------
+    This module tests HTTP responses between nodes: {{ label("dev1", device['dev1']) }}, {{ label("dev2", device['dev2']) }}
+    {% endmacro %}
+    """
+    dev1: Annotated[str, Hint("Device 1 to be used in tests", required=True)]
+    dev2: Annotated[str, Hint("Device 2 to be used in tests", required=True)]
+    test_string: Annotated[
+        str, Hint('String to send in tests (default: "Hello World!")')]
+    port: Annotated[int, Hint("Port for this machine to run server on")]
 
-    def configure(self):
-        assert hasattr(self, "dev1"), "dev1 parameter required in yaml"
-        assert hasattr(self, "dev2"), "dev2 parameter required in yaml"
+    def configure(self) -> None:
         self.test_string = getattr(self, "test_string", "Hello World!")
         self.port = getattr(self, "port", 8899)
 
-    def test_echo_multinode(self):
+    def test_echo_multinode(self) -> None:
         """
-        Orchestration test:
-        1. Main PC starts HTTP server.
-        2. dev1 connects to Main PC and POSTs "Hello world".
-        3. dev2 connects to Main PC and GETs the message.
-        4. Main PC verifies the message matches.
+        {% macro test_echo_multinode(device) -%}
+           Orchestration test:
+           1. Main PC starts HTTP server.
+           2. dev1 connects to Main PC and POSTs "Hello world".
+           3. dev2 connects to Main PC and GETs the message.
+           4. Main PC verifies the message matches.
+        {%- endmacro %}
         """
 
         SimpleEchoHandler.shared_message = None
@@ -91,14 +105,16 @@ class TestEcho:
             server.shutdown()
             server.server_close()
 
-    def test_echo_async(self):
+    def test_echo_async(self) -> None:
         """
-        Async Orchestration test:
-        1. Main PC starts HTTP server.
-        2. dev2 starts polling for the message (non-blocking).
-        3. Main PC thread sleeps for 5 seconds.
-        4. dev1 connects to Main PC and POSTs "Hello world".
-        5. dev2 receives the message and returns it.
+        {% macro test_echo_async(device) -%}
+           Async Orchestration test:
+           1. Main PC starts HTTP server.
+           2. dev2 starts polling for the message (non-blocking).
+           3. Main PC thread sleeps for 5 seconds.
+           4. dev1 connects to Main PC and POSTs "Hello world".
+           5. dev2 receives the message and returns it.
+        {%- endmacro %}
         """
 
         SimpleEchoHandler.shared_message = None
@@ -124,7 +140,7 @@ class TestEcho:
 
             # Wait for `dev2` to finish reading (it should have picked up the message)
             print(f"[{self.dev2}] Waiting for async read result...")
-            read_result = future_read.result()
+            read_result = getattr(future_read, "result", lambda: None)()
             print(f"[{self.dev2}] Async Result: {read_result}")
 
             assert read_result == self.test_string, (
@@ -136,12 +152,14 @@ class TestEcho:
             server.shutdown()
             server.server_close()
 
-    def test_echo_fully_async(self):
+    def test_echo_fully_async(self) -> None:
         """
-        Fully Async test:
-        1. Main PC starts HTTP server.
-        2. Triggers dev2 (read) AND dev1 (write) asynchronously.
-        3. Waits for both to complete.
+        {% macro test_echo_fully_async(device) -%}
+           Fully Async test:
+           1. Main PC starts HTTP server.
+           2. Triggers dev2 (read) AND dev1 (write) asynchronously.
+           3. Waits for both to complete.
+        {%- endmacro %}
         """
 
         SimpleEchoHandler.shared_message = None
@@ -166,11 +184,11 @@ class TestEcho:
 
             print("Waiting for tasks to complete...")
 
-            write_result = future_write.result()
+            write_result = getattr(future_write, "result", lambda: None)()
             print(f"[{self.dev1}] Write finished: {write_result}")
             assert "successfully" in str(write_result), "Write failed"
 
-            read_result = future_read.result()
+            read_result = getattr(future_read, "result", lambda: None)()
             print(f"[{self.dev2}] Read finished: {read_result}")
             assert read_result == self.test_string, \
                 f"Expected '{self.test_string}', got '{read_result}'"
@@ -180,5 +198,5 @@ class TestEcho:
             server.shutdown()
             server.server_close()
 
-    def name(self):
+    def name(self) -> str:
         return f"HTTP echo test ({self.dev1}, {self.dev2})"

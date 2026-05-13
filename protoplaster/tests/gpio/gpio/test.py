@@ -8,7 +8,6 @@ class TestGPIO:
     {% macro TestGPIO(prefix) -%}
     GPIOs tests
     -----------
-    {% do prefix.append('/sys/class/gpio/gpio') %}
     This module provides tests dedicated to GPIO on specific pin number
     {%- endmacro %}
     """

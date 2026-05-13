@@ -4,7 +4,7 @@ SPIDEV_LIBRARY = False
 try:
     from spidev import SpiDev
     SPIDEV_LIBRARY = True
-except OSError:
+except ImportError:
     print(
         "Warning: SPIDEV library is not available. Disabling spi module tests."
     )

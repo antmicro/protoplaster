@@ -3,7 +3,7 @@ import shutil
 import pytest
 
 from protoplaster.conf.module import ModuleName
-from .ibert_eyescan import EyeScan
+from protoplaster.tests.bert.vivado_ibert.ibert_eyescan import EyeScan
 
 
 @ModuleName("vivado_ibert")

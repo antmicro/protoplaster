@@ -6,7 +6,7 @@ from protoplaster.tests.gpio.PI4IO.PI4IO import PI4IOE5V96224
 class TestPI4IO:
     """
     {% macro TestPI4IO(prefix) -%}
-    GPIOs tests
+    PI4IO tests
     -----------
     This module provides tests dedicated to PI4IO
     {%- endmacro %}

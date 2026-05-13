@@ -12,7 +12,6 @@ class TestUCD90320U:
     {% macro TestUCD90320U(prefix) -%}
     UCD90320U device test
     ----------------
-    {% do prefix.append('') %}
     This module provides tests for UCD90320U:
     {%- endmacro %}
     """
