@@ -162,11 +162,14 @@ def trigger_test_run():
     manager = current_app.config["RUN_MANAGER"]
     args = current_app.config["ARGS"]
 
+    is_orchestrator = machine_target is None
+
     run = manager.handle_run_request(config_name,
                                      trigger_id,
                                      test_suite_name,
                                      args,
                                      machine_target=machine_target,
+                                     is_orchestrator=is_orchestrator,
                                      overrides=overrides,
                                      pattern=pattern)
 
@@ -517,11 +520,16 @@ def repeat_run(identifier: str):
 
     pattern = request.get_json()
 
-    new_run = manager.handle_run_request(run["config_name"], run["trigger_id"],
+    is_orchestrator = run["machine_target"] is None
+
+    new_run = manager.handle_run_request(run["config_name"],
+                                         run["trigger_id"],
                                          run["test_suite_name"],
                                          current_app.config["ARGS"],
-                                         run["machine_target"],
-                                         run["overrides"], pattern)
+                                         machine_target=run["machine_target"],
+                                         is_orchestrator=is_orchestrator,
+                                         overrides=run["overrides"],
+                                         pattern=pattern)
 
     if "error" in new_run:
         return jsonify(new_run), 500
