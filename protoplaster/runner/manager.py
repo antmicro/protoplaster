@@ -3,6 +3,7 @@ from threading import Lock
 from urllib.parse import urljoin
 import uuid
 from .metadata import new_run_metadata, RunStatus, new_trigger_metadata
+from protoplaster.conf.consts import LOCAL_DEVICE_HOST
 from .worker import run_orchestrator, run_test
 from .runner import create_test_file
 from datetime import datetime, timezone
@@ -238,6 +239,76 @@ class RunManager:
                     pass
 
         return canceled_anything
+
+    def collect_results(self, trigger_id, base_args, orchestrator_data):
+        results = []
+
+        collection_dir = os.path.join(base_args.artifacts_dir,
+                                      f"results_{trigger_id}")
+
+        os.makedirs(collection_dir, exist_ok=True)
+
+        local_trigger = self.get_trigger(trigger_id)
+
+        if local_trigger:
+            for run in local_trigger["runs"]:
+                run_id = run["id"]
+
+                report_path = os.path.join(base_args.reports_dir,
+                                           run_id + ".csv")
+
+                artifacts_path = os.path.join(base_args.artifacts_dir, run_id)
+
+                results.append({
+                    "machine": LOCAL_DEVICE_HOST,
+                    "status": run["status"].value,
+                    "report_path": report_path,
+                    "artifacts_path": artifacts_path,
+                })
+
+        for machine_name, machine_url in (
+                orchestrator_data.triggered_machines.items()):
+
+            try:
+                resp = requests.get(urljoin(
+                    machine_url, f"/api/v1/test-runs/trigger/{trigger_id}"),
+                                    timeout=5)
+
+                remote_metadata = resp.json()
+
+                runs = remote_metadata.get("runs", [])
+
+                if not runs:
+                    continue
+
+                remote_run = runs[0]
+                remote_run_id = remote_run["id"]
+
+                machine_dir = os.path.join(collection_dir, machine_name)
+
+                os.makedirs(machine_dir, exist_ok=True)
+
+                self._download_run_results(machine_name, machine_url,
+                                           remote_run_id, machine_dir,
+                                           base_args.reports_dir)
+
+                report_path = os.path.join(
+                    machine_dir, f"remote_{machine_name}_{remote_run_id}.csv")
+
+                artifacts_path = os.path.join(
+                    machine_dir, f"remote_{machine_name}_{remote_run_id}")
+
+                results.append({
+                    "machine": machine_name,
+                    "status": remote_run["status"],
+                    "report_path": report_path,
+                    "artifacts_path": artifacts_path,
+                })
+
+            except Exception as e:
+                print(f"Failed to collect results from {machine_url}: {e}")
+
+        return results
 
     def aggregate_results(self, trigger_id, base_args, orchestrator_data):
         aggregation_dir = os.path.join(
