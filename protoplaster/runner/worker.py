@@ -22,9 +22,12 @@ def prepare_args(run_metadata, base_args):
     args.test_file = run_metadata["config_name"]
     args.group = run_metadata["test_suite_name"]
     args.csv = run_metadata["id"] + ".csv"
-    args.artifacts_dir = os.path.join(args.artifacts_dir, run_metadata["id"])
+    if run_metadata.get("machine_target") is not None:
+        args.artifacts_dir = os.path.join(args.artifacts_dir,
+                                          run_metadata["id"])
     args.force_local = run_metadata.get("force_local", False)
     args.overrides = run_metadata["overrides"]
+    args.machine_target = run_metadata["machine_target"]
 
     return args
 

@@ -367,6 +367,15 @@ def orchestrate_tests(args, orchestrator_data):
                         "base_url": local_url,
                         "run_id": run_id
                     })
+            elif getattr(args, "tracked_execution", False):
+                orchestrator_data.run_manager.handle_run_request(
+                    config_name=args.test_file,
+                    trigger_id=args.trigger_id,
+                    test_suite_name=test_name,
+                    base_args=args,
+                    machine_target=LOCAL_DEVICE_HOST,
+                    is_orchestrator=False,
+                )
             else:
                 # CLI mode: Execute local tests directly
                 print("Executing local tests directly (CLI mode)")

@@ -16,9 +16,12 @@ import os
 class OrchestratorData:
 
     def __init__(self,
+                 trigger_id=None,
+                 run_manager=None,
                  aggregate_results=False,
                  combined_results_dir_prefix=""):
-        self.trigger_id = str(uuid.uuid4())
+        self.trigger_id = trigger_id
+        self.run_manager = run_manager
         self.triggered_machines = {}
         self.aggregate_results = aggregate_results
         self.combined_results_dir_prefix = combined_results_dir_prefix
@@ -32,6 +35,7 @@ class RunManager:
         self.runs = {}
         self.futures = {}
         self.orchestrators = {}
+        self.orchestrator_futures = {}
         self.lock = Lock()
 
     def handle_run_request(self,
@@ -41,7 +45,8 @@ class RunManager:
                            base_args,
                            machine_target=None,
                            overrides=[],
-                           pattern=""):
+                           pattern="",
+                           is_orchestrator=False):
         # Prepare args for inspection
         check_args = deepcopy(base_args)
         check_args.test_file = config_name
@@ -55,36 +60,46 @@ class RunManager:
         except Exception as e:
             return {"error": str(e)}
 
+        with self.lock:
+            if trigger_id is None:
+                trigger_id = str(uuid.uuid4())
+                trigger = new_trigger_metadata(trigger_id)
+                self.triggers[trigger_id] = trigger
+            elif trigger_id not in self.triggers:
+                trigger = new_trigger_metadata(trigger_id)
+                self.triggers[trigger_id] = trigger
+            else:
+                trigger = self.triggers[trigger_id]
+
+            is_aborted = trigger["is_aborted"]
+
         run_metadata = new_run_metadata(config_name, trigger_id,
                                         test_suite_name, machine_target,
                                         overrides)
 
-        # if there is no trigger id it means that
-        # this is an orchestrator job
-        if trigger_id is None:
+        if is_orchestrator:
             orchestrator_data = OrchestratorData(
+                trigger_id=trigger_id,
+                run_manager=self,
                 aggregate_results=aggregate_results,
                 combined_results_dir_prefix=combined_results_dir_prefix)
-            self.orchestrators[
-                orchestrator_data.trigger_id] = orchestrator_data
-            self.create_orchestrator(run_metadata, base_args,
-                                     orchestrator_data)
-            return None
+
+            self.orchestrators[trigger_id] = orchestrator_data
+
+            future = self.create_orchestrator(run_metadata, base_args,
+                                              orchestrator_data)
+
+            self.orchestrator_futures[trigger_id] = future
+
         else:
-            with self.lock:
-                trigger = None
-
-                if not trigger_id in self.triggers:
-                    trigger = new_trigger_metadata(trigger_id)
-                    self.triggers[trigger_id] = trigger
-                else:
-                    trigger = self.triggers[trigger_id]
-
-                is_aborted = trigger["is_aborted"]
-
             # Generate a "tracked" run.
-            return self.create_run(run_metadata, base_args, is_aborted,
-                                   machine_target, pattern)
+            self.create_run(run_metadata, base_args, is_aborted,
+                            machine_target, pattern)
+
+        if is_orchestrator:
+            return trigger_id
+
+        return run_metadata
 
     def create_orchestrator(self, run_metadata, base_args, orchestrator_data):
 
@@ -98,6 +113,8 @@ class RunManager:
         future = self.executor.submit(run_orchestrator, run_metadata,
                                       base_args, orchestrator_data)
         future.add_done_callback(on_done)
+
+        return future
 
     def create_run(self,
                    run_metadata,
