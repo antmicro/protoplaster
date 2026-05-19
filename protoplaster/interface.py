@@ -1,4 +1,5 @@
 from pathlib import Path
+from os import PathLike
 from types import SimpleNamespace
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,17 +14,18 @@ from protoplaster.runner.metadata import RunStatus
 class Protoplaster:
 
     def __init__(self,
-                 config_dir: str | None = None,
-                 reports_dir: str | None = None,
-                 artifacts_dir: str | None = None,
-                 test_file: str | None = None,
-                 external_devices: str | None = None,
-                 custom_tests: str | None = None):
+                 config_dir: str | PathLike[str] | None = None,
+                 reports_dir: str | PathLike[str] | None = None,
+                 artifacts_dir: str | PathLike[str] | None = None,
+                 test_file: str | PathLike[str] | None = None,
+                 external_devices: str | PathLike[str] | None = None,
+                 custom_tests: str | PathLike[str] | None = None):
         self.config_dir = Path(config_dir) if config_dir else CONFIG_DIR
-        self.reports_dir = Path(reports_dir) if reports_dir else REPORTS_DIR
-        self.artifacts_dir = Path(
-            artifacts_dir) if artifacts_dir else ARTIFACTS_DIR
-        self.test_file = test_file if test_file else TEST_FILE
+        self.reports_dir = Path(reports_dir) if reports_dir else Path(
+            REPORTS_DIR)
+        self.artifacts_dir = Path(artifacts_dir) if artifacts_dir else Path(
+            ARTIFACTS_DIR)
+        self.test_file = Path(test_file) if test_file else Path(TEST_FILE)
         self.external_devices = external_devices if external_devices else None
         self.custom_tests = custom_tests if custom_tests else None
         self._args = self._build_args()
