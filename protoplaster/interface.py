@@ -3,11 +3,12 @@ from os import PathLike
 from types import SimpleNamespace
 from dataclasses import dataclass
 from pathlib import Path
+import tempfile
 
 from protoplaster.runner.manager import OrchestratorData, RunManager
 from protoplaster.runner.runner import create_test_file, orchestrate_tests
 from protoplaster.protoplaster import load_external_devices
-from protoplaster.conf.consts import TEST_FILE, CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME, SERVE_IP
+from protoplaster.conf.consts import TEST_FILE, CONFIG_DIR, LOCAL_DEVICE_NAME, SERVE_IP
 from protoplaster.runner.metadata import RunStatus
 
 
@@ -21,10 +22,16 @@ class Protoplaster:
                  external_devices: str | PathLike[str] | None = None,
                  custom_tests: str | PathLike[str] | None = None):
         self.config_dir = Path(config_dir) if config_dir else CONFIG_DIR
-        self.reports_dir = Path(reports_dir) if reports_dir else Path(
-            REPORTS_DIR)
-        self.artifacts_dir = Path(artifacts_dir) if artifacts_dir else Path(
-            ARTIFACTS_DIR)
+        if not reports_dir or not artifacts_dir:
+            out_dir = Path(tempfile.mkdtemp(prefix="protoplaster-out."))
+            if not reports_dir:
+                reports_dir = out_dir / "reports"
+                reports_dir.mkdir()
+            if not artifacts_dir:
+                artifacts_dir = out_dir / "artifacts"
+                artifacts_dir.mkdir()
+        self.reports_dir = Path(reports_dir)
+        self.artifacts_dir = Path(artifacts_dir)
         self.test_file = Path(test_file) if test_file else Path(TEST_FILE)
         self.external_devices = external_devices if external_devices else None
         self.custom_tests = custom_tests if custom_tests else None

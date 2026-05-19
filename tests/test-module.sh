@@ -10,7 +10,7 @@ mkdir -p "$OUTPUT_DIR"
 rm -rf /tmp/protoplaster/*
 mkdir -p /tmp/protoplaster/node1/{tests,reports,artifacts}
 mkdir -p /tmp/protoplaster/node2/{tests,reports,artifacts}
-mkdir -p /tmp/protoplaster/main/{tests,reports,artifacts}
+mkdir -p /tmp/protoplaster/main/tests
 
 # Create devices.yaml
 cat <<EOF > /tmp/protoplaster/devices.yaml
@@ -41,8 +41,6 @@ from protoplaster import Protoplaster
 
 p = Protoplaster(
     config_dir="/tmp/protoplaster/main/tests",
-    artifacts_dir="/tmp/protoplaster/main/artifacts",
-    reports_dir="/tmp/protoplaster/main/reports",
     test_file="test-multinode-simple.yml",
     external_devices="/tmp/protoplaster/devices.yaml"
 )
