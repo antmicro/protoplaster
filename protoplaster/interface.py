@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 from types import SimpleNamespace
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,10 +13,10 @@ from protoplaster.runner.metadata import RunStatus
 class Protoplaster:
 
     def __init__(self,
-                 config_dir: Optional[str] = None,
-                 reports_dir: Optional[str] = None,
-                 artifacts_dir: Optional[str] = None,
-                 test_file: Optional[str] = None,
+                 config_dir: str | None = None,
+                 reports_dir: str | None = None,
+                 artifacts_dir: str | None = None,
+                 test_file: str | None = None,
                  external_devices: str | None = None,
                  custom_tests: str | None = None):
         self.config_dir = Path(config_dir) if config_dir else CONFIG_DIR
