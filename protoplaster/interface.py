@@ -4,12 +4,15 @@ from types import SimpleNamespace
 from dataclasses import dataclass
 from pathlib import Path
 import tempfile
+import requests
+from urllib.parse import urljoin
 
 from protoplaster.runner.manager import OrchestratorData, RunManager
 from protoplaster.runner.runner import create_test_file, orchestrate_tests
 from protoplaster.protoplaster import load_external_devices
-from protoplaster.conf.consts import TEST_FILE, CONFIG_DIR, LOCAL_DEVICE_NAME, SERVE_IP
+from protoplaster.conf.consts import TEST_FILE, CONFIG_DIR, LOCAL_DEVICE_HOST
 from protoplaster.runner.metadata import RunStatus
+from protoplaster.webui.devices import get_all_devices
 
 
 class Protoplaster:
@@ -56,6 +59,56 @@ class Protoplaster:
 
         return TestRun(self._run_manager, self._args, self.reports_dir,
                        self.artifacts_dir, trigger_id)
+
+    def upload_config(self, path=None, device=None):
+        path = Path(path) if path else Path(self.config_dir) / self.test_file
+
+        if not path.exists():
+            raise FileNotFoundError(path)
+
+        device_url = self._get_device_url(device)
+
+        with open(path, "rb") as f:
+            resp = requests.post(
+                urljoin(device_url, "/api/v1/configs"),
+                files={"file": (
+                    path.name,
+                    f,
+                    "application/x-yaml",
+                )},
+                timeout=10,
+            )
+
+        resp.raise_for_status()
+
+        return {
+            "device": device,
+            "config": path.name,
+        }
+
+    def upload_config_all(self, path=None):
+        results = []
+
+        devices = get_all_devices()
+
+        for device in devices:
+            name = device["name"]
+
+            if (name == LOCAL_DEVICE_HOST):
+                continue
+
+            results.append(self.upload_config(path, device=name))
+
+        return results
+
+    def _get_device_url(self, device):
+        devices = get_all_devices()
+
+        for d in devices:
+            if d["name"] == device:
+                return d["url"]
+
+        raise ValueError(f"Unknown device: {device}")
 
     def _build_args(self):
         return SimpleNamespace(

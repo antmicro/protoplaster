@@ -45,6 +45,8 @@ p = Protoplaster(
     external_devices="/tmp/protoplaster/devices.yaml"
 )
 
+p.upload_config_all()
+
 run = p.run_tests()
 
 run.wait()
@@ -108,17 +110,6 @@ for port in 2138 2139; do
   while ! curl -s http://localhost:$port/api/v1/configs > /dev/null; do
     sleep 1
   done
-done
-
-# Upload config to worker nodes
-CONFIG_FILE="test-multinode-simple.yml"
-for port in 2138 2139; do
-  echo "Uploading config to port $port..."
-  NAME=$(curl -s -X POST http://localhost:$port/api/v1/configs -F "file=@/tmp/protoplaster/main/tests/$CONFIG_FILE" | jq -r '.name')
-  if [ "$NAME" != "$CONFIG_FILE" ] ; then
-    echo "Config upload failed on port $port!"
-    exit 1
-  fi
 done
 
 # Trigger test run on Main Node
