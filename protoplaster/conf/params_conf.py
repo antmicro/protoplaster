@@ -3,6 +3,8 @@ import inspect
 import yaml
 import copy
 from .plugin_manager import pm
+from typing import get_type_hints
+from protoplaster.tools.log import pr_warn, pr_err
 
 
 def pytest_addoption(parser):
@@ -143,8 +145,19 @@ def setup_tests(request: pytest.FixtureRequest, test_config):
 
     request.cls.machine_target = request.config.getoption("--machine-target")
     conf = test_config
+    hints = get_type_hints(request.cls, include_extras=True)
     for key in conf:
         setattr(request.cls, key, conf[key])
+        if key not in list(hints) + ["override", "_execution_order"]:
+            pr_warn(
+                f'Unexpected parameter "{key}" for class "{request.cls.__name__}"'
+            )
+    params_required = [
+        h for h in hints if getattr(
+            getattr(hints[h], "__metadata__", (None, ))[0], "required", False)
+    ]
+    for p in params_required:
+        assert p in conf, f'Required parameter "{p}" missing in config for "{request.cls.__name__}"'
 
     pm.hook.before_test_setup(test_class=request.cls)
 
