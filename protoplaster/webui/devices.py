@@ -34,10 +34,21 @@ def add_device(name, url, is_broadcast=False):
 
     url = urlunparse(parsed)
 
-    if any(d["name"] == name for d in _devices):
-        raise ValueError(f"Device '{name}' already exists")
-    if any(d["url"] == url for d in _devices):
-        raise ValueError(f"Device with URL '{url}' already exists")
+    for d in _devices:
+        if d["name"] == name:
+            if d["url"] == url:
+                # Device already exists with identical parameters.
+                # Treat this as a no-op to avoid redundant rebroadcasts
+                return d
+
+            raise ValueError(
+                f"Device '{name}' already exists with different URL '{d['url']}'"
+            )
+
+        if d["url"] == url:
+            raise ValueError(
+                f"Device with URL '{url}' already exists as '{d['name']}'")
+
     device = {"name": name, "url": url}
     _devices.append(device)
     if not is_broadcast:
