@@ -54,6 +54,7 @@ run.wait()
 results = run.results()
 
 print("Collected results:")
+print()
 
 for result in results.results:
     print(f"Machine: {result.machine}")
@@ -61,7 +62,23 @@ for result in results.results:
     print(f"Report: {result.report_path}")
     print(f"Artifacts: {result.artifacts_path}")
 
+
     assert result.status == "failed"
+
+    expected_results = {
+        "success[test_config0]": "passed",
+        "failure[test_config0]": "failed",
+        "conditional_skip[test_config0]": "passed",
+        "record_artifact[test_config0]": "passed",
+        "configure_runs_once[test_config0]": "passed",
+    }
+
+    for test in result.tests:
+      print(f"Test: {test.name}, status: {test.status}")
+      assert test.status == expected_results[test.name], (
+          f"Unexpected status for {test.name}: "
+          f"{test.status} != {expected[test.name]}"
+      )
 
     assert result.report_path.exists(), (
         f"Missing report for {result.machine}"
@@ -76,6 +93,8 @@ for result in results.results:
     assert artifact_files, (
         f"No artifacts downloaded for {result.machine}"
     )
+
+    print()
 
 print("All artifact checks passed")
 

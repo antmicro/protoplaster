@@ -12,6 +12,7 @@ from copy import deepcopy
 import requests
 import shutil
 import os
+import csv
 
 
 class OrchestratorData:
@@ -259,11 +260,14 @@ class RunManager:
 
                 artifacts_path = os.path.join(base_args.artifacts_dir, run_id)
 
+                tests = self._parse_test_results(report_path)
+
                 results.append({
                     "machine": LOCAL_DEVICE_HOST,
                     "status": run["status"].value,
                     "report_path": report_path,
                     "artifacts_path": artifacts_path,
+                    "tests": tests,
                 })
 
         for machine_name, machine_url in (
@@ -298,11 +302,14 @@ class RunManager:
                 artifacts_path = os.path.join(
                     machine_dir, f"remote_{machine_name}_{remote_run_id}")
 
+                tests = self._parse_test_results(report_path)
+
                 results.append({
                     "machine": machine_name,
                     "status": remote_run["status"],
                     "report_path": report_path,
                     "artifacts_path": artifacts_path,
+                    "tests": tests,
                 })
 
             except Exception as e:
@@ -382,3 +389,20 @@ class RunManager:
                     f.write(file_resp.content)
         except Exception as e:
             print(f"Error downloading results for run {run_id}: {e}")
+
+    def _parse_test_results(self, report_path):
+        tests = []
+
+        if not os.path.exists(report_path):
+            return tests
+
+        with open(report_path, newline="") as f:
+            reader = csv.DictReader(f)
+
+            for row in reader:
+                tests.append({
+                    "name": row.get("test name", ""),
+                    "status": row.get("status", ""),
+                })
+
+        return tests

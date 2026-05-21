@@ -179,15 +179,24 @@ class TestRun:
             self.trigger_id, self._base_args, orchestrator_data)
 
         results = [
-            DeviceResult(
-                machine=r["machine"],
-                status=r["status"],
-                report_path=Path(r["report_path"]),
-                artifacts_path=Path(r["artifacts_path"]),
-            ) for r in raw_results
+            DeviceResult(machine=r["machine"],
+                         status=r["status"],
+                         report_path=Path(r["report_path"]),
+                         artifacts_path=Path(r["artifacts_path"]),
+                         tests=[
+                             SingleTestResult(name=t["name"],
+                                              status=t["status"])
+                             for t in r["tests"]
+                         ]) for r in raw_results
         ]
 
         return TestResults(results=results)
+
+
+@dataclass
+class SingleTestResult:
+    name: str
+    status: str
 
 
 @dataclass
@@ -196,6 +205,7 @@ class DeviceResult:
     status: str
     report_path: Path | None
     artifacts_path: Path | None
+    tests: list[SingleTestResult]
 
 
 @dataclass
