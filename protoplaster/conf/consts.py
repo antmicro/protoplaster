@@ -8,3 +8,5 @@ SERVE_IP = "0.0.0.0"
 REMOTE_RUN_TRIGGER_TIMEOUT = 10  # seconds
 PROTOPLASTER = "protoplaster"
 TEST_FILE = "test.yaml"
+# test parameters that should not be reported as "unexpected"
+SPECIAL_KEYS = ["override", "_execution_order"]

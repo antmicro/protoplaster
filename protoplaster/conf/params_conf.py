@@ -5,6 +5,7 @@ import copy
 from .plugin_manager import pm
 from typing import get_type_hints
 from protoplaster.tools.log import pr_warn, pr_err
+from protoplaster.conf.consts import SPECIAL_KEYS
 
 
 def pytest_addoption(parser):
@@ -148,7 +149,7 @@ def setup_tests(request: pytest.FixtureRequest, test_config):
     hints = get_type_hints(request.cls, include_extras=True)
     for key in conf:
         setattr(request.cls, key, conf[key])
-        if key not in list(hints) + ["override", "_execution_order"]:
+        if key not in list(hints) + SPECIAL_KEYS:
             pr_warn(
                 f'Unexpected parameter "{key}" for class "{request.cls.__name__}"'
             )
