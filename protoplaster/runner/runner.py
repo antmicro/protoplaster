@@ -281,11 +281,28 @@ def wait_for_remote_runs(remote_runs):
 
     while len(completed_runs) < len(remote_runs):
         for run_info in remote_runs:
-            run_id = run_info["run_id"]
-            if run_id in completed_runs:
+            machine = run_info["machine"]
+
+            if machine in completed_runs:
                 continue
 
-            machine = run_info["machine"]
+            # Local tracked execution
+            future = run_info.get("future")
+            if future is not None:
+                if future.done():
+                    try:
+                        future.result()
+                        print(f"[{machine}] Local run finished successfully")
+
+                    except Exception as e:
+                        print(error(f"[{machine}] Local run failed: {e}"))
+
+                    completed_runs.add(machine)
+
+                continue
+
+            # Remote HTTP execution
+            run_id = run_info["run_id"]
             base_url = run_info["base_url"]
 
             try:
@@ -299,10 +316,10 @@ def wait_for_remote_runs(remote_runs):
                     print(
                         f"[{machine}] Remote run {run_id} finished with status: {status}"
                     )
-                    completed_runs.add(run_id)
+                    completed_runs.add(machine)
             except Exception as e:
                 print(error(f"[{machine}] Failed to get run status: {e}"))
-                completed_runs.add(run_id)
+                completed_runs.add(machine)
 
         if len(completed_runs) < len(remote_runs):
             time.sleep(REMOTE_TEST_POLL_INTERVAL)
@@ -368,7 +385,7 @@ def orchestrate_tests(args, orchestrator_data):
                         "run_id": run_id
                     })
             elif getattr(args, "tracked_execution", False):
-                orchestrator_data.run_manager.handle_run_request(
+                run_metadata = orchestrator_data.run_manager.handle_run_request(
                     config_name=args.test_file,
                     trigger_id=args.trigger_id,
                     test_suite_name=test_name,
@@ -376,6 +393,12 @@ def orchestrate_tests(args, orchestrator_data):
                     machine_target=LOCAL_DEVICE_HOST,
                     is_orchestrator=False,
                 )
+                remote_runs.append({
+                    "machine":
+                    LOCAL_DEVICE_HOST,
+                    "future":
+                    orchestrator_data.run_manager.futures[run_metadata["id"]]
+                })
             else:
                 # CLI mode: Execute local tests directly
                 print("Executing local tests directly (CLI mode)")
