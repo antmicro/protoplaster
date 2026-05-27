@@ -109,7 +109,8 @@ def generate_rst_doc(tests_doc_list, docs_dict, output_file):
     jinja2_env.globals["label"] = label
 
     template = jinja2_env.get_template(TOP_LEVEL_TEMPLATE_PATH)
-    output = template.render(tests_doc_list=tests_doc_list)
+    output = template.render(tests_doc_list=tests_doc_list,
+                             output_file=output_file)
     with open(output_file, "w") as doc:
         doc.write(output)
 

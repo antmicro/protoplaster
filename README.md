@@ -153,45 +153,6 @@ node2: 10.0.1.3:2100
 lab_device: http://192.168.1.50:8037
 ```
 
-## Base modules parameters
-Each base module requires parameters for test initialization. 
-These parameters describe the tests and are passed to the test class as its attributes.
-
-### I2C
-Required parameters:
-
-* `bus` - i2c bus to be checked
-* `name` - name of device to be detected
-* `address` - address of the device to be detected on the indicated bus
-
-### GPIO
-Required parameters:
-
-* `number` - GPIO pin number
-* `value` - value written to, or expected to be read from that pin
-
-Optional parameters:
-
-* `gpio_name` - name of the sysfs GPIO interface after exporting
-* `write` - whether to configure the pin as an output and assert that the written value is preserved, otherwise perform a read and assert that the read value matches the specified value (default: false)
-
-### Cameras
-Required parameters:
-
-* `device` - path to the camera device (eg. /dev/video0)
-* `camera_name` - expected camera name
-* `driver_name` - expected driver name
-
-Optional parameters:
-
-* `save_file` - a path which the tested frame is saved to (the frame is saved only if this parameter is present)
-
-### FPGA
-Required parameters:
-
-* `sysfs_interface` - path to a sysfs interface for flashing the bitstream to the FPGA
-* `bitstream_path` - path to a test bitstream that is going to be flashed
-
 ## Writing additional modules
 Apart from the base modules available in Protoplaster, you can provide your own additional modules.
 

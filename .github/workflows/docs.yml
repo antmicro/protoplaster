@@ -32,6 +32,7 @@ jobs:
         run: |
           tuttest README.md example > example.yml
           protoplaster -d . -r . -a /tmp -t example.yml --generate-docs
+          protoplaster -d . -r . -a /tmp --generate-docs
 
       - name: Generate test report in Renode
         uses: antmicro/renode-linux-runner-action@main
@@ -59,7 +60,8 @@ jobs:
         run: |
           cp -r .github/docs-template docs/
           cp README.md docs/source/readme.md
-          cp protoplaster.md docs/source/
+          cp tests_reference.md docs/source/
+          cp tests_description.md docs/source/
           cp report_base.md docs/source/
           echo -e "\`\`\`\n$(cat system-report-example.yml)\n\`\`\`" >>  docs/source/system-report-example.yml
           mkdir -p docs/source/_static/system_report

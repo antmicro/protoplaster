@@ -7,7 +7,8 @@ introduction
 readme
 api
 webui
-protoplaster
+tests_reference
+tests_description
 report
 system_report
 ```
