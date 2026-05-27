@@ -6,20 +6,21 @@ import uuid
 import zipfile
 import requests
 import copy
+import importlib
+import inspect
 from urllib.parse import urljoin
-from collections import OrderedDict
 from pathlib import Path
-from typing import Optional, Set
+from typing import Set, get_type_hints
 
 import pytest
 from jinja2 import Environment, DictLoader, select_autoescape
 
-from protoplaster.docs.docs import TestDocs
+from protoplaster.docs.docs import Hint, TestDocs
 from protoplaster.docs import __file__ as docs_path
 
 from protoplaster.conf.csv_generator import CsvReportGenerator
 from protoplaster.conf.log_generator import LogGenerator
-from protoplaster.conf.parser import TestFile, load_yaml, CustomizedLoader
+from protoplaster.conf.parser import TestFile, load_yaml, CustomizedLoader, test_modules_paths
 from protoplaster.report_generators.test_report.protoplaster_test_report import generate_test_report
 from protoplaster.report_generators.system_report.protoplaster_system_report import generate_system_report, CommandConfig, run_command
 from protoplaster.tools.log import error, pr_warn, pr_err, warning
@@ -88,14 +89,14 @@ def list_test_suites(args):
             print(f"- {test}")
 
 
-def label(label: str, value: Any = None) -> str:
+def label(label: str, value=None) -> str:
     # function for use in Jinja templates
     if value:
         return f"`{label}`: *{value}*"
     return f"`{label}`"
 
 
-def generate_rst_doc(tests_doc_list, docs_dict):
+def generate_rst_doc(tests_doc_list, docs_dict, output_file):
 
     jinja2_env = Environment(
         loader=DictLoader(docs_dict),
@@ -109,75 +110,161 @@ def generate_rst_doc(tests_doc_list, docs_dict):
 
     template = jinja2_env.get_template(TOP_LEVEL_TEMPLATE_PATH)
     output = template.render(tests_doc_list=tests_doc_list)
-    with open("protoplaster.md", "w") as doc:
+    with open(output_file, "w") as doc:
         doc.write(output)
 
 
-def generate_docs(tests_full_path, yaml_content):
+def typename(t) -> str:
+    # print name of type
+    if isinstance(t, type):
+        return t.__name__
+    else:
+        return str(t)
+
+
+def traverse_annotations(nodes: dict) -> list[Hint]:
+    """
+    Recursively collect Hint objects from type annotations and fill empty attributes
+
+    `nodes` is dictionary returned by get_type_hints(class, include_extras=True)
+    or dictionary of classes mapped to ignored placeholder values
+
+    Example of final effect:
+    devices: list[Device], required
+      List of devices to test
+      Device
+        (type with attributes defined below)
+        path: str
+          Path to device
+    """
+    if not nodes:
+        return []
+    children = []
+    for node_name in nodes:
+        name = node_name if isinstance(node_name, str) else ""
+        if hasattr(nodes[node_name], "__args__"):
+            # if node is an Annotated[] or a subscripted type
+            datatype = nodes[node_name].__args__
+            # recurse into the node's datatype (this is how the "Device"
+            # class was annotated in the example above)
+            children_next = traverse_annotations(dict(enumerate(datatype)))
+            datatype = ", ".join(typename(t) for t in datatype)
+            hint = getattr(nodes[node_name], "__metadata__", (None, ))[0]
+            if hint and not isinstance(hint, Hint):
+                # node is an Annotated[] and its 2nd argument is not a Hint object
+                raise ValueError(name)
+            if hint is None:
+                # node is a subscripted type (for example list[Device]);
+                # create a Hint object for a class with further attributes
+                hint = Hint("")
+            hint.name, hint.datatype = name, datatype
+            for c in children_next:
+                # ignore nodes with no content; otherwise, for example,
+                # list[str] would cause "str" to needlessly appear in docs
+                # with no description and no children
+                if c.description or c.children:
+                    hint.children = (getattr(hint, "children") or []) + [c]
+            children.append(hint)
+        else:
+            # if node is a class (like Device in example above)
+            hints = get_type_hints(nodes[node_name], include_extras=True)
+            children_next = traverse_annotations(hints)
+            children += children_next
+    return children
+
+
+def generate_docs(yaml_content=None) -> None:
     tests_doc_list = []
     templates = {}
     mod_testcls = {}
-    method_macros = {}
+    method_macros: dict[str, list[str]] = {}
+    parameters = {}
 
     with open(f"{os.path.dirname(docs_path)}/{TOP_LEVEL_TEMPLATE_PATH}",
               "r") as jinja2_doc:
         templates[TOP_LEVEL_TEMPLATE_PATH] = jinja2_doc.read()
 
-    for test_path in tests_full_path:
-        # collect docstrings from tests
-        py_file = Path(test_path)
-        raw_tree = py_file.read_text()
-        tree = ast.parse(raw_tree)
-        classes = [c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
-        for tests_class in classes:
-            class_doc = ast.get_docstring(tests_class)
-            if class_doc is None:
-                print(
-                    error(f'Docstring for the "{tests_class.name}" class ' +
-                          'is not defined - Exiting!'))
-                sys.exit(2)
-            elif tests_class.name not in class_doc:
-                print(
-                    error(
-                        f'Macro in the docstring for the "{tests_class.name}" '
-                        + 'function should have the same name as class ' +
-                        '- Exiting!'))
-                sys.exit(3)
-            templates[tests_class.name] = class_doc
+    def is_test_function(f):
+        return inspect.isfunction(f) and f.__name__.startswith("test")
 
-            functions = [
-                f for f in ast.walk(tests_class)
-                if isinstance(f, ast.FunctionDef) and f.name.startswith("test")
-            ]
-            for func in functions:
-                function_doc = ast.get_docstring(func)
-                if function_doc is None:
-                    print(
+    for test_path in test_modules_paths.values():
+        module_name = Path(test_path).parent.stem
+        spec = importlib.util.spec_from_file_location(module_name, test_path)
+        if spec is None or spec.loader is None:
+            sys.exit(error(f'Could not import {test_path} - Exiting!'))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        def is_test_class(cls):
+            return inspect.isclass(cls) and getattr(
+                cls, "module_name", lambda: None)() == module_name
+
+        for cls_name, cls in inspect.getmembers(module, is_test_class):
+            class_doc = inspect.getdoc(cls)
+            if not class_doc:
+                sys.exit(
+                    error(f'Docstring for the "{cls_name}" class ' +
+                          'is not defined - Exiting!'))
+            elif cls_name not in class_doc:
+                sys.exit(
+                    error(f'Macro in the docstring for the "{cls_name}" ' +
+                          'class should have the same name ' + '- Exiting!'))
+            templates[cls_name] = class_doc
+
+            annotations = get_type_hints(cls, include_extras=True)
+            try:
+                parameters[cls_name] = traverse_annotations(annotations)
+            except ValueError as e:
+                sys.exit(
+                    error(
+                        f'Incorrect type annotation in class "{cls_name}": {e} - Exiting!'
+                    ))
+
+            for func_name, func in inspect.getmembers(cls, is_test_function):
+                function_doc = inspect.getdoc(func) or ""
+                if not function_doc:
+                    sys.exit(
                         error(
-                            f'Docstring for the "{func.name}" function ' +
-                            f'in class {tests_class.name} is not defined - Exiting!'
-                        ))
-                    sys.exit(4)
-                elif func.name not in function_doc:
-                    print(
+                            f'Docstring for the "{func.__name__}" function ' +
+                            f'in class {cls_name} is not defined - Exiting!'))
+                elif func.__name__ not in function_doc:
+                    sys.exit(
                         error(
-                            f'Macro in the docstring for the "{func.name}" ' +
-                            f'function in class "{tests_class.name}" should ' +
+                            f'Macro in the docstring for the "{func.__name__}" '
+                            + f'function in class "{cls_name}" should ' +
                             'have the same name as function - Exiting!'))
-                    sys.exit(5)
-                templates[tests_class.name] += function_doc
-                method_macros.setdefault(tests_class.name,
-                                         []).append(func.name)
+                templates[cls_name] += function_doc
+                method_macros.setdefault(cls_name, []).append(func.__name__)
             # map module names to test class names
-            mod_testcls[test_path.split("/")[-2]] = tests_class.name
-    # collect data from yaml file
-    for test_group in yaml_content:
-        for test_module in yaml_content[test_group]:
-            mod_name, mod_conf = next(iter(test_module.items()))
-            cls_name = mod_testcls[mod_name]
-            test_doc = TestDocs(cls_name, mod_conf, method_macros[cls_name])
+            mod_testcls[test_path.split("/")[-2]] = cls_name
+
+    if yaml_content is not None:
+        # collect data from yaml file
+        for test_group in yaml_content:
+            for test_module in yaml_content[test_group]:
+                mod_name, mod_conf = next(iter(test_module.items()))
+                cls_name = mod_testcls[mod_name]
+                test_doc = TestDocs(
+                    cls_name, sorted(parameters[cls_name],
+                                     key=lambda x: x.name), mod_conf,
+                    method_macros[cls_name])
+                tests_doc_list.append(test_doc)
+        output_file = "tests_description.md"
+    else:
+        # generate docs for all tests
+        for cls_name in mod_testcls.values():
+            mod_conf = {}
+            for p in parameters[cls_name]:
+                # avoid errors when using dictionaries in docstrings
+                if p.datatype.startswith("dict") or (p.children and all(
+                        d.name for d in p.children)):
+                    mod_conf[p.name] = {}
+            test_doc = TestDocs(
+                cls_name, sorted(parameters[cls_name], key=lambda x: x.name),
+                mod_conf, method_macros[cls_name])
             tests_doc_list.append(test_doc)
-    generate_rst_doc(tests_doc_list, templates)
+        output_file = "tests_reference.md"
+    generate_rst_doc(tests_doc_list, templates, output_file)
 
 
 def extract_class_names(path):
@@ -431,9 +518,7 @@ def run_tests(args, machine_target, csv):
         test_file = create_test_file(args)
         paths_to_tests = test_file.list_paths_to_tests()
         with test_file.merged_test_file() as tf:
-            generate_docs(
-                OrderedDict.fromkeys(paths_to_tests).keys(),
-                load_yaml(tf.name))
+            generate_docs(load_yaml(tf.name))
             sys.exit()
 
     if machine_target == LOCAL_DEVICE_HOST:

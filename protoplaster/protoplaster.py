@@ -16,7 +16,7 @@ import protoplaster.webui
 import protoplaster.webui.devices
 from protoplaster.conf.consts import TEST_FILE, CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME, SERVE_IP
 from protoplaster.runner.manager import OrchestratorData, RunManager
-from protoplaster.runner.runner import list_tests, list_test_suites, orchestrate_tests, run_tests
+from protoplaster.runner.runner import list_tests, list_test_suites, orchestrate_tests, run_tests, generate_docs
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
 from protoplaster.tools.log import error, info
 
@@ -59,7 +59,6 @@ def parse_args():
         "-t",
         "--test-file",
         type=str,
-        default=f"{TEST_FILE}",
         help="Path to the yaml test description in the test directory")
     parser.add_argument("-g",
                         "--group",
@@ -235,6 +234,15 @@ def handle_sigint(manager, is_server):
 def main():
     init()
     args = parse_args()
+
+    if not args.test_file:
+        if args.generate_docs:
+            # if generate_docs is given without specifying a config,
+            # generate a full documentation; the case where both
+            # are given is handled in run_tests()
+            generate_docs()
+            sys.exit()
+        args.test_file = TEST_FILE
 
     if args.sudo:
         os.execv(shutil.which("sudo"),

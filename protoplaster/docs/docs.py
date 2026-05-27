@@ -14,5 +14,6 @@ class Hint:
 @dataclass
 class TestDocs:
     class_name: str
+    parameters: list[Hint]
     test_details: dict[str, Any]
     test_macros: list[str]

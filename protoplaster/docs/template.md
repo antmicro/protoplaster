@@ -10,16 +10,47 @@ To perform hardware/BSP tests the open-source [Protoplaster](https://github.com/
 Running Protoplaster runs the tests described in the following chapters:
 
 {% for module_doc in tests_doc_list -%}
- {% set prefix = [] -%}
- {% import module_doc.class_name as jinja2_macros -%}
-  {% if jinja2_macros[module_doc.class_name](prefix) -%}
-   {{ jinja2_macros[module_doc.class_name](prefix) }}
+  {% import module_doc.class_name as jinja2_macros -%}
+  {% set conf = module_doc.test_details %}
+  {% if jinja2_macros[module_doc.class_name](conf) -%}
+    {{ jinja2_macros[module_doc.class_name](conf) }}
   {% endif -%}
- {% set conf = module_doc.test_details -%}
-*{{ prefix[0] }}{{ conf.values()|first }}*
-  {%- for macro_name in module_doc.test_macros %}
-   {% if jinja2_macros[macro_name](conf) %}
-  * {{ jinja2_macros[macro_name](conf) }}
-   {% endif -%}
+
+{% macro typedef(t) -%}
+`{{ t.datatype }}`
+: *(type with attributes defined below)*
+  {% for c in t.children %}
+    {{ parameters(c) | indent }}
+  {%- endfor -%}
+{% endmacro -%}
+
+{% macro parameter(p) -%}
+`{{ p.name or "(anonymous)" }}`: `{{ p.datatype }}`{{ ", *required*" if p.required else "" }}
+: {{ p.description }}
+  {% for c in p.children %}
+    {{ parameters(c) | indent }}
+  {%- endfor -%}
+{% endmacro -%}
+
+{% macro parameters(p) -%}
+  {%- if not p.name and not p.description -%}
+    {{ typedef(p) }}
+  {%- else -%}
+    {{ parameter(p) }}
+  {%- endif -%}
+{% endmacro -%}
+
+{% if module_doc.parameters -%}
+### Parameters
+  {% for p in module_doc.parameters %}
+{{ parameters(p) }}
+  {%- endfor -%}
+{% endif %}
+### Tests
+  {% for macro_name in module_doc.test_macros %}
+    {% if jinja2_macros[macro_name](conf) -%}
+`{{ macro_name }}`
+: {{ jinja2_macros[macro_name](conf) }}
+    {% endif -%}
   {% endfor %}
 {% endfor -%}

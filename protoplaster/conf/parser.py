@@ -18,6 +18,9 @@ test_modules_paths = {}
 tests_root = protoplaster.tests.__path__[0]
 for test_path in Path(tests_root).parent.rglob("test.py"):
     test_modules_paths[test_path.parent.name] = str(test_path.absolute())
+# Sort by path (so that nested modules are sorted correctly)
+test_modules_paths = dict(
+    sorted(test_modules_paths.items(), key=lambda i: i[1]))
 
 
 def to_path(p: StrPath) -> Path:
