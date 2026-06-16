@@ -82,7 +82,10 @@ includes:
 tests:
   base:                 # Test name
   - i2c:                # A module specifier
-      bus: 0            # An interface specifier
+      dev:              # An interface specifier
+        name: "I2C 0"
+        driver: "I2C_SMBus"
+        bus: 0
       devices:          # Multiple instances of devices can be defined in one module
       - name: "Sensor name"
         address: 0x3c   # The given device parameters determine which tests will be run for the module
