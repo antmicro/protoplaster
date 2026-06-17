@@ -126,6 +126,8 @@ class TestTiDac38j8xEyescan:
         assert min_width <= max_width, f"Invalid range: [{min_width}, {max_width}]"
         assert min_height <= max_height, f"Invalid range: [{min_height}, {max_height}]"
 
+        failure_reasons = []
+
         for dac_id, lanes in aggregated_dict.items():
             dac_id = dac_id - 1  # start numbering from zero
             for laneid, sample in enumerate(lanes):
@@ -144,10 +146,15 @@ class TestTiDac38j8xEyescan:
                     height = val[1]
                     bit_string = "average all bits" if bit == 0 else f"bit {bit}"
 
-                    assert min_width <= width <= max_width, \
-                        f"DAC {dac_id} lane {laneid} {bit_string} width {width} not in range [{min_width}, {max_width}]"
-                    assert min_height <= height <= max_height, \
-                        f"DAC {dac_id} lane {laneid} {bit_string} height {height} not in range [{min_height}, {max_height}]"
+                    if not (min_width <= width <= max_width):
+                        failure_reasons.append(
+                            f"DAC {dac_id} lane {laneid} {bit_string} width {width} not in range [{min_width}, {max_width}]"
+                        )
+                    if not (min_height <= height <= max_height):
+                        failure_reasons.append(
+                            f"DAC {dac_id} lane {laneid} {bit_string} height {height} not in range [{min_height}, {max_height}]"
+                        )
+        assert not failure_reasons, failure_reasons
 
     def name(self):
         return "eyescan-" + str(self.daisy_chain_number)
