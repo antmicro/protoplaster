@@ -151,7 +151,7 @@ def setup_tests(request: pytest.FixtureRequest, test_config):
         setattr(request.cls, key, conf[key])
         if key not in list(hints) + SPECIAL_KEYS:
             pr_warn(
-                f'Unexpected parameter "{key}" for class "{request.cls.__name__}"'
+                f'Undocumented parameter "{key}" for class "{request.cls.__name__}"'
             )
     params_required = [
         h for h in hints if getattr(
