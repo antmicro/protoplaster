@@ -7,7 +7,7 @@
 
   <div class="opts">
     <div class="opt-item">
-      <label for="dacs">DAC</label>
+      <label for="dacs">DAC (daisy-chain order)</label>
       <select onchange="updateEyeDiagram()" name="dacs" id="dacs"></select>
     </div>
     <div class="opt-item">
@@ -235,9 +235,9 @@ function updateEyeDiagram() {
 
 window.addEventListener("DOMContentLoaded", () => {
   const selectDacs = document.getElementById("dacs");
-  Object.keys(chartData).sort().forEach(dacId => {
+  Object.keys(chartData).forEach(dacId => {
     const option = document.createElement("option");
-    option.text = `DAC ${dacId}`;
+    option.text = `DAC ${dacId - 1}`;
     option.value = dacId;
     selectDacs.add(option);
   });

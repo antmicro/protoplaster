@@ -127,6 +127,7 @@ class TestTiDac38j8xEyescan:
         assert min_height <= max_height, f"Invalid range: [{min_height}, {max_height}]"
 
         for dac_id, lanes in aggregated_dict.items():
+            dac_id = dac_id - 1  # start numbering from zero
             for laneid, sample in enumerate(lanes):
                 skip_check = False
                 for dac in ignore_dac_lanes:
