@@ -88,12 +88,19 @@ class TestIbertEyescan:
         expected_line_rate = getattr(self, "line_rate", None)
         if expected_line_rate is None:
             pytest.skip("`line_rate` test property is not set")
+        allowed_line_rate_variance = getattr(self,
+                                             "allowed_line_rate_variance", 0)
 
-        line_rate = self.eyescan.get_line_rate()
+        line_rate = float(self.eyescan.get_line_rate())
         if line_rate is None:
             pytest.fail(f"`LINE_RATE` entry cannot be find in a report file.")
 
-        assert line_rate == expected_line_rate, f"Expected `rate_line`: {expected_line_rate}, Actual: {line_rate}"
+        min_expected_line_rate = float(expected_line_rate) - float(
+            allowed_line_rate_variance)
+        max_expected_line_rate = float(expected_line_rate) + float(
+            allowed_line_rate_variance)
+
+        assert min_expected_line_rate <= line_rate <= max_expected_line_rate, f"Expected `line_rate`: {expected_line_rate} +- {allowed_line_rate_variance}, Actual: {line_rate}"
 
     def test_create_diagram(self, record_artifact, artifacts_dir):
         """
