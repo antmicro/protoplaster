@@ -1,6 +1,7 @@
 import os
 import shutil
 import pytest
+from pathlib import Path
 
 from protoplaster.conf.module import ModuleName
 from protoplaster.tests.bert.vivado_ibert.ibert_eyescan import EyeScan
@@ -116,7 +117,13 @@ class TestIbertEyescan:
                         eyescan_output_path)
         record_artifact(eyescan_output_path)
 
-        diagram = self.eyescan.render_diagram()
+        png_name = (Path(self.eyescan_diagram).stem + ".png")
+        png_path = os.path.join(artifacts_dir, png_name)
+
+        self.eyescan.render_png_diagram(png_path)
+        record_artifact(png_path)
+
+        diagram = self.eyescan.render_diagram(png_name)
 
         eyescan_diagram_path = os.path.join(artifacts_dir,
                                             self.eyescan_diagram)
@@ -145,7 +152,9 @@ class TestIbertEyescan:
           {{ _item('max_height') }}
         {%- endmacro %}
         """
-        _, width, height = self.eyescan.parse_file()
+        data = self.eyescan.read_scan_data()
+        width = data.width
+        height = data.height
 
         min_width = getattr(self, "min_width", -float('inf'))
         max_width = getattr(self, "max_width", float('inf'))

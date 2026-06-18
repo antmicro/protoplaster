@@ -3,9 +3,22 @@ import os
 import shutil
 import tempfile
 import subprocess
+import numpy as np
+from pathlib import Path
+
 from typing import Literal, Optional
+from dataclasses import dataclass
 
 from jinja2 import DictLoader, Environment
+
+
+@dataclass
+class EyeScanData:
+    x: np.ndarray
+    y: np.ndarray
+    z: np.ndarray
+    width: int
+    height: int
 
 
 class EyeScan:
@@ -64,8 +77,7 @@ class EyeScan:
             raise RuntimeError("Eye scan failed, Vivado stdout:\n" +
                                res.stdout + "\nVivado stderr:\n" + res.stderr)
 
-    def parse_file(self) -> tuple[list[dict], int, int]:
-        samples = []
+    def read_scan_data(self) -> EyeScanData:
         width = 0
         height = 0
         with open(self.get_eyescan_file_path()) as file:
@@ -81,17 +93,26 @@ class EyeScan:
                     "Scan data start marker not found in CSV file")
 
             reader = csv.reader(file)
-            xs = [int(x) for x in next(reader)[1:]]
+
+            x = np.array([float(v) for v in next(reader)[1:]])
+            y = []
+            z = []
+
             for row in reader:
                 if row == ["Scan End"]:
                     break
-                y, *amps = int(row[0]), *map(float, row[1:])
-                for x, amp in zip(xs, amps, strict=True):
-                    samples.append({"x": x, "y": y, "amp": amp})
+                y.append(float(row[0]))
+                z.append([float(v) for v in row[1:]])
             else:
-                raise ValueError("Scan data end marker not found in CSV file")
+                raise ValueError("Scan data end marker not found")
 
-        return (samples, width, height)
+        return EyeScanData(
+            x=x,
+            y=np.array(y),
+            z=np.array(z),
+            width=width,
+            height=height,
+        )
 
     def read_diagram_template(self) -> str:
         with open(f"{os.path.dirname(__file__)}/eye_diagram.html") as file:
@@ -113,15 +134,62 @@ class EyeScan:
         template = environment.get_template("template")
         return template.render(**kwargs)
 
-    def render_diagram(self) -> str:
-        samples, width, height = self.parse_file()
+    def render_diagram(self, png_name: str) -> str:
+        data = self.read_scan_data()
         diagram_template = self.read_diagram_template()
         return self.render_template(diagram_template,
-                                    samples=samples,
                                     disable_nav=True,
-                                    num_bits=self.prbs_bits,
-                                    eye_width=width,
-                                    eye_height=height)
+                                    png_name=png_name,
+                                    eye_width=data.width,
+                                    eye_height=data.height)
+
+    def render_png_diagram(self, filename: str | Path) -> None:
+        import matplotlib
+        matplotlib.use("Agg")
+
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import LogNorm
+        from matplotlib.ticker import FormatStrFormatter
+
+        data = self.read_scan_data()
+
+        x_ui = data.x / (len(data.x) - 1)
+
+        X, Y = np.meshgrid(
+            x_ui,
+            data.y,
+        )
+
+        z = np.maximum(data.z, np.finfo(float).tiny)
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        cmap = plt.get_cmap("jet", 64)
+
+        mesh = ax.pcolormesh(X,
+                             Y,
+                             z,
+                             cmap=cmap,
+                             shading="nearest",
+                             norm=LogNorm(
+                                 vmin=z.min(),
+                                 vmax=z.max(),
+                             ))
+
+        ax.set_xlabel("Unit Interval")
+        ax.set_ylabel("Voltage (Codes)")
+
+        cbar = fig.colorbar(mesh, ax=ax)
+        cbar.set_label("BER")
+        cbar.ax.yaxis.set_major_formatter(FormatStrFormatter("%.1E"))
+
+        ax.set_xlim(x_ui.min(), x_ui.max())
+        ax.set_ylim(data.y.min(), data.y.max())
+
+        fig.tight_layout()
+
+        fig.savefig(filename, dpi=150, bbox_inches="tight")
+        plt.close(fig)
 
     def get_eyescan_file_path(self) -> str:
         return self.eyescan_file.name
