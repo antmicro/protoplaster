@@ -35,7 +35,7 @@ jobs:
          python3-pip telnet iptables iproute2 bc cpio rsync
 
       - name: Run scripts in Renode
-        uses: antmicro/renode-linux-runner-action@fix-use_renode_portable
+        uses: antmicro/renode-linux-runner-action@main
         with:
           shared-dirs: ./
           renode-run: |
@@ -47,3 +47,16 @@ jobs:
             vivid
             gpio 0 32
             i2c 0x1C
+
+      - name: Test backward compatibility
+        uses: antmicro/renode-linux-runner-action@main
+        with:
+          shared-dirs: ./
+          renode-run: |
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install .
+            protoplaster -d tests -r . -a . -t backward.yml
+          devices: |
+            i2c 0x21
+

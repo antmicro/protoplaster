@@ -1,0 +1,12 @@
+tests:
+  backward_compat:
+  - i2c:
+      bus: 0
+      devices:
+      - name: "Some device"
+        address: 0x21
+
+test-suites:
+  local:
+    tests:
+    - backward_compat
