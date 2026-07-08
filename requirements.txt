@@ -3,7 +3,7 @@ pytest==7.4.3
 pytest-instafail==0.5.0
 pyyaml>=5.3.1
 smbus2==0.3.0
-spidev==3.8; python_version > '3.11.10'
+spidev==3.8; platform_machine != 'riscv64'
 colorama>=0.3.9
 Jinja2==3.1.2
 MarkupSafe==2.1.1
@@ -14,5 +14,6 @@ flask-cors==6.0.1
 requests==2.32.5
 waitress==3.0.2
 eyescan @ https://github.com/antmicro/dac-eyescan-test/archive/a584dc09357bd76b6edfc4b58a9c1cbfd3c7ea4f.zip
-numpy==2.4.2
-matplotlib==3.10.8
+# used by vivado_ibert: not useful on riscv64
+numpy==2.4.2; platform_machine != 'riscv64'
+matplotlib==3.10.8; platform_machine != 'riscv64'

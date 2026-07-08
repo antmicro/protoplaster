@@ -3,7 +3,14 @@ import os
 import shutil
 import tempfile
 import subprocess
-import numpy as np
+from protoplaster.tools.log import pr_warn
+
+NUMPY_LIBRARY = False
+try:
+    import numpy as np
+    NUMPY_LIBRARY = True
+except ImportError:
+    pr_warn("NumPy is not available. Disabling bert tests.")
 from pathlib import Path
 
 from typing import Literal, Optional
@@ -40,6 +47,8 @@ class EyeScan:
         self.dwell_value = dwell_value
         self.horizontal_increment = horizontal_increment
         self.vertical_increment = vertical_increment
+
+        assert NUMPY_LIBRARY, "NumPy is not available."
 
         # Check if Vivado is available
         if shutil.which(vivado_cmd) is None:
@@ -144,12 +153,16 @@ class EyeScan:
                                     eye_height=data.height)
 
     def render_png_diagram(self, filename: str | Path) -> None:
-        import matplotlib
-        matplotlib.use("Agg")
-
-        import matplotlib.pyplot as plt
-        from matplotlib.colors import LogNorm
-        from matplotlib.ticker import FormatStrFormatter
+        try:
+            import matplotlib
+            matplotlib.use("Agg")
+            import matplotlib.pyplot as plt
+            from matplotlib.colors import LogNorm
+            from matplotlib.ticker import FormatStrFormatter
+            MATPLOTLIB_LIBRARY = True
+        except ImportError:
+            pr_warn("Matplotlib is not available. Cannot render diagrams.")
+        assert MATPLOTLIB_LIBRARY, "Matplotlib is not available."
 
         data = self.read_scan_data()
 

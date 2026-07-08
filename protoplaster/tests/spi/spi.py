@@ -1,13 +1,12 @@
 from typing import Literal
+from protoplaster.tools.log import pr_warn
 
 SPIDEV_LIBRARY = False
 try:
     from spidev import SpiDev
     SPIDEV_LIBRARY = True
 except ImportError:
-    print(
-        "Warning: SPIDEV library is not available. Disabling spi module tests."
-    )
+    pr_warn("SPIDEV library is not available. Disabling spi module tests.")
 
 
 class SPI:
