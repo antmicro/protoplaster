@@ -83,3 +83,48 @@ api-test:
     paths:
       - srv/protoplaster/*
     when: always
+
+renode-test:
+  stage: tests
+  only:
+    refs:
+      - main
+      - merge_requests
+  image: debian:trixie
+  variables:
+    BGS_ACTION_REPO: antmicro/renode-linux-runner-action
+    BGS_ACTION_REF: renode_portable_build_essential
+    BGS_RENODE_VERSION: "1.16.1"
+    DEVICES: |
+      vivid
+      gpio 0 32
+      i2c 0x1C
+    CMD: |
+      python -m venv venv-protoplaster
+      source venv-protoplaster/bin/activate
+      pip install . --progress-bar=off
+      protoplaster -d tests -r . -a . -t basic.yml
+  before_get_sources:
+    - apt-get -y update
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends git wget python3-venv screen libicu76 telnet e2fsprogs iproute2 iptables procps sudo jq python-is-python3
+    - git clone https://github.com/$BGS_ACTION_REPO /renode_action
+    - git -C /renode_action switch --detach refs/tags/$BGS_ACTION_REF
+    - wget -q --no-verbose https://github.com/renode/renode/releases/download/v${BGS_RENODE_VERSION}/renode-${BGS_RENODE_VERSION}.linux-portable-dotnet.tar.gz -O /renode.tar.gz
+    - mkdir /opt/renode
+    - tar xzf /renode.tar.gz --strip-components=1 -C /opt/renode
+    - rm /renode.tar.gz
+  script:
+    - PATH=$PATH:/opt/renode
+    - cd /renode_action
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - PS1='# ' # the script expects # to be the prompt character
+    - sysctl -w net.ipv4.ip_forward=1 # enable routing inside Renode
+    - pip3 install -r requirements.txt
+    - RUN_CONF=$(jq -n
+        --arg arch riscv64
+        --arg devices "$DEVICES"
+        --arg renode-run "$CMD"
+        --arg shared-dirs ./
+        '$ARGS.named')
+    - python3 action/run-in-renode.py "$RUN_CONF" "/ci" "$BGS_ACTION_REPO" "$BGS_ACTION_REF"
