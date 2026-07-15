@@ -1,0 +1,12 @@
+tests:
+  backward_compat:
+  - i2c:
+      bus: 0
+      devices:
+      - name: "Example device"
+        address: 0x1C
+
+test-suites:
+  local:
+    tests:
+    - backward_compat

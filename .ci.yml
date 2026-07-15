@@ -104,6 +104,7 @@ renode-test:
       source venv-protoplaster/bin/activate
       pip install . --progress-bar=off
       protoplaster -d tests -r . -a . -t basic.yml
+      protoplaster -d tests -r . -a . -t backward.yml
   before_get_sources:
     - apt-get -y update
     - DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends git wget python3-venv screen libicu76 telnet e2fsprogs iproute2 iptables procps sudo jq python-is-python3

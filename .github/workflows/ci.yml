@@ -41,8 +41,9 @@ jobs:
           renode-run: |
             python -m venv venv-protoplaster
             source venv-protoplaster/bin/activate
-            pip install .
+            pip install . --progress-bar=off
             protoplaster -d tests -r . -a . -t basic.yml
+            protoplaster -d tests -r . -a . -t backward.yml
           devices: |
             vivid
             gpio 0 32
