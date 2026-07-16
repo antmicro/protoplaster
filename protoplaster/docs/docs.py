@@ -9,6 +9,7 @@ class Hint:
     required: bool = False
     children: list["Hint"] = field(default_factory=list)
     datatype: str = ""
+    hidden: bool = False
 
 
 @dataclass

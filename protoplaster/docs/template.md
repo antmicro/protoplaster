@@ -50,7 +50,9 @@ Running Protoplaster runs the tests described in the following sections:
 {% if module_doc.parameters -%}
 ### Parameters
   {% for p in module_doc.parameters %}
+    {% if not p.hidden -%}
 {{ parameters(p) }}
+    {%- endif %}
   {%- endfor -%}
 {% endif %}
 ### Tests
