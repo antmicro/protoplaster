@@ -35,13 +35,13 @@ jobs:
           protoplaster -d . -r . -a /tmp --generate-docs
 
       - name: Generate test report in Renode
-        uses: antmicro/renode-linux-runner-action@main
+        uses: antmicro/renode-linux-runner-action@renode_portable_build_essential
         with:
           shared-dirs: ./
           renode-run: |
-            python -m venv .venv
-            source .venv/bin/activate
-            pip install .
+            python -m venv venv-protoplaster
+            source venv-protoplaster/bin/activate
+            pip install . --progress-bar=off
             protoplaster -d . -r . -a /tmp -t example.yml --csv report.csv
             protoplaster-test-report report_base.csv -t md
           devices: |
