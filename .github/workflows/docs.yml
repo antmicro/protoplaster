@@ -68,7 +68,7 @@ jobs:
           unzip report.zip -d docs/source/_static/system_report
 
       - name: Build html
-        uses: docker://btdi/sphinx:min
+        uses: docker://btdi/sphinx:pytooling
         with:
           args: ./.github/scripts/sphinx.sh
 
