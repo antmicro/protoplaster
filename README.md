@@ -102,9 +102,13 @@ tests:
       save_file: "frame.raw"
   additional:
   - gpio:
-      number: 20
-      value: 1
-      write: True
+      dev:
+        name: "GPIO 0"
+        driver: "GPIO_sysfs"
+      pins:
+        - pin: 20
+          direction: out
+          state: on
 
 metadata:               # Additional metadata to be generated on tested device
   uname:                # Metadata name

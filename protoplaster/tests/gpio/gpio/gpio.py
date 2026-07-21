@@ -1,5 +1,5 @@
 from enum import Enum
-import os
+from abc import ABC, abstractmethod
 
 
 class Direction(Enum):
@@ -7,52 +7,28 @@ class Direction(Enum):
     OUT = "out"
 
 
-class GPIO:
+class GPIO(ABC):
 
-    def __init__(self,
-                 number,
-                 direction: Direction = Direction.IN,
-                 path="/sys/class/gpio",
-                 gpio_name=None):
-        self.number = number
-        self.direction = direction
-        self.path = path
-        self.gpio_name = gpio_name if gpio_name is not None else f"gpio{number}"
-        self.unexport_gpio = True
+    def __init__(self, pins: list[int], directions: list[Direction]):
+        self.pins = pins
+        self.dirs = [Direction(d) for d in directions]
 
     def __enter__(self):
-        self.export()
         return self
 
     def __exit__(self, *args, **kwargs):
-        if self.unexport_gpio:
-            self.unexport()
+        return
 
-    def export(self):
-        if not os.path.isdir(f"{self.path}/{self.gpio_name}"):
-            assert os.path.isfile(f"{self.path}/export"
-                                  ), "Sysfs interface for GPIO does not exist"
-            with open(f"{self.path}/export", 'w') as file:
-                file.write(str(self.number))
-            self.unexport_gpio = True
-        else:
-            self.unexport_gpio = False
-        assert os.path.isdir(
-            f"{self.path}/{self.gpio_name}"), "GPIO could not be initiated"
-        with open(f"{self.path}/{self.gpio_name}/direction", 'w') as file:
-            file.write(self.direction.value)
-        return self
+    def get_pins(self) -> list[int]:
+        return self.pins
 
-    def unexport(self):
-        with open(f"{self.path}/unexport", 'w') as file:
-            file.write(str(self.number))
+    def get_dirs(self) -> list[Direction]:
+        return self.dirs
 
-    def read_value(self):
-        with open(f"{self.path}/{self.gpio_name}/value") as file:
-            value = file.read()
-        return int(value.strip())
+    @abstractmethod
+    def get(self, pin: int) -> bool:
+        pass
 
-    def write_value(self, value):
-        assert self.direction == Direction.OUT, "You can only write to a GPIO in an OUT state"
-        with open(f"{self.path}/{self.gpio_name}/value", 'w') as file:
-            file.write(str(value))
+    @abstractmethod
+    def set(self, pin: int, value: bool) -> None:
+        pass
