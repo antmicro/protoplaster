@@ -1,15 +1,18 @@
-from smbus2 import SMBus, i2c_msg
+from protoplaster.tests.gpio.gpio.gpio import Direction
+from protoplaster.tests.gpio.GPIO_I2C.GPIO_I2C import GPIO_I2C
+from typing import Any
 
 
-class PI4IOE5V96224:
+class PI4IO(GPIO_I2C):
 
-    def __init__(self, i2c_bus: int, i2c_address: int):
-        self.bus = SMBus(i2c_bus)
-        self.address = i2c_address
+    def __init__(self, pins: list[int], directions: list[Direction],
+                 parent: dict[str, Any], i2c_address: int, **kwargs) -> None:
+        for pin in pins:
+            self._validate_pin(pin)
+        super().__init__(pins, directions, parent, i2c_address)
         self.state = [0xFF, 0xFF, 0xFF]
 
-    def is_alive(self):
-
+    def is_alive(self) -> bool:
         try:
             self._write_state()
             self._read_state()
@@ -21,16 +24,13 @@ class PI4IOE5V96224:
         if not (0 <= pin <= 24):
             raise IndexError
 
-    def _write_state(self):
-        msg = i2c_msg.write(self.address, self.state)
-        self.bus.i2c_rdwr(msg)
+    def _write_state(self) -> None:
+        self.i2c_bus.write(self.i2c_address, self.state)
 
-    def _read_state(self):
-        msg = i2c_msg.read(self.address, 3)
-        self.bus.i2c_rdwr(msg)
-        return list(msg)
+    def _read_state(self) -> bytes:
+        return self.i2c_bus.read(self.i2c_address, 3)
 
-    def set_pin(self, pin: int, value: int):
+    def set(self, pin: int, value: bool) -> None:
         self._validate_pin(pin)
         byte_index, bit_index = divmod(pin, 8)
         if value:
@@ -39,10 +39,9 @@ class PI4IOE5V96224:
             self.state[byte_index] &= ~(1 << bit_index)
         self._write_state()
 
-    # pin should be beforehand set to 1
-    def get_pin(self, pin: int) -> int:
+    def get(self, pin: int) -> bool:
         self._validate_pin(pin)
         byte_index, bit_index = divmod(pin, 8)
         self.state[byte_index] |= (1 << bit_index)
         read = self._read_state()
-        return (read[byte_index] >> bit_index) & 1
+        return bool((read[byte_index] >> bit_index) & 1)
