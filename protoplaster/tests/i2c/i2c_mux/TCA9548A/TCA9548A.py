@@ -1,5 +1,6 @@
 from protoplaster.tests.i2c.i2c.i2c import I2C
 from protoplaster.tests.i2c.i2c_mux.I2CMux import I2CMux
+from protoplaster.tests.gpio.gpio.test import TestGPIO
 
 
 class TCA9548A(I2CMux):
@@ -8,8 +9,11 @@ class TCA9548A(I2CMux):
                  i2c_bus: I2C,
                  i2c_address: int,
                  reset_gpio: int | None = None,
-                 reset_state: bool = True):
-        super().__init__(i2c_bus, i2c_address, reset_gpio, reset_state)
+                 reset_state: bool = True,
+                 gpio_dev: TestGPIO._GPIO | None = None,
+                 **kwargs):
+        super().__init__(i2c_bus, i2c_address, reset_gpio, reset_state,
+                         gpio_dev)
 
     def is_alive(self) -> bool:
         self.fail_reason = None

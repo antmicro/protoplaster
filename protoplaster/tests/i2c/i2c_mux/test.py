@@ -5,6 +5,7 @@ from protoplaster.tests.i2c.i2c_mux.I2CMux import I2CMux
 import importlib
 from typing import Annotated, TypedDict
 from protoplaster.docs.docs import Hint
+from protoplaster.tests.gpio.gpio.test import TestGPIO
 import pytest
 
 
@@ -31,6 +32,9 @@ class TestI2CMux:
                       Hint("Parent I2C bus (attribute `dev` of I2C test)")],
             "i2c_address":
             Annotated[int, Hint("I2C address of multiplexer")],
+            "gpio_dev":
+            Annotated[TestGPIO._GPIO | None,
+                      Hint("GPIO device for reset functionality")],
             "reset_gpio":
             Annotated[int | None, Hint("GPIO reset pin")],
             "reset_state":
@@ -59,7 +63,7 @@ class TestI2CMux:
         assert issubclass(
             driver,
             I2CMux), f"Class {driver_name} must implement class 'I2CMux'"
-        self.mux = driver(parent, self.dev["i2c_address"])
+        self.mux = driver(parent, **self.dev)
 
     def test_is_alive(self) -> None:
         """
