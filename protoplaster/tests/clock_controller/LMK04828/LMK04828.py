@@ -1,6 +1,6 @@
 from enum import Enum
 
-from protoplaster.tests.spi.spi import SPI
+from protoplaster.tests.spi.SPI_spidev.SPI_spidev import SPI_spidev
 
 
 class Register(Enum):
@@ -23,11 +23,12 @@ class LMK04828:
 
     def __init__(self, bus, device):
         self.address_bytes = 2
-        self.device = SPI(bus,
-                          device,
-                          address_bytes=self.address_bytes,
-                          read_command=(1 << (8 * self.address_bytes - 1)),
-                          data_endian="little")
+        self.device = SPI_spidev(bus,
+                                 device,
+                                 address_bytes=self.address_bytes,
+                                 read_command=(1 <<
+                                               (8 * self.address_bytes - 1)),
+                                 data_endian="little")
 
     def read_register(self, reg: Register):
         return self.device.read_register(reg.index, reg.bytes)
