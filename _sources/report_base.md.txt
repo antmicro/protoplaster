@@ -1,0 +1,11 @@
+Protoplaster tests report
+==================
+|start time|device name|test name|module|duration|message|status|artifacts|
+|---|---|---|---|---|---|---|---|
+|2026-09-02T02:14:14|I2C 0|addresses[test_config0]|test.py::TestI2C::test_addresses[test_config0]|13ms 844us|AssertionError: "Sensor name" not found at address 0x3c|<span style='color:red'>failed</span>|uname|
+|2026-09-02T02:14:20|/dev/video0|frame[test_config0]|test.py::TestCamera::test_frame[test_config0]|210ms 696us||<span style='color:green'>passed</span>|uname|
+|2026-09-02T02:14:20|/dev/video0|device_name[test_config0]|test.py::TestCamera::test_device_name[test_config0]|187ms 258us||<span style='color:green'>passed</span>|uname|
+|2026-09-02T02:14:20|/dev/video0|driver_name[test_config0]|test.py::TestCamera::test_driver_name[test_config0]|186ms 575us||<span style='color:green'>passed</span>|uname|
+|2026-09-02T02:14:21|/dev/video2|frame[test_config1]|test.py::TestCamera::test_frame[test_config1]|211ms 988us||<span style='color:green'>passed</span>|frame.raw, uname|
+|2026-09-02T02:14:21|/dev/video2|device_name[test_config1]|test.py::TestCamera::test_device_name[test_config1]|187ms 500us||<span style='color:green'>passed</span>|uname|
+|2026-09-02T02:14:21|/dev/video2|driver_name[test_config1]|test.py::TestCamera::test_driver_name[test_config1]|186ms 369us||<span style='color:green'>passed</span>|uname|
