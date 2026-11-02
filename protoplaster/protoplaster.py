@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import ipaddress
 import os
 import sys
 import yaml
@@ -123,6 +124,10 @@ def parse_args():
                             action='store_true',
                             help="Run in DUT mode")
 
+    parser.add_argument("--host",
+                        type=ipaddress.ip_address,
+                        default=SERVE_IP,
+                        help="Address to listen on in server/DUT mode")
     parser.add_argument("--port",
                         type=str,
                         default="5000",
@@ -216,10 +221,10 @@ def run_http_server(args):
 
     print(
         info(
-            f"Protoplaster {'server' if args.server else 'DUT' if args.dut else ''} running on http://{SERVE_IP}:{args.port}"
+            f"Protoplaster {'server' if args.server else 'DUT' if args.dut else ''} running on http://{args.host}:{args.port}"
         ))
 
-    serve(app, host=SERVE_IP, port=int(args.port))
+    serve(app, host=args.host, port=int(args.port))
 
 
 def handle_sigint(manager, is_server):
