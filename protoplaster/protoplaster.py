@@ -238,7 +238,7 @@ def run_http_server(args):
     app.secret_key = "protoplaster-secret"
     app.config["ARGS"] = args
     app.config["RUN_MANAGER"] = manager
-    app.register_blueprint(protoplaster.api.v1.create_routes())
+    app.register_blueprint(protoplaster.api.v1.create_routes(args))
 
     signal.signal(signal.SIGINT,
                   lambda _, __: handle_sigint(manager, args.server))

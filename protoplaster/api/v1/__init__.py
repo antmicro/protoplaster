@@ -6,7 +6,7 @@ import protoplaster.api.v1.devices
 import protoplaster.api.v1.execution
 
 
-def create_routes() -> Blueprint:
+def create_routes(args=None) -> Blueprint:
     api_routes: Blueprint = Blueprint("protoplaster-api-v1", __name__)
     api_routes.register_blueprint(
         protoplaster.api.v1.configs.configs_blueprint)
@@ -14,6 +14,8 @@ def create_routes() -> Blueprint:
         protoplaster.api.v1.test_runs.test_runs_blueprint)
     api_routes.register_blueprint(
         protoplaster.api.v1.devices.devices_blueprint)
-    api_routes.register_blueprint(
-        protoplaster.api.v1.execution.execution_blueprint)
+    # RPC available only in DUT mode
+    if args is not None and args.dut:
+        api_routes.register_blueprint(
+            protoplaster.api.v1.execution.execution_blueprint)
     return api_routes
