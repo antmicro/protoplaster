@@ -13,6 +13,7 @@ from protoplaster.protoplaster import load_external_devices
 from protoplaster.conf.consts import TEST_FILE, CONFIG_DIR, LOCAL_DEVICE_HOST
 from protoplaster.runner.metadata import RunStatus
 from protoplaster.webui.devices import get_all_devices
+from protoplaster.tools.auth import set_token
 
 
 class Protoplaster:
@@ -23,7 +24,8 @@ class Protoplaster:
                  artifacts_dir: str | PathLike[str] | None = None,
                  test_file: str | PathLike[str] | None = None,
                  external_devices: str | PathLike[str] | None = None,
-                 custom_tests: str | PathLike[str] | None = None):
+                 custom_tests: str | PathLike[str] | None = None,
+                 secure_token: str | None = None):
         self.config_dir = Path(config_dir) if config_dir else CONFIG_DIR
         if not reports_dir or not artifacts_dir:
             out_dir = Path(tempfile.mkdtemp(prefix="protoplaster-out."))
@@ -43,6 +45,8 @@ class Protoplaster:
         self._test_file = create_test_file(self._args)
         self._run_manager = RunManager()
         load_external_devices(self._args)
+        if secure_token is not None:
+            set_token(secure_token)
 
     def list_tests(self):
         return list(self._test_file.tests.keys())

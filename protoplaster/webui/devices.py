@@ -1,4 +1,5 @@
-from protoplaster.conf.consts import LOCAL_DEVICE_NAME
+import protoplaster.tools.auth as auth
+from protoplaster.conf.consts import LOCAL_DEVICE_NAME, SECURE_SIGNATURE_HEADER
 from protoplaster.tools.log import error
 from urllib.parse import urlparse, urlunparse
 from concurrent.futures import ThreadPoolExecutor, Future
@@ -88,11 +89,21 @@ def _execute_request(url: str, function: Callable, args: List[Any]) -> Any:
     }
 
     pickled_payload = pickle.dumps(payload)
-    hdrs = {'Content-Type': 'application/octet-stream'}
+    signature = auth.sign(pickled_payload)
+
+    hdrs = {
+        "Content-Type": "application/octet-stream",
+        SECURE_SIGNATURE_HEADER: signature,
+    }
     resp = requests.post(f"{url}/api/v1/exec",
                          data=pickled_payload,
                          headers=hdrs,
                          timeout=60)
+    # Never unpickle a response we cannot authenticate
+    if not auth.verify(resp.headers.get(SECURE_SIGNATURE_HEADER),
+                       resp.content):
+        raise RemoteException(
+            f"Response from {url} has missing or invalid signature")
     # Error responses are returned as a pickled payload with an error status code.
     try:
         data = pickle.loads(resp.content)

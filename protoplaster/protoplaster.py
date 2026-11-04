@@ -15,11 +15,12 @@ import protoplaster.api.v1
 from protoplaster.conf.plugin_manager import load_plugins_from_dir
 import protoplaster.webui
 import protoplaster.webui.devices
-from protoplaster.conf.consts import TEST_FILE, CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME, SERVE_IP
+import protoplaster.tools.auth as auth
+from protoplaster.conf.consts import TEST_FILE, CONFIG_DIR, ARTIFACTS_DIR, REPORTS_DIR, LOCAL_DEVICE_NAME, SERVE_IP, SECURE_TOKEN_ENV
 from protoplaster.runner.manager import OrchestratorData, RunManager
 from protoplaster.runner.runner import list_tests, list_test_suites, orchestrate_tests, run_tests, generate_docs
 from protoplaster.report_generators.system_report.protoplaster_system_report import __file__ as system_report_file
-from protoplaster.tools.log import error, info
+from protoplaster.tools.log import error, info, pr_warn, pr_err
 
 
 def create_docs_app() -> Flask:
@@ -132,6 +133,17 @@ def parse_args():
                         type=str,
                         default="5000",
                         help="Port to use when running in server mode")
+
+    security = parser.add_mutually_exclusive_group()
+    security.add_argument(
+        "--token-file",
+        type=str,
+        help=
+        f"Path to a file containing secure token used for message signing. Value in file overrides ENV:{SECURE_TOKEN_ENV}"
+    )
+    security.add_argument("--skip-secure-token",
+                          action="store_true",
+                          help="Allow usage without specifying secure token")
     parser.add_argument(
         "--external-devices",
         type=str,
@@ -192,6 +204,21 @@ def load_external_devices(args):
 
 
 def run_http_server(args):
+    if args.token_file:
+        with open(args.token_file, 'r') as f:
+            auth.set_token(f.read().strip())
+    elif (env_token := os.getenv(SECURE_TOKEN_ENV)) is not None:
+        auth.set_token(env_token)
+    elif args.skip_secure_token:
+        pr_warn(
+            "Secure token DISABLED! Anyone with access to the network will be able to remotely execute code on DUT machines!"
+        )
+    else:
+        pr_err(
+            f"Missing secure token (both --token-file and ENV:{SECURE_TOKEN_ENV} unset)"
+        )
+        exit(1)
+
     if args.custom_tests and os.path.isdir(args.custom_tests):
         sys.path.append(os.path.abspath(args.custom_tests))
         print(info(f"Added custom tests dir to path: {args.custom_tests}"))
