@@ -33,10 +33,14 @@ def execute_function():
     :status 400: missing parameters
     :status 401: missing or invalid signature
     :status 404: module or function not found
+    :status 415: invalid data format
     :status 500: execution error
 
     :>json any result: return value of the function
     """
+    # Only accept current pickle mimetype
+    if request.mimetype != "application/octet-stream":
+        return _response({"error": "Invalid request body format"}, 415)
 
     if not auth.verify(request.headers.get(SECURE_SIGNATURE_HEADER),
                        request.data):
