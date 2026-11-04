@@ -26,36 +26,40 @@ usage: protoplaster [-h] [-d TEST_DIR] [-r REPORTS_DIR] [-a ARTIFACTS_DIR]
                     [--generate-docs] [-c CUSTOM_TESTS] [-l]
                     [--report-output REPORT_OUTPUT]
                     [--system-report-config SYSTEM_REPORT_CONFIG] [--sudo]
-                    [--server | --dut] [--port PORT]
+                    [--server | --dut] [--host HOST] [--port PORT]
+                    [--token-file TOKEN_FILE | --skip-secure-token]
                     [--external-devices EXTERNAL_DEVICES]
-                    [--override OVERRIDES]
+                    [--override OVERRIDES] [--plugins PLUGINS] [-k PATTERN]
+                    [-p MODULE_PATTERN]
 
 options:
   -h, --help            show this help message and exit
-  -d, --test-dir TEST_DIR
+  -d TEST_DIR, --test-dir TEST_DIR
                         Path to the test directory
-  -r, --reports-dir REPORTS_DIR
+  -r REPORTS_DIR, --reports-dir REPORTS_DIR
                         Path to the reports directory
-  -a, --artifacts-dir ARTIFACTS_DIR
+  -a ARTIFACTS_DIR, --artifacts-dir ARTIFACTS_DIR
                         Path to the test artifacts directory
   -m, --mkdir           Try to create test/reports/artifacts directories if
                         missing
-  -t, --test-file TEST_FILE
+  -t TEST_FILE, --test-file TEST_FILE
                         Path to the yaml test description in the test
                         directory
-  -g, --group GROUP     Group to execute [deprecated]
-  -s, --test-suite TEST_SUITE
+  -g GROUP, --group GROUP
+                        Group to execute [deprecated]
+  -s TEST_SUITE, --test-suite TEST_SUITE
                         Test suite to execute
   --list-groups         List possible groups to execute [deprecated]
   --list-test-suites    List possible test suites to execute
   --list-tests          List all defined tests
-  -o, --output OUTPUT   A junit-xml style report of the tests results
+  -o OUTPUT, --output OUTPUT
+                        A junit-xml style report of the tests results
   --csv CSV             Generate a CSV report of the tests results
   --csv-columns CSV_COLUMNS
                         Comma-separated list of columns to be included in
                         generated CSV
   --generate-docs       Generate documentation
-  -c, --custom-tests CUSTOM_TESTS
+  -c CUSTOM_TESTS, --custom-tests CUSTOM_TESTS
                         Path to the custom tests sources
   -l, --log             Append test results to a log file
   --report-output REPORT_OUTPUT
@@ -65,11 +69,24 @@ options:
   --sudo                Run as sudo
   --server              Run in server mode
   --dut                 Run in DUT mode
+  --host HOST           Address to listen on in server/DUT mode
   --port PORT           Port to use when running in server mode
+  --token-file TOKEN_FILE
+                        Path to a file containing secure token used for
+                        message signing. Value in file overrides
+                        ENV:PROTOPLASTER_SECURE_TOKEN
+  --skip-secure-token   Allow usage without specifying secure token
   --external-devices EXTERNAL_DEVICES
                         Path to yaml config file with additional external
                         devices
   --override OVERRIDES  Config property override
+  --plugins PLUGINS     Path to a folder with plugins
+  -k PATTERN, --pattern PATTERN
+                        Only run tests which match the given substring
+                        expression
+  -p MODULE_PATTERN, --module-pattern MODULE_PATTERN
+                        Only run modules which match the given substring
+                        expression
 ```
 
 Protoplaster expects a yaml file describing tests as an input. The yaml file should have a structure specified as follows:
