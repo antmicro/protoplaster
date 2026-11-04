@@ -12,6 +12,8 @@ mkdir -p /tmp/protoplaster/node1/{tests,reports,artifacts}
 mkdir -p /tmp/protoplaster/node2/{tests,reports,artifacts}
 mkdir -p /tmp/protoplaster/main/tests
 
+export PROTOPLASTER_SECURE_TOKEN="test1234"
+
 # Create devices.yaml
 cat <<EOF > /tmp/protoplaster/devices.yaml
 node1: localhost:2138

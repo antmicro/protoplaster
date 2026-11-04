@@ -13,6 +13,8 @@ mkdir -p "$OUTPUT_DIR"
 
 COMBINED_DIR_PREFIX="custom-prefix_"
 
+export PROTOPLASTER_SECURE_TOKEN="test1234"
+
 # Create devices.yaml for the main node
 cat <<EOF > /tmp/protoplaster/devices.yaml
 node1: localhost:2138

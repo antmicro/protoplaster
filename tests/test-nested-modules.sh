@@ -7,6 +7,8 @@ TEST_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 PORTS=(5001)
 mkdir -p "$OUTPUT_DIR"
 
+export PROTOPLASTER_SECURE_TOKEN="test1234"
+
 cat <<EOF > /tmp/protoplaster/nested_modules.yml
 tests:
   nested_modules_test:

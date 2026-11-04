@@ -8,6 +8,8 @@ TEST_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 PORTS=(5001 2140)
 mkdir -p "$OUTPUT_DIR"
 
+export PROTOPLASTER_SECURE_TOKEN="test1234"
+
 cat <<EOF > /tmp/protoplaster/external_devices.yaml
 node1: localhost:2140
 EOF

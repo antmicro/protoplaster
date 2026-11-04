@@ -3,6 +3,7 @@
 set -e
 
 mkdir -p srv/protoplaster/{tests,reports,artifacts}
+export PROTOPLASTER_SECURE_TOKEN="test1234"
 protoplaster --test-dir srv/protoplaster/tests --reports-dir srv/protoplaster/reports --artifacts-dir srv/protoplaster/artifacts --server &
 PROTOPLASTER_PID=$!
 
