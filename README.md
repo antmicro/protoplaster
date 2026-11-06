@@ -233,6 +233,21 @@ base:
     - path: "/dev/video1"
 ```
 
+## Security
+
+Protoplaster is meant to be used in trusted, local networks only.
+In server and DUT modes, it can execute commands remotely on the device it runs on,
+so anyone with access to the network could abuse it.
+By default, Protoplaster only listens on the loopback interface (`127.0.0.1`),
+but this can be overridden with `--host` flag to listen on a different address.
+
+Requests that execute external commands are authenticated with a secure token shared between the server and the DUTs.
+It is provided either as a file (`--token-file`) or through the `PROTOPLASTER_SECURE_TOKEN` environment variable.
+Remote execution requests are rejected if the token used by the two instances doesn't match.
+By default, Protoplaster won't start in server or DUT mode without specifying a token.
+This check can be bypassed with the `--skip-secure-token` flag, but doing so is **not recommended**,
+as it leaves remote command execution open to anyone in the same network.
+
 ## Plugins
 
 Protoplaster supports extending its functionality via **plugins**. Each plugin is a Python module that can be placed in a directory specified when running Protoplaster using:
