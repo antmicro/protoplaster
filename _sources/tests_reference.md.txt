@@ -1,0 +1,676 @@
+Tests reference
+===============
+
+Protoplaster contains tests described in the following sections:
+
+
+
+ADC12DJ3200 SPI test
+---------------
+This module provides tests for the ADC12DJ3200:
+
+### Tests
+
+`test_default_values`
+: check if some ADC12DJ3200 registers have default reset values
+
+
+LTC2493 device test
+---------------
+This module provides tests for LTC2493:
+### Parameters
+
+`address`: `int`
+: I2C address of device
+
+`bus`: `int | str`
+: I2C bus
+
+`vref`: `float`
+: Voltage reference
+
+### Tests
+
+`test_is_alive`
+: check if responds correctly to simple requests
+
+
+LTC2499 device test
+---------------
+This module provides tests for LTC2499:
+### Parameters
+
+`address`: `int`
+: I2C address of device
+
+`bus`: `int | str`
+: I2C bus
+
+`vref`: `float`
+: Voltage reference
+
+### Tests
+
+`test_is_alive`
+: check if responds correctly to simple requests
+
+
+ADC device test
+---------------
+This module provides tests for ADC devices: `dev.name`
+
+### Parameters
+
+
+`channels`: `list[adc.__Channel]`
+: Device-dependent channel configuration
+
+    `__Channel`
+    : *(type with attributes defined below)*
+
+        `channel`: `int`
+        : Channel number
+
+        `v_expected`: `float`
+        : Expected voltage for channel
+
+`dev`: `__ADC`
+: ADC device config
+
+    `name`: `str`
+    : Name of ADC
+
+    `driver`: `str`
+    : Name of an ADC driver class defined in `protoplaster/tests/adc` (further parameters required)
+
+`device_name`: `str`
+: Expected name for drivers that can return a name
+
+
+
+
+`tolerance`: `float`
+: Absolute tolerance for results measured vs expected [V]
+
+### Tests
+
+`test_device_name`
+: (if applicable) check if the device name is `device_name`
+
+`test_is_alive`
+: check if `dev.name` exists and responds
+
+`test_read_adc`
+: verify that voltages measure within `self.tolerance`: *0.5 V* of their expected values
+
+
+Eye Scan tests
+-----------------
+This module provides tests for Eye Scan using IBERT:
+
+### Tests
+
+`test_create_diagram`
+: parse `` and create diagram
+
+
+`test_eye_size`
+: parse `` and assert eye size
+
+  
+  
+  
+
+
+`test_transceiver_status`
+: check if the transceiver link is correctly established via verifying STATUS property
+
+
+Camera sensor tests
+-------------------
+This module provides tests dedicated to V4L devices on specific video node: `device`
+
+### Parameters
+
+`camera_name`: `str`, *required*
+: Camera sensor name
+
+`device`: `str`, *required*
+: Video device
+
+`driver_name`: `str`, *required*
+: Video driver name
+
+`save_file`: `str`
+: Output file for frame test
+
+### Tests
+
+`test_device_name`
+: check if the camera sensor name is `camera_name`
+
+`test_driver_name`
+: check if the camera sensor driver name is `driver_name`
+
+`test_frame`
+: try to capture frame
+
+
+LMK04828 SPI test
+---------------
+This module provides tests for the LMK04828:
+
+### Tests
+
+`test_default_values`
+: check if read-only LMK04828 registers have their default reset value
+
+
+LTC2655 device test
+---------------
+This module provides tests for LTC2655:
+
+### Tests
+
+`test_is_alive`
+: check if LTC2655 responds correctly to simple requests
+
+
+LTC2657 device test
+---------------
+This module provides tests for LTC2657:
+
+### Tests
+
+`test_is_alive`
+: check if LTC2657 responds correctly to simple requests
+
+
+DAC device test
+---------------
+This module provides tests for DAC devices:
+
+### Tests
+
+`test_sysfs_interface`
+: check if the sysfs interface exists: ``
+
+
+Eye Scan tests
+-----------------
+This module provides tests for Eye Scan:
+
+### Tests
+
+`test_create_diagram`
+: parse `` and create diagram
+
+
+`test_eye_size`
+: parse `` and assert eye size
+
+  
+  
+  
+
+
+DAC38J8x SPI test
+---------------
+This module provides tests for the DAC38J8x:
+
+### Tests
+
+`test_config127_value`
+: verify the default value of the read-only CONFIG127 register
+
+
+Extended simple tests
+---------------
+This module extends TestSimple:
+### Parameters
+
+`device`: `str`, *required*
+: Name to use in dummy tests
+
+`skipped_devices`: `list[str]`
+: List of devices to skip
+
+### Tests
+
+`test_conditional_skip`
+: This test is skipped if the device name is "skip" or its contained in skipped_devices list
+
+`test_configure_runs_once`
+: This test asserts `configure` has been executed and the class state
+   is correctly initialized for the current test run.
+
+`test_failure`
+: This test always fails.
+
+`test_record_artifact`
+: This test always succeeds, and records an artifact.
+
+`test_success`
+: This test always succeeds.
+
+
+Flash chip test
+-----------------
+This module provides tests dedicated to flash chips: `dev.name`
+
+### Parameters
+
+`binary`: `str`, *required*
+: Path to file to be flashed
+
+`dev`: `__Flash`, *required*
+: Device config
+
+    `name`: `str`
+    : Storage device name
+
+    `driver`: `str`
+    : Name of a device driver class defined in `protoplaster/tests/flash` (further parameters required)
+
+### Tests
+
+`test_flashing`
+: try flashing file `binary` onto device
+
+`test_presence`
+: check if device `dev.name` is present
+
+`test_validate_flashing`
+: check if file was flashed correctly (if possible)
+
+
+Flashing FPGA test
+-----------------
+This module provides tests for flashing the fpga:
+
+### Tests
+
+
+
+
+PI4IO tests
+-----------
+This module provides tests dedicated to the PI4IOE5V96224
+### Parameters
+
+`address`: `int`
+: I2C address of device
+
+`bus`: `int`
+: I2C bus
+
+### Tests
+
+`test_is_alive`
+: check if PI4IOE5V96224 responds correctly to simple requests
+
+
+GPIOs tests
+-----------
+This module provides tests dedicated to GPIO on specified bus: `dev.name`
+
+### Parameters
+
+`dev`: `_GPIO`
+: GPIO device
+
+    `name`: `str`
+    : GPIO device name
+
+    `driver`: `str`
+    : Name of a GPIO driver class defined in `protoplaster/tests/gpio` (further parameters required)
+
+
+
+`pins`: `list[gpio.__GPIO_Pin]`
+: List of pins to test
+
+    `__GPIO_Pin`
+    : *(type with attributes defined below)*
+
+        `pin`: `int`
+        : Pin number
+
+        `direction`: `str`
+        : Direction ('in' or 'out')
+
+        `state`: `bool`
+        : Expected pin state
+
+`test_name`: `str`
+: Custom name for the test
+
+
+
+### Tests
+
+`test_is_alive`
+: (if applicable) check if device `dev.name` responds
+
+
+
+HTTP echo tests
+------------
+This module tests HTTP responses between nodes: `dev1`, `dev2`
+
+### Parameters
+
+`dev1`: `str`, *required*
+: Device 1 to be used in tests
+
+`dev2`: `str`, *required*
+: Device 2 to be used in tests
+
+`port`: `int`
+: Port for this machine to run server on
+
+`test_string`: `str`
+: String to send in tests (default: "Hello World!")
+
+### Tests
+
+`test_echo_async`
+: Async Orchestration test:
+   1. Main PC starts HTTP server.
+   2. dev2 starts polling for the message (non-blocking).
+   3. Main PC thread sleeps for 5 seconds.
+   4. dev1 connects to Main PC and POSTs "Hello world".
+   5. dev2 receives the message and returns it.
+
+`test_echo_fully_async`
+: Fully Async test:
+   1. Main PC starts HTTP server.
+   2. Triggers dev2 (read) AND dev1 (write) asynchronously.
+   3. Waits for both to complete.
+
+`test_echo_multinode`
+: Orchestration test:
+   1. Main PC starts HTTP server.
+   2. dev1 connects to Main PC and POSTs "Hello world".
+   3. dev2 connects to Main PC and GETs the message.
+   4. Main PC verifies the message matches.
+
+
+I2C device tests
+-----------------
+This module provides tests dedicated to i2c devices on a specific bus: `dev.name`
+
+### Parameters
+
+
+`dev`: `_I2C`
+: I2C controller
+
+    `name`: `str`
+    : Name of I2C controller
+
+    `driver`: `str`
+    : Name of an I2C driver class defined in `protoplaster/tests/i2c` (further parameters required)
+
+`devices`: `list[i2c.__I2C_Device]`, *required*
+: List of I2C devices
+
+    `__I2C_Device`
+    : *(type with attributes defined below)*
+
+        `name`: `str`
+        : Name of I2C device
+
+        `address`: `int`
+        : Address of I2C device
+
+### Tests
+
+`test_addresses`
+: detection test:
+    * check for device `name` on address `address`
+
+
+TCA9548A test
+---------------
+This module provides tests for the TCA9548A:
+### Parameters
+
+`i2c_address`: `int`, *required*
+: I2C device address
+
+`i2c_bus`: `int | str`, *required*
+: I2C bus address
+
+`reset_gpio`: `int | str`
+: GPIO number for resetting device
+
+`reset_state`: `bool`
+: GPIO reset pin logic level -- active-low (False) or active-high (True)
+
+`smbus_force`: `bool`
+: Use address even if already in use by another kernel driver
+
+### Tests
+
+`test_is_alive`
+: check if TCA9548A responds correctly to simple requests
+
+`test_reset`
+: Check whether the TCA9548A responds correctly to a reset triggered by pulling  low
+
+
+I2C multiplexer test
+---------------
+This module provides generic tests for I2C multiplexers: `dev.name`
+
+### Parameters
+
+`dev`: `__Mux`
+: I2C multiplexer
+
+    `name`: `str`
+    : Device name
+
+    `model`: `str`
+    : Name of a mux driver class defined in `protoplaster/tests/i2c/i2c_mux` (further parameters may be required)
+
+    `parent`: `_I2C`
+    : Parent I2C bus (attribute `dev` of I2C test)
+
+        `name`: `str`
+        : Name of I2C controller
+
+        `driver`: `str`
+        : Name of an I2C driver class defined in `protoplaster/tests/i2c` (further parameters required)
+
+    `i2c_address`: `int`
+    : I2C address of multiplexer
+
+    `gpio_dev`: `protoplaster.tests.gpio.gpio.test._GPIO | None`
+    : GPIO device for reset functionality
+
+        `_GPIO, NoneType`
+        : *(type with attributes defined below)*
+
+            `name`: `str`
+            : GPIO device name
+
+            `driver`: `str`
+            : Name of a GPIO driver class defined in `protoplaster/tests/gpio` (further parameters required)
+
+    `reset_gpio`: `int | None`
+    : GPIO reset pin
+
+    `reset_state`: `bool`
+    : GPIO reset pin logic level -- active-low (False) or active-high (True)
+
+### Tests
+
+`test_is_alive`
+: check if muxer responds correctly to simple requests
+
+`test_reset`
+: (skipped) check whether the multiplexer responds correctly to a reset triggered by pulling the reset pin low
+
+
+DMA test
+--------
+This module provides tests for DMA:
+
+### Tests
+
+`test_memory`
+: verify the integrity of memory of size  with  iterations.
+
+
+Network interface tests
+-------------------
+This module provides tests dedicated to network interfaces: `interface`
+
+### Parameters
+
+`interface`: `str`, *required*
+: Network device to perform tests on
+
+`speed`: `str`
+: Speed of network device [Mbit/s]
+
+### Tests
+
+`test_exist`
+: check if the interface exists
+
+`test_speed`
+: check if the interface speed is `speed` Mbit/s
+
+
+DA9062 device test
+----------------
+This module provides tests for DA9062:
+
+### Tests
+
+`test_config_id`
+: verify that the DA9062 PMIC returns the expected config ID: ``
+
+`test_current_ldos`
+: verify voltage of: 
+
+`test_current_selections`
+: verify selection of: 
+
+`test_customer_id`
+: verify that the DA9062 PMIC returns the expected customer ID: ``
+
+`test_is_alive`
+: check if DA9062 responds correctly to simple requests
+
+`test_variant_id`
+: verify that the DA9062 PMIC returns the expected variant ID: ``
+
+
+UCD90320U device test
+----------------
+This module provides tests for UCD90320U:
+
+### Tests
+
+`test_clear_faults`
+: clear the faults latched by the UCD90320U in preparation for
+  a new test run
+
+`test_is_alive`
+: check if UCD90320U responds correctly to simple requests
+
+`test_read_faults`
+: read the faults latched by the UCD90320U after the test run
+
+
+Simple tests
+------------
+This module provides simple dummy tests: `device`
+
+### Parameters
+
+`device`: `str`, *required*
+: Name to use in dummy tests
+
+### Tests
+
+`test_conditional_skip`
+: This test is skipped if the device name is "skip"
+
+`test_configure_runs_once`
+: This test asserts `configure` has been executed and the class state
+   is correctly initialized for the current test run.
+
+`test_failure`
+: This test always fails.
+
+`test_record_artifact`
+: This test always succeeds, and records an artifact.
+
+`test_success`
+: This test always succeeds.
+
+
+SPI device tests
+-----------------
+This module provides tests dedicated to SPI devices: `dev.name`
+
+### Parameters
+
+
+`command`: `list[int]`
+: Command to send
+
+`dev`: `__SPI`
+: Device config
+
+    `name`: `str`
+    : SPI device name
+
+    `driver`: `str`
+    : Name of an SPI driver class defined in `protoplaster/tests/spi` (further parameters required)
+
+
+`response_expected`: `list[int]`
+: Expected response to command
+
+### Tests
+
+`test_spi_response`
+: check if device responds to command `command` with `response_expected`
+
+
+TMP431 device test
+----------------
+This module provides tests for TMP431:
+
+### Tests
+
+`test_is_alive`
+: check if TMP431 responds correctly to simple requests
+
+
+USB tests
+------------
+This module provides tests for USB devices: `device`
+
+### Parameters
+
+`device`: `str`, *required*
+: Name of device as seen by kernel
+
+`speed`: `int`
+: Expected speed [Mbps]
+
+### Tests
+
+`test_negotiated_speed`
+: check if the negotiated USB speed is  Mbps
+
+`test_sysfs_interface`
+: check if the sysfs interface exists: ``
+
